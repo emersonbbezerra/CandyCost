@@ -149,7 +149,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/products/:id/recipes", async (req, res) => {
     try {
       const productId = parseInt(req.params.id);
-      const recipes = z.array(insertRecipeSchema).parse(req.body);
+      const recipeSchema = insertRecipeSchema.extend({
+        ingredientId: z.number().nullable(),
+        productIngredientId: z.number().nullable(),
+      });
+      const recipes = z.array(recipeSchema).parse(req.body);
       
       // Delete existing recipes for this product
       await storage.deleteRecipesByProduct(productId);

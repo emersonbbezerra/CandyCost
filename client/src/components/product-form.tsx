@@ -18,7 +18,12 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 const productSchema = insertProductSchema.extend({
-  recipes: z.array(insertRecipeSchema.omit({ productId: true })).optional(),
+  recipes: z.array(
+    insertRecipeSchema.omit({ productId: true }).extend({
+      ingredientId: z.number().nullable(),
+      productIngredientId: z.number().nullable(),
+    })
+  ).optional(),
 });
 
 interface ProductFormProps {
@@ -65,7 +70,6 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
 
   // Atualizar formulário quando o produto muda
   useEffect(() => {
-    console.log("ProductForm useEffect - produto recebido:", product);
     if (product) {
       const formData = {
         name: product.name || "",
@@ -75,12 +79,11 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
         marginPercentage: product.marginPercentage || "60",
         recipes: product.recipes?.map((r) => ({
           ingredientId: r.ingredientId,
-          productIngredientId: r.productIngredientId,
-          quantity: r.quantity,
-          unit: r.unit,
+          productIngredientId: null,
+          quantity: r.quantity || "",
+          unit: r.unit || "",
         })) || [],
       };
-      console.log("Dados do formulário a serem aplicados:", formData);
       form.reset(formData);
     } else {
       form.reset({
@@ -284,7 +287,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
               </CardHeader>
               <CardContent className="space-y-4">
                 {fields.map((field, index) => (
-                  <div key={field.id} className="grid grid-cols-5 gap-2 items-end">
+                  <div key={field.id} className="grid grid-cols-4 gap-2 items-end">
                     <FormField
                       control={form.control}
                       name={`recipes.${index}.ingredientId`}
@@ -294,7 +297,6 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                           <Select 
                             onValueChange={(value) => {
                               field.onChange(value === "null" ? null : parseInt(value));
-                              form.setValue(`recipes.${index}.productIngredientId`, null);
                             }} 
                             value={field.value?.toString() || ""}
                           >
@@ -308,38 +310,6 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                               {ingredients.map((ingredient) => (
                                 <SelectItem key={ingredient.id} value={ingredient.id.toString()}>
                                   {ingredient.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name={`recipes.${index}.productIngredientId`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Produto</FormLabel>
-                          <Select 
-                            onValueChange={(value) => {
-                              field.onChange(value === "null" ? null : parseInt(value));
-                              form.setValue(`recipes.${index}.ingredientId`, null);
-                            }} 
-                            value={field.value?.toString() || ""}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Produto" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="null">Selecione...</SelectItem>
-                              {availableProductIngredients.map((prod) => (
-                                <SelectItem key={prod.id} value={prod.id.toString()}>
-                                  {prod.name}
                                 </SelectItem>
                               ))}
                             </SelectContent>

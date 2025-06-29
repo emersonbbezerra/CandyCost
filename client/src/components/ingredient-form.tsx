@@ -113,12 +113,15 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-screen overflow-y-auto">
+      <DialogContent className="max-w-md max-h-screen overflow-y-auto" aria-describedby="ingredient-form-description">
         <DialogHeader>
           <DialogTitle>
             {ingredient ? "Editar Ingrediente" : "Novo Ingrediente"}
           </DialogTitle>
         </DialogHeader>
+        <div id="ingredient-form-description" className="sr-only">
+          Formulário para {ingredient ? "editar" : "criar"} ingrediente com informações de nome, categoria, quantidade e preço
+        </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
