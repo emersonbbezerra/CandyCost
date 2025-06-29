@@ -26,7 +26,7 @@ export default function Ingredients() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | undefined>();
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -60,7 +60,7 @@ export default function Ingredients() {
   const filteredIngredients = ingredients.filter((ingredient) => {
     const matchesSearch = ingredient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          ingredient.brand?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !categoryFilter || ingredient.category === categoryFilter;
+    const matchesCategory = categoryFilter === "all" || ingredient.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
 
@@ -132,7 +132,7 @@ export default function Ingredients() {
                 <SelectValue placeholder="Todas as categorias" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as categorias</SelectItem>
+                <SelectItem value="all">Todas as categorias</SelectItem>
                 <SelectItem value="Laticínios">Laticínios</SelectItem>
                 <SelectItem value="Farinhas">Farinhas</SelectItem>
                 <SelectItem value="Açúcares">Açúcares</SelectItem>

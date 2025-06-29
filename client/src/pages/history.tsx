@@ -8,8 +8,8 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import type { PriceHistory, Ingredient, Product } from "@shared/schema";
 
 export default function History() {
-  const [selectedIngredient, setSelectedIngredient] = useState<string>("");
-  const [selectedProduct, setSelectedProduct] = useState<string>("");
+  const [selectedIngredient, setSelectedIngredient] = useState<string>("all");
+  const [selectedProduct, setSelectedProduct] = useState<string>("all");
 
   const { data: ingredients = [] } = useQuery<Ingredient[]>({
     queryKey: ["/api/ingredients"],
@@ -21,8 +21,8 @@ export default function History() {
 
   const { data: priceHistory = [] } = useQuery<PriceHistory[]>({
     queryKey: ["/api/price-history", { 
-      ingredientId: selectedIngredient || undefined,
-      productId: selectedProduct || undefined 
+      ingredientId: selectedIngredient !== "all" ? selectedIngredient : undefined,
+      productId: selectedProduct !== "all" ? selectedProduct : undefined 
     }],
   });
 
@@ -74,7 +74,7 @@ export default function History() {
                   <SelectValue placeholder="Todos os ingredientes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os ingredientes</SelectItem>
+                  <SelectItem value="all">Todos os ingredientes</SelectItem>
                   {ingredients.map((ingredient) => (
                     <SelectItem key={ingredient.id} value={ingredient.id.toString()}>
                       {ingredient.name}
@@ -93,7 +93,7 @@ export default function History() {
                   <SelectValue placeholder="Todos os produtos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os produtos</SelectItem>
+                  <SelectItem value="all">Todos os produtos</SelectItem>
                   {products.map((product) => (
                     <SelectItem key={product.id} value={product.id.toString()}>
                       {product.name}
