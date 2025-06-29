@@ -121,7 +121,7 @@ export class MemStorage implements IStorage {
       { name: "Torta Holandesa", category: "Tortas", description: "Torta com creme e chocolate premium", isAlsoIngredient: false, marginPercentage: "15" },
       
       // Alta lucratividade adicional para teste
-      { name: "Beijinho Gourmet", category: "Doces", description: "Beijinho artesanal com coco premium", isAlsoIngredient: false, marginPercentage: "75" },
+      { name: "Beijinho Gourmet", category: "Doces", description: "Beijinho artesanal com coco premium", isAlsoIngredient: false, marginPercentage: "200" },
     ];
 
     sampleProducts.forEach((product) => {
