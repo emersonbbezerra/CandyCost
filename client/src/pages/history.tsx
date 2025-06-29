@@ -24,7 +24,6 @@ export default function History() {
       ingredientId: selectedIngredient || undefined,
       productId: selectedProduct || undefined 
     }],
-    queryKey: ["/api/price-history"],
   });
 
   // Group price history by month for chart

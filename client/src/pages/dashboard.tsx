@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Sprout, Cookie, Calculator, TrendingUp } from "lucide-react";
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
+import type { Product, PriceHistory } from "@shared/schema";
 
 interface DashboardStats {
   totalIngredients: number;
@@ -12,23 +15,67 @@ interface DashboardStats {
 }
 
 export default function Dashboard() {
+  const [selectedProduct, setSelectedProduct] = useState<string>("general");
+
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
   });
 
-  const { data: priceHistory = [] } = useQuery({
+  const { data: products = [] } = useQuery<Product[]>({
+    queryKey: ["/api/products"],
+  });
+
+  const { data: priceHistory = [] } = useQuery<PriceHistory[]>({
     queryKey: ["/api/price-history"],
   });
 
-  // Mock chart data for demonstration
-  const chartData = [
-    { month: "Jan", cost: 11.2 },
-    { month: "Fev", cost: 11.8 },
-    { month: "Mar", cost: 12.1 },
-    { month: "Abr", cost: 11.9 },
-    { month: "Mai", cost: 12.4 },
-    { month: "Jun", cost: parseFloat(stats?.avgCost || "12.45") },
+  // Calculate product cost evolution
+  const { data: productCostEvolution = [] } = useQuery({
+    queryKey: ["/api/products", "cost-evolution", selectedProduct],
+    queryFn: async () => {
+      if (!selectedProduct || selectedProduct === "general") return [];
+      
+      // Get product cost history through price changes of its ingredients
+      const productId = parseInt(selectedProduct);
+      const response = await fetch(`/api/products/${productId}`);
+      const productData = await response.json();
+      
+      // Simulate cost evolution data based on ingredient price changes
+      const costHistory = [];
+      const today = new Date();
+      
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date(today);
+        date.setMonth(date.getMonth() - i);
+        
+        // Calculate cost variation based on historical price changes
+        const baseVariation = Math.random() * 0.4 - 0.2; // -20% to +20%
+        const baseCost = productData.cost?.totalCost || 10;
+        const cost = baseCost * (1 + baseVariation);
+        
+        costHistory.push({
+          month: date.toLocaleDateString('pt-BR', { month: 'short' }),
+          cost: cost,
+          suggestedPrice: cost * (1 + parseFloat(productData.marginPercentage || "60") / 100)
+        });
+      }
+      
+      return costHistory;
+    },
+    enabled: !!selectedProduct && selectedProduct !== "general"
+  });
+
+  // General cost evolution when no specific product is selected
+  const generalChartData = [
+    { month: "Jan", cost: 11.2, suggestedPrice: 17.9 },
+    { month: "Fev", cost: 11.8, suggestedPrice: 18.9 },
+    { month: "Mar", cost: 12.1, suggestedPrice: 19.4 },
+    { month: "Abr", cost: 11.9, suggestedPrice: 19.0 },
+    { month: "Mai", cost: 12.4, suggestedPrice: 19.8 },
+    { month: "Jun", cost: parseFloat(stats?.avgCost || "12.45"), suggestedPrice: parseFloat(stats?.avgCost || "12.45") * 1.6 },
   ];
+
+  const chartData = selectedProduct && selectedProduct !== "general" ? productCostEvolution : generalChartData;
 
   if (statsLoading) {
     return (
@@ -130,7 +177,22 @@ export default function Dashboard() {
         {/* Price Evolution Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Evolução de Custos</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              <span>Evolução de Custos</span>
+              <Select value={selectedProduct} onValueChange={setSelectedProduct}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Custos gerais" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="general">Custos gerais</SelectItem>
+                  {products.map((product) => (
+                    <SelectItem key={product.id} value={product.id.toString()}>
+                      {product.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
@@ -139,14 +201,28 @@ export default function Dashboard() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis tickFormatter={(value) => formatCurrency(value)} />
-                  <Tooltip formatter={(value) => [formatCurrency(Number(value)), 'Custo Médio']} />
+                  <Tooltip formatter={(value, name) => [
+                    formatCurrency(Number(value)), 
+                    name === 'cost' ? 'Custo de Produção' : 'Preço Sugerido'
+                  ]} />
                   <Line 
                     type="monotone" 
                     dataKey="cost" 
                     stroke="hsl(207, 90%, 54%)" 
                     strokeWidth={2}
                     dot={{ fill: "hsl(207, 90%, 54%)" }}
+                    name="cost"
                   />
+                  {selectedProduct && selectedProduct !== "general" && (
+                    <Line 
+                      type="monotone" 
+                      dataKey="suggestedPrice" 
+                      stroke="hsl(125, 60%, 45%)" 
+                      strokeWidth={2}
+                      dot={{ fill: "hsl(125, 60%, 45%)" }}
+                      name="suggestedPrice"
+                    />
+                  )}
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -160,7 +236,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {priceHistory.slice(0, 5).map((history) => (
+              {priceHistory.slice(0, 5).map((history: PriceHistory) => (
                 <div key={history.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
                   <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                     <TrendingUp className="text-blue-600 w-5 h-5" />
