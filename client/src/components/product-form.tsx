@@ -80,7 +80,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
         marginPercentage: product.marginPercentage || "60",
         recipes: product.recipes?.map((r) => ({
           ingredientId: r.ingredientId,
-          productIngredientId: null,
+          productIngredientId: r.productIngredientId,
           quantity: r.quantity || "",
           unit: r.unit || "",
         })) || [],
