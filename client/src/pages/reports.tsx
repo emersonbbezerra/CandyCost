@@ -53,6 +53,8 @@ export default function Reports() {
   const [sortBy, setSortBy] = useState<"name" | "profitMargin" | "cost">("profitMargin");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [profitabilityFilter, setProfitabilityFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const { data: ingredients = [] } = useQuery<Ingredient[]>({
     queryKey: ["/api/ingredients"],
@@ -120,6 +122,21 @@ export default function Reports() {
     return filtered;
   }, [reportsData?.profitabilityAnalysis, searchTerm, categoryFilter, sortBy, sortOrder, profitabilityFilter]);
 
+  // Calcular dados paginados
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredProfitabilityData.slice(startIndex, endIndex);
+  }, [filteredProfitabilityData, currentPage, itemsPerPage]);
+
+  // Calcular total de páginas
+  const totalPages = Math.ceil(filteredProfitabilityData.length / itemsPerPage);
+
+  // Reset página quando filtros mudam
+  const resetFilters = () => {
+    setCurrentPage(1);
+  };
+
   const handleExportReport = () => {
     // Implementar exportação futura
     alert("Funcionalidade de exportação será implementada em breve!");
@@ -171,12 +188,18 @@ export default function Reports() {
                 <Input
                   placeholder="Buscar produto..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
                   className="pl-10"
                 />
               </div>
               
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <Select value={categoryFilter} onValueChange={(value) => {
+                setCategoryFilter(value);
+                setCurrentPage(1);
+              }}>
                 <SelectTrigger>
                   <Filter className="w-4 h-4 mr-2" />
                   <SelectValue placeholder="Categoria" />
@@ -189,7 +212,10 @@ export default function Reports() {
                 </SelectContent>
               </Select>
 
-              <Select value={profitabilityFilter} onValueChange={setProfitabilityFilter}>
+              <Select value={profitabilityFilter} onValueChange={(value) => {
+                setProfitabilityFilter(value);
+                setCurrentPage(1);
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Lucratividade" />
                 </SelectTrigger>
@@ -205,6 +231,7 @@ export default function Reports() {
                 const [newSortBy, newSortOrder] = value.split('-') as [typeof sortBy, typeof sortOrder];
                 setSortBy(newSortBy);
                 setSortOrder(newSortOrder);
+                setCurrentPage(1);
               }}>
                 <SelectTrigger>
                   {sortOrder === "asc" ? <SortAsc className="w-4 h-4 mr-2" /> : <SortDesc className="w-4 h-4 mr-2" />}
@@ -223,7 +250,7 @@ export default function Reports() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {filteredProfitabilityData.slice(0, 5).map(({ product, cost, profitMargin }) => (
+              {paginatedData.map(({ product, cost, profitMargin }) => (
                 <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
                     <p className="font-medium">{product.name}</p>
@@ -256,6 +283,61 @@ export default function Reports() {
                 <p className="text-gray-500 text-center py-4">Nenhum produto encontrado com os filtros aplicados.</p>
               )}
             </div>
+            
+            {/* Paginação */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                <div className="text-sm text-gray-600">
+                  Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, filteredProfitabilityData.length)} de {filteredProfitabilityData.length} produtos
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Anterior
+                  </Button>
+                  
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNumber;
+                      if (totalPages <= 5) {
+                        pageNumber = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNumber = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNumber = totalPages - 4 + i;
+                      } else {
+                        pageNumber = currentPage - 2 + i;
+                      }
+                      
+                      return (
+                        <Button
+                          key={pageNumber}
+                          variant={currentPage === pageNumber ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(pageNumber)}
+                          className="w-8 h-8 p-0"
+                        >
+                          {pageNumber}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Próxima
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
