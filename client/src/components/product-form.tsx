@@ -312,9 +312,30 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                             <FormLabel>Ingrediente</FormLabel>
                             <Select 
                               onValueChange={(value) => {
-                                field.onChange(value === "null" ? null : parseInt(value));
+                                if (value === "null") {
+                                  field.onChange(null);
+                                  // Also clear productIngredientId
+                                  form.setValue(`recipes.${index}.productIngredientId`, null);
+                                } else if (value.startsWith("product-")) {
+                                  // This is a product ingredient
+                                  const productId = parseInt(value.replace("product-", ""));
+                                  field.onChange(null); // Clear ingredientId
+                                  form.setValue(`recipes.${index}.productIngredientId`, productId);
+                                } else {
+                                  // This is a regular ingredient
+                                  field.onChange(parseInt(value));
+                                  form.setValue(`recipes.${index}.productIngredientId`, null);
+                                }
                               }} 
-                              value={field.value?.toString() || ""}
+                              value={(() => {
+                                const recipe = form.watch(`recipes.${index}`);
+                                if (recipe?.productIngredientId) {
+                                  return `product-${recipe.productIngredientId}`;
+                                } else if (recipe?.ingredientId) {
+                                  return recipe.ingredientId.toString();
+                                }
+                                return "";
+                              })()}
                             >
                               <FormControl>
                                 <SelectTrigger>
@@ -328,6 +349,18 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                                     {ingredient.name}
                                   </SelectItem>
                                 ))}
+                                {availableProductIngredients.length > 0 && (
+                                  <>
+                                    <SelectItem value="separator" disabled>
+                                      — Produtos como Ingredientes —
+                                    </SelectItem>
+                                    {availableProductIngredients.map((productIngredient) => (
+                                      <SelectItem key={`product-${productIngredient.id}`} value={`product-${productIngredient.id}`}>
+                                        {productIngredient.name} (Produto)
+                                      </SelectItem>
+                                    ))}
+                                  </>
+                                )}
                               </SelectContent>
                             </Select>
                             <FormMessage />
