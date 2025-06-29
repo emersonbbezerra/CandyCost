@@ -239,7 +239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const productCosts = await Promise.all(costsPromises);
       
-      // Profitability analysis
+      // Lucratividade analysis
       const profitabilityAnalysis = productCosts.map(({ product, cost }) => {
         const profitMargin = cost.suggestedPrice > 0 
           ? ((cost.suggestedPrice - cost.totalCost) / cost.suggestedPrice) * 100 

@@ -89,12 +89,12 @@ export default function Reports() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Análise de Rentabilidade */}
+        {/* Análise de Lucratividade */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
               <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
-              Análise de Rentabilidade
+              Análise de Lucratividade
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -106,11 +106,22 @@ export default function Reports() {
                     <p className="text-sm text-gray-600">{formatCurrency(cost.totalCost)} → {formatCurrency(cost.suggestedPrice)}</p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Badge variant={profitMargin > 50 ? "default" : profitMargin > 30 ? "secondary" : "destructive"}>
+                    <Badge 
+                      variant={profitMargin > 50 ? "default" : profitMargin > 30 ? "secondary" : "destructive"}
+                      className={
+                        profitMargin > 50 
+                          ? "bg-green-100 text-green-800 border-green-200" 
+                          : profitMargin > 30 
+                            ? "bg-yellow-100 text-yellow-800 border-yellow-200" 
+                            : "bg-red-100 text-red-800 border-red-200"
+                      }
+                    >
                       {profitMargin.toFixed(1)}%
                     </Badge>
                     {profitMargin > 50 ? (
                       <TrendingUp className="w-4 h-4 text-green-600" />
+                    ) : profitMargin > 30 ? (
+                      <TrendingUp className="w-4 h-4 text-yellow-600" />
                     ) : (
                       <TrendingDown className="w-4 h-4 text-red-600" />
                     )}
@@ -230,7 +241,7 @@ export default function Reports() {
               <p className="text-2xl font-bold text-green-600">
                 {reportsData?.profitabilityAnalysis[0]?.profitMargin.toFixed(1) || '0'}%
               </p>
-              <p className="text-sm text-gray-600">Maior margem de lucro</p>
+              <p className="text-sm text-gray-600">Maior lucratividade</p>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-lg mx-auto mb-2">
