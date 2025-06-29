@@ -346,7 +346,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                                       const recipe = form.watch(`recipes.${index}`);
                                       if (recipe?.productIngredientId) {
                                         const productIngredient = availableProductIngredients.find(p => p.id === recipe.productIngredientId);
-                                        return productIngredient ? `${productIngredient.name} (Produto)` : "Produto não encontrado";
+                                        return productIngredient ? productIngredient.name : "Produto não encontrado";
                                       } else if (recipe?.ingredientId) {
                                         const ingredient = ingredients.find(i => i.id === recipe.ingredientId);
                                         return ingredient ? ingredient.name : "Ingrediente não encontrado";
@@ -363,18 +363,11 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                                     {ingredient.name}
                                   </SelectItem>
                                 ))}
-                                {availableProductIngredients.length > 0 && (
-                                  <>
-                                    <SelectItem value="separator" disabled>
-                                      — Produtos como Ingredientes —
-                                    </SelectItem>
-                                    {availableProductIngredients.map((productIngredient) => (
-                                      <SelectItem key={`product-${productIngredient.id}`} value={`product-${productIngredient.id}`}>
-                                        {productIngredient.name} (Produto)
-                                      </SelectItem>
-                                    ))}
-                                  </>
-                                )}
+                                {availableProductIngredients.map((productIngredient) => (
+                                  <SelectItem key={`product-${productIngredient.id}`} value={`product-${productIngredient.id}`}>
+                                    {productIngredient.name}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                             <FormMessage />

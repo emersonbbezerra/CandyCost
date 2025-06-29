@@ -34,6 +34,7 @@ Sistema completo de gestão de custos para confeitaria desenvolvido com React + 
 - **29/06/2025**: Criado arquivo de constantes compartilhadas para categorias e unidades
 - **29/06/2025**: Corrigida funcionalidade de produtos como ingredientes - agora aparecem na lista e são salvos corretamente
 - **29/06/2025**: Adicionada visualização das receitas na página de produtos, mostrando ingredientes e produtos-ingredientes
+- **29/06/2025**: Removido separador visual desnecessário e identificador "(Produto)" - produtos-ingredientes agora aparecem naturalmente na lista
 
 ## Melhorias de Interface
 - **Selects Padronizados**: Categorias de produtos, ingredientes e unidades agora usam listas predefinidas

@@ -191,7 +191,7 @@ export default function Products() {
                           <div key={index} className="text-xs text-gray-600 flex justify-between">
                             <span>
                               {recipe.ingredient ? recipe.ingredient.name : 
-                               recipe.productIngredient ? `${recipe.productIngredient.name} (Produto)` : 
+                               recipe.productIngredient ? recipe.productIngredient.name : 
                                'Ingrediente não encontrado'}
                             </span>
                             <span>{recipe.quantity} {recipe.unit}</span>
