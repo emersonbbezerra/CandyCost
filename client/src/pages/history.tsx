@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { TrendingUp, TrendingDown, History as HistoryIcon } from "lucide-react";
+import { TrendingUp, TrendingDown, History as HistoryIcon, Package, ShoppingCart } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { PriceHistory, Ingredient, Product } from "@shared/schema";
 
@@ -24,33 +24,22 @@ export default function History() {
     queryKey: ["/api/price-history"],
   });
 
-  // Filtrar dados baseado na seleção do usuário
-  const priceHistory = allPriceHistory.filter(item => {
-    const matchesIngredient = selectedIngredient === "all" || 
-      (item.ingredientId && item.ingredientId.toString() === selectedIngredient);
-    const matchesProduct = selectedProduct === "all" || 
-      (item.productId && item.productId.toString() === selectedProduct);
-    
-    // Se ambos filtros são "all", mostrar tudo
-    if (selectedIngredient === "all" && selectedProduct === "all") {
-      return true;
-    }
-    
-    // Se apenas um filtro está selecionado, verificar apenas esse
-    if (selectedIngredient !== "all" && selectedProduct === "all") {
-      return matchesIngredient;
-    }
-    
-    if (selectedProduct !== "all" && selectedIngredient === "all") {
-      return matchesProduct;
-    }
-    
-    // Se ambos filtros estão selecionados, ambos devem corresponder
-    return matchesIngredient && matchesProduct;
-  });
+  // Separar histórico de ingredientes e produtos
+  const ingredientHistory = allPriceHistory.filter(item => item.ingredientId && !item.productId);
+  const productHistory = allPriceHistory.filter(item => item.productId && !item.ingredientId);
 
-  // Group price history by month for chart
-  const chartData = priceHistory.reduce((acc, item) => {
+  // Filtrar ingredientes baseado na seleção
+  const filteredIngredientHistory = ingredientHistory.filter(item => 
+    selectedIngredient === "all" || item.ingredientId?.toString() === selectedIngredient
+  );
+
+  // Filtrar produtos baseado na seleção
+  const filteredProductHistory = productHistory.filter(item => 
+    selectedProduct === "all" || item.productId?.toString() === selectedProduct
+  );
+
+  // Group ingredient history by month for chart
+  const ingredientChartData = filteredIngredientHistory.reduce((acc: Record<string, any>, item) => {
     const month = new Date(item.createdAt).toLocaleDateString('pt-BR', { 
       month: 'short', 
       year: 'numeric' 
@@ -73,29 +62,77 @@ export default function History() {
     return acc;
   }, {} as Record<string, any>);
 
-  const chartDataArray = Object.values(chartData).slice(-6);
+  // Group product history by month for chart
+  const productChartData = filteredProductHistory.reduce((acc: Record<string, any>, item) => {
+    const month = new Date(item.createdAt).toLocaleDateString('pt-BR', { 
+      month: 'short', 
+      year: 'numeric' 
+    });
+    
+    if (!acc[month]) {
+      acc[month] = {
+        month,
+        changes: 0,
+        avgIncrease: 0,
+        totalIncrease: 0,
+      };
+    }
+    
+    const increase = ((parseFloat(item.newPrice) - parseFloat(item.oldPrice)) / parseFloat(item.oldPrice)) * 100;
+    acc[month].changes += 1;
+    acc[month].totalIncrease += increase;
+    acc[month].avgIncrease = acc[month].totalIncrease / acc[month].changes;
+    
+    return acc;
+  }, {} as Record<string, any>);
 
-  const recentChanges = priceHistory
+  const ingredientChartArray = Object.values(ingredientChartData).slice(-6);
+  const productChartArray = Object.values(productChartData).slice(-6);
+
+  const recentIngredientChanges = filteredIngredientHistory
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 10);
+    .slice(0, 5);
+
+  const recentProductChanges = filteredProductHistory
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5);
+
+  // Buscar nome do ingrediente
+  const getIngredientName = (id: number | null) => {
+    if (!id) return "Ingrediente desconhecido";
+    const ingredient = ingredients.find(i => i.id === id);
+    return ingredient?.name || "Ingrediente não encontrado";
+  };
+
+  // Buscar nome do produto
+  const getProductName = (id: number | null) => {
+    if (!id) return "Produto desconhecido";
+    const product = products.find(p => p.id === id);
+    return product?.name || "Produto não encontrado";
+  };
 
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900">Histórico de Preços</h2>
-        <p className="text-gray-600 mt-2">Acompanhe a evolução dos preços de ingredientes e produtos</p>
+        <h2 className="text-3xl font-bold text-gray-900">Histórico de Alterações</h2>
+        <p className="text-gray-600 mt-2">Acompanhe a evolução dos preços de ingredientes e custos de receitas</p>
       </div>
 
-      {/* Filters */}
-      <Card className="mb-6">
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+      {/* Seção de Ingredientes */}
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-4">
+          <Package className="w-6 h-6 text-blue-600" />
+          <h3 className="text-2xl font-bold text-gray-900">Histórico de Preços de Ingredientes</h3>
+        </div>
+
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Filtrar por Ingrediente
               </label>
               <Select value={selectedIngredient} onValueChange={setSelectedIngredient}>
-                <SelectTrigger>
+                <SelectTrigger className="w-64">
                   <SelectValue placeholder="Todos os ingredientes" />
                 </SelectTrigger>
                 <SelectContent>
@@ -109,12 +146,85 @@ export default function History() {
               </Select>
             </div>
 
-            <div>
+            {/* Chart de ingredientes */}
+            {ingredientChartArray.length > 0 ? (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={ingredientChartArray}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip 
+                      formatter={(value: any) => [`${value.toFixed(1)}%`, "Variação Média"]}
+                      labelFormatter={(label) => `Mês: ${label}`}
+                    />
+                    <Bar dataKey="avgIncrease" fill="#3b82f6" name="Variação Média %" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="h-64 flex items-center justify-center text-gray-500">
+                <p>Nenhum histórico de ingredientes disponível</p>
+              </div>
+            )}
+
+            {/* Lista de alterações recentes de ingredientes */}
+            <div className="mt-6">
+              <h4 className="text-lg font-semibold mb-4">Alterações Recentes</h4>
+              <div className="space-y-3">
+                {recentIngredientChanges.map((change: PriceHistory) => (
+                  <div key={change.id} className="flex items-start space-x-4 p-4 bg-blue-50 rounded-lg">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Package className="text-blue-600 w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-gray-900 font-medium">
+                        {getIngredientName(change.ingredientId)}
+                      </p>
+                      <p className="text-gray-600 text-sm">
+                        Preço alterado de {formatCurrency(parseFloat(change.oldPrice))} para {formatCurrency(parseFloat(change.newPrice))}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {formatDate(new Date(change.createdAt))}
+                      </p>
+                    </div>
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      parseFloat(change.newPrice) > parseFloat(change.oldPrice)
+                        ? "bg-red-100 text-red-700"
+                        : "bg-green-100 text-green-700"
+                    }`}>
+                      {parseFloat(change.newPrice) > parseFloat(change.oldPrice) ? "+" : ""}
+                      {(((parseFloat(change.newPrice) - parseFloat(change.oldPrice)) / parseFloat(change.oldPrice)) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                ))}
+                
+                {recentIngredientChanges.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>Nenhuma alteração de preço de ingrediente registrada ainda.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Seção de Produtos/Receitas */}
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-4">
+          <ShoppingCart className="w-6 h-6 text-green-600" />
+          <h3 className="text-2xl font-bold text-gray-900">Histórico de Custos de Receitas</h3>
+        </div>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Filtrar por Produto
+                Filtrar por Produto/Receita
               </label>
               <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-                <SelectTrigger>
+                <SelectTrigger className="w-64">
                   <SelectValue placeholder="Todos os produtos" />
                 </SelectTrigger>
                 <SelectContent>
@@ -127,136 +237,70 @@ export default function History() {
                 </SelectContent>
               </Select>
             </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Price Changes Over Time */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Alterações de Preço por Mês</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartDataArray}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip 
-                    formatter={(value, name) => [
-                      name === 'changes' ? value : `${Number(value).toFixed(1)}%`,
-                      name === 'changes' ? 'Alterações' : 'Variação Média'
-                    ]}
-                  />
-                  <Bar dataKey="changes" fill="hsl(207, 90%, 54%)" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+            {/* Chart de produtos */}
+            {productChartArray.length > 0 ? (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={productChartArray}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip 
+                      formatter={(value: any) => [`${value.toFixed(1)}%`, "Variação Média"]}
+                      labelFormatter={(label) => `Mês: ${label}`}
+                    />
+                    <Bar dataKey="avgIncrease" fill="#10b981" name="Variação Média %" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="h-64 flex items-center justify-center text-gray-500">
+                <p>Nenhum histórico de custos de receitas disponível</p>
+              </div>
+            )}
 
-        {/* Average Price Variation */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Variação Média de Preços</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartDataArray}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis tickFormatter={(value) => `${value.toFixed(1)}%`} />
-                  <Tooltip formatter={(value) => [`${Number(value).toFixed(1)}%`, 'Variação Média']} />
-                  <Line 
-                    type="monotone" 
-                    dataKey="avgIncrease" 
-                    stroke="hsl(125, 60%, 45%)" 
-                    strokeWidth={2}
-                    dot={{ fill: "hsl(125, 60%, 45%)" }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+            {/* Lista de alterações recentes de produtos */}
+            <div className="mt-6">
+              <h4 className="text-lg font-semibold mb-4">Alterações Recentes</h4>
+              <div className="space-y-3">
+                {recentProductChanges.map((change: PriceHistory) => (
+                  <div key={change.id} className="flex items-start space-x-4 p-4 bg-green-50 rounded-lg">
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <ShoppingCart className="text-green-600 w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-gray-900 font-medium">
+                        {getProductName(change.productId)}
+                      </p>
+                      <p className="text-gray-600 text-sm">
+                        Custo alterado de {formatCurrency(parseFloat(change.oldPrice))} para {formatCurrency(parseFloat(change.newPrice))}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {formatDate(new Date(change.createdAt))}
+                      </p>
+                    </div>
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      parseFloat(change.newPrice) > parseFloat(change.oldPrice)
+                        ? "bg-red-100 text-red-700"
+                        : "bg-green-100 text-green-700"
+                    }`}>
+                      {parseFloat(change.newPrice) > parseFloat(change.oldPrice) ? "+" : ""}
+                      {(((parseFloat(change.newPrice) - parseFloat(change.oldPrice)) / parseFloat(change.oldPrice)) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                ))}
+                
+                {recentProductChanges.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>Nenhuma alteração de custo de receita registrada ainda.</p>
+                  </div>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Recent Changes */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <HistoryIcon className="w-5 h-5" />
-            <span>Alterações Recentes</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {recentChanges.map((change) => {
-              const percentChange = ((parseFloat(change.newPrice) - parseFloat(change.oldPrice)) / parseFloat(change.oldPrice)) * 100;
-              const isIncrease = percentChange > 0;
-              
-              const ingredient = change.ingredientId ? 
-                ingredients.find(i => i.id === change.ingredientId) : null;
-              const product = change.productId ? 
-                products.find(p => p.id === change.productId) : null;
-
-              return (
-                <div key={change.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    isIncrease ? 'bg-red-100' : 'bg-green-100'
-                  }`}>
-                    {isIncrease ? (
-                      <TrendingUp className="text-red-600 w-5 h-5" />
-                    ) : (
-                      <TrendingDown className="text-green-600 w-5 h-5" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-gray-900">
-                      <span className="font-medium">
-                        {ingredient?.name || product?.name || 'Item'}
-                      </span>{" "}
-                      teve preço {isIncrease ? 'aumentado' : 'reduzido'} de{" "}
-                      <span className="font-medium">{formatCurrency(parseFloat(change.oldPrice))}</span>{" "}
-                      para{" "}
-                      <span className="font-medium">{formatCurrency(parseFloat(change.newPrice))}</span>
-                    </p>
-                    {change.changeReason && (
-                      <p className="text-sm text-gray-500 mt-1">
-                        Motivo: {change.changeReason}
-                      </p>
-                    )}
-                    <p className="text-xs text-gray-400 mt-2">
-                      {formatDate(new Date(change.createdAt))}
-                    </p>
-                  </div>
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    isIncrease 
-                      ? 'bg-red-100 text-red-700' 
-                      : 'bg-green-100 text-green-700'
-                  }`}>
-                    {isIncrease ? '+' : ''}{percentChange.toFixed(1)}%
-                  </span>
-                </div>
-              );
-            })}
-
-            {recentChanges.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                <HistoryIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p>Nenhuma alteração de preço registrada ainda.</p>
-                <p className="text-sm mt-2">
-                  Quando você atualizar preços de ingredientes, eles aparecerão aqui.
-                </p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
