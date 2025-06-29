@@ -192,9 +192,9 @@ export class MemStorage implements IStorage {
       { productId: 9, ingredientId: 6, productIngredientId: null, quantity: "6", unit: "unidade" }, // Ovos
 
       // Beijinho Gourmet (Product ID 10) - Alta lucratividade
-      { productId: 10, ingredientId: 2, productIngredientId: null, quantity: "0.395", unit: "kg" }, // Leite Condensado
-      { productId: 10, ingredientId: 5, productIngredientId: null, quantity: "0.05", unit: "kg" }, // Manteiga
-      { productId: 10, ingredientId: 4, productIngredientId: null, quantity: "0.1", unit: "kg" }, // Açúcar (para finalizar)
+      { productId: 10, ingredientId: 2, productIngredientId: null, quantity: "0.1", unit: "kg" }, // Leite Condensado
+      { productId: 10, ingredientId: 5, productIngredientId: null, quantity: "0.02", unit: "kg" }, // Manteiga
+      { productId: 10, ingredientId: 4, productIngredientId: null, quantity: "0.03", unit: "kg" }, // Açúcar (para finalizar)
     ];
 
     sampleRecipes.forEach((recipe) => {
