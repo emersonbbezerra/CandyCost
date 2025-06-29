@@ -339,7 +339,21 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Selecione um ingrediente" />
+                                  <SelectValue 
+                                    placeholder="Selecione um ingrediente"
+                                  >
+                                    {(() => {
+                                      const recipe = form.watch(`recipes.${index}`);
+                                      if (recipe?.productIngredientId) {
+                                        const productIngredient = availableProductIngredients.find(p => p.id === recipe.productIngredientId);
+                                        return productIngredient ? `${productIngredient.name} (Produto)` : "Produto não encontrado";
+                                      } else if (recipe?.ingredientId) {
+                                        const ingredient = ingredients.find(i => i.id === recipe.ingredientId);
+                                        return ingredient ? ingredient.name : "Ingrediente não encontrado";
+                                      }
+                                      return "Selecione um ingrediente";
+                                    })()}
+                                  </SelectValue>
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
