@@ -1,7 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { 
   TrendingUp, 
@@ -11,7 +14,11 @@ import {
   Download,
   DollarSign,
   Package,
-  Calculator
+  Calculator,
+  Search,
+  SortAsc,
+  SortDesc,
+  Filter
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import type { Ingredient, Product, ProductCost } from "@shared/schema";
@@ -40,6 +47,13 @@ interface ReportsData {
 }
 
 export default function Reports() {
+  // Estados para filtros
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [sortBy, setSortBy] = useState<"name" | "profitMargin" | "cost">("profitMargin");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [profitabilityFilter, setProfitabilityFilter] = useState("all");
+
   const { data: ingredients = [] } = useQuery<Ingredient[]>({
     queryKey: ["/api/ingredients"],
   });
@@ -52,6 +66,59 @@ export default function Reports() {
     queryKey: ["/api/reports"],
     enabled: products.length > 0
   });
+
+  // Obter categorias únicas dos produtos
+  const categories = useMemo(() => {
+    const categorySet = new Set(products.map(p => p.category));
+    const uniqueCategories = Array.from(categorySet);
+    return uniqueCategories.sort();
+  }, [products]);
+
+  // Filtrar e ordenar dados de lucratividade
+  const filteredProfitabilityData = useMemo(() => {
+    if (!reportsData?.profitabilityAnalysis) return [];
+
+    let filtered = reportsData.profitabilityAnalysis.filter(item => {
+      // Filtro por nome
+      const matchesSearch = item.product.name.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Filtro por categoria
+      const matchesCategory = categoryFilter === "all" || item.product.category === categoryFilter;
+      
+      // Filtro por lucratividade
+      let matchesProfitability = true;
+      if (profitabilityFilter === "high") {
+        matchesProfitability = item.profitMargin > 50;
+      } else if (profitabilityFilter === "medium") {
+        matchesProfitability = item.profitMargin >= 30 && item.profitMargin <= 50;
+      } else if (profitabilityFilter === "low") {
+        matchesProfitability = item.profitMargin < 30;
+      }
+
+      return matchesSearch && matchesCategory && matchesProfitability;
+    });
+
+    // Ordenação
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case "name":
+          comparison = a.product.name.localeCompare(b.product.name);
+          break;
+        case "profitMargin":
+          comparison = a.profitMargin - b.profitMargin;
+          break;
+        case "cost":
+          comparison = a.cost.totalCost - b.cost.totalCost;
+          break;
+      }
+
+      return sortOrder === "asc" ? comparison : -comparison;
+    });
+
+    return filtered;
+  }, [reportsData?.profitabilityAnalysis, searchTerm, categoryFilter, sortBy, sortOrder, profitabilityFilter]);
 
   const handleExportReport = () => {
     // Implementar exportação futura
@@ -90,16 +157,73 @@ export default function Reports() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Análise de Lucratividade */}
-        <Card>
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center">
               <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
               Análise de Lucratividade
             </CardTitle>
+            
+            {/* Filtros */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                <Input
+                  placeholder="Buscar produto..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger>
+                  <Filter className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as categorias</SelectItem>
+                  {categories.map(category => (
+                    <SelectItem key={category} value={category}>{category}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={profitabilityFilter} onValueChange={setProfitabilityFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Lucratividade" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="high">Alta (acima de 50%)</SelectItem>
+                  <SelectItem value="medium">Média (30-50%)</SelectItem>
+                  <SelectItem value="low">Baixa (abaixo de 30%)</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={`${sortBy}-${sortOrder}`} onValueChange={(value) => {
+                const [newSortBy, newSortOrder] = value.split('-') as [typeof sortBy, typeof sortOrder];
+                setSortBy(newSortBy);
+                setSortOrder(newSortOrder);
+              }}>
+                <SelectTrigger>
+                  {sortOrder === "asc" ? <SortAsc className="w-4 h-4 mr-2" /> : <SortDesc className="w-4 h-4 mr-2" />}
+                  <SelectValue placeholder="Ordenar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="profitMargin-desc">Lucratividade ↓</SelectItem>
+                  <SelectItem value="profitMargin-asc">Lucratividade ↑</SelectItem>
+                  <SelectItem value="name-asc">Nome A-Z</SelectItem>
+                  <SelectItem value="name-desc">Nome Z-A</SelectItem>
+                  <SelectItem value="cost-desc">Custo ↓</SelectItem>
+                  <SelectItem value="cost-asc">Custo ↑</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {reportsData?.profitabilityAnalysis.slice(0, 5).map(({ product, cost, profitMargin }) => (
+              {filteredProfitabilityData.slice(0, 5).map(({ product, cost, profitMargin }) => (
                 <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
                     <p className="font-medium">{product.name}</p>
@@ -128,6 +252,9 @@ export default function Reports() {
                   </div>
                 </div>
               ))}
+              {filteredProfitabilityData.length === 0 && (
+                <p className="text-gray-500 text-center py-4">Nenhum produto encontrado com os filtros aplicados.</p>
+              )}
             </div>
           </CardContent>
         </Card>
