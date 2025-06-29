@@ -236,7 +236,10 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {priceHistory.slice(0, 5).map((history: PriceHistory) => (
+              {priceHistory
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                .slice(0, 5)
+                .map((history: PriceHistory) => (
                 <div key={history.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
                   <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                     <TrendingUp className="text-blue-600 w-5 h-5" />

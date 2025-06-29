@@ -19,11 +19,34 @@ export default function History() {
     queryKey: ["/api/products"],
   });
 
-  const { data: priceHistory = [] } = useQuery<PriceHistory[]>({
-    queryKey: ["/api/price-history", { 
-      ingredientId: selectedIngredient !== "all" ? selectedIngredient : undefined,
-      productId: selectedProduct !== "all" ? selectedProduct : undefined 
-    }],
+  // Carregar todos os dados de histórico inicialmente
+  const { data: allPriceHistory = [] } = useQuery<PriceHistory[]>({
+    queryKey: ["/api/price-history"],
+  });
+
+  // Filtrar dados baseado na seleção do usuário
+  const priceHistory = allPriceHistory.filter(item => {
+    const matchesIngredient = selectedIngredient === "all" || 
+      (item.ingredientId && item.ingredientId.toString() === selectedIngredient);
+    const matchesProduct = selectedProduct === "all" || 
+      (item.productId && item.productId.toString() === selectedProduct);
+    
+    // Se ambos filtros são "all", mostrar tudo
+    if (selectedIngredient === "all" && selectedProduct === "all") {
+      return true;
+    }
+    
+    // Se apenas um filtro está selecionado, verificar apenas esse
+    if (selectedIngredient !== "all" && selectedProduct === "all") {
+      return matchesIngredient;
+    }
+    
+    if (selectedProduct !== "all" && selectedIngredient === "all") {
+      return matchesProduct;
+    }
+    
+    // Se ambos filtros estão selecionados, ambos devem corresponder
+    return matchesIngredient && matchesProduct;
   });
 
   // Group price history by month for chart
@@ -52,7 +75,9 @@ export default function History() {
 
   const chartDataArray = Object.values(chartData).slice(-6);
 
-  const recentChanges = priceHistory.slice(0, 10);
+  const recentChanges = priceHistory
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 10);
 
   return (
     <div className="p-8">
