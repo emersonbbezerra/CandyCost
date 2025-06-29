@@ -46,11 +46,14 @@ export default function Products() {
 
   const handleEdit = async (product: ProductWithCost) => {
     try {
+      console.log("Editando produto:", product);
       const response = await apiRequest("GET", `/api/products/${product.id}`);
       const productWithRecipes = await response.json();
+      console.log("Produto carregado do servidor:", productWithRecipes);
       setEditingProduct(productWithRecipes);
       setIsFormOpen(true);
     } catch (error) {
+      console.error("Erro ao carregar produto:", error);
       toast({
         title: "Erro",
         description: "Erro ao carregar dados do produto.",

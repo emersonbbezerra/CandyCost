@@ -1,6 +1,7 @@
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,6 +62,37 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
     control: form.control,
     name: "recipes",
   });
+
+  // Atualizar formulário quando o produto muda
+  useEffect(() => {
+    console.log("ProductForm useEffect - produto recebido:", product);
+    if (product) {
+      const formData = {
+        name: product.name || "",
+        category: product.category || "",
+        description: product.description || "",
+        isAlsoIngredient: product.isAlsoIngredient || false,
+        marginPercentage: product.marginPercentage || "60",
+        recipes: product.recipes?.map((r) => ({
+          ingredientId: r.ingredientId,
+          productIngredientId: r.productIngredientId,
+          quantity: r.quantity,
+          unit: r.unit,
+        })) || [],
+      };
+      console.log("Dados do formulário a serem aplicados:", formData);
+      form.reset(formData);
+    } else {
+      form.reset({
+        name: "",
+        category: "",
+        description: "",
+        isAlsoIngredient: false,
+        marginPercentage: "60",
+        recipes: [],
+      });
+    }
+  }, [product, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: z.infer<typeof productSchema>) => {
@@ -135,12 +167,15 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-screen overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-screen overflow-y-auto" aria-describedby="product-form-description">
         <DialogHeader>
           <DialogTitle>
             {product ? "Editar Produto" : "Novo Produto"}
           </DialogTitle>
         </DialogHeader>
+        <div id="product-form-description" className="sr-only">
+          Formulário para {product ? "editar" : "criar"} produto com informações básicas e receitas
+        </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -181,7 +216,12 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                 <FormItem>
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Descrição do produto..." {...field} />
+                    <Textarea 
+                      placeholder="Descrição do produto..." 
+                      {...field} 
+                      onChange={field.onChange}
+                      value={field.value || ""} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
