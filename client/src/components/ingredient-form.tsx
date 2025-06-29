@@ -8,26 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { insertIngredientSchema, type Ingredient } from "@shared/schema";
+import { INGREDIENT_CATEGORIES, UNITS } from "@shared/constants";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-
-const categories = [
-  { value: "Laticínios", label: "Laticínios" },
-  { value: "Farinhas", label: "Farinhas" },
-  { value: "Açúcares", label: "Açúcares" },
-  { value: "Chocolates", label: "Chocolates" },
-  { value: "Frutas", label: "Frutas" },
-  { value: "Outros", label: "Outros" },
-];
-
-const units = [
-  { value: "kg", label: "kg" },
-  { value: "g", label: "g" },
-  { value: "l", label: "L" },
-  { value: "ml", label: "mL" },
-  { value: "unidade", label: "Unidade" },
-];
+import { useEffect } from "react";
 
 interface IngredientFormProps {
   open: boolean;
@@ -42,14 +27,37 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
   const form = useForm<z.infer<typeof insertIngredientSchema>>({
     resolver: zodResolver(insertIngredientSchema),
     defaultValues: {
-      name: ingredient?.name || "",
-      category: ingredient?.category || "",
-      quantity: ingredient?.quantity || "",
-      unit: ingredient?.unit || "",
-      price: ingredient?.price || "",
-      brand: ingredient?.brand || "",
+      name: "",
+      category: "",
+      quantity: "",
+      unit: "",
+      price: "",
+      brand: "",
     },
   });
+
+  // Atualizar formulário quando o ingrediente muda
+  useEffect(() => {
+    if (ingredient) {
+      form.reset({
+        name: ingredient.name || "",
+        category: ingredient.category || "",
+        quantity: ingredient.quantity || "",
+        unit: ingredient.unit || "",
+        price: ingredient.price || "",
+        brand: ingredient.brand || "",
+      });
+    } else {
+      form.reset({
+        name: "",
+        category: "",
+        quantity: "",
+        unit: "",
+        price: "",
+        brand: "",
+      });
+    }
+  }, [ingredient, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: z.infer<typeof insertIngredientSchema>) => {
@@ -152,7 +160,7 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {categories.map((category) => (
+                      {INGREDIENT_CATEGORIES.map((category) => (
                         <SelectItem key={category.value} value={category.value}>
                           {category.label}
                         </SelectItem>
@@ -192,7 +200,7 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {units.map((unit) => (
+                        {UNITS.map((unit) => (
                           <SelectItem key={unit.value} value={unit.value}>
                             {unit.label}
                           </SelectItem>
@@ -226,7 +234,12 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
                 <FormItem>
                   <FormLabel>Marca/Fornecedor</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: Marca Premium" {...field} />
+                    <Input 
+                      placeholder="Ex: Marca Premium" 
+                      {...field} 
+                      onChange={field.onChange}
+                      value={field.value || ""} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

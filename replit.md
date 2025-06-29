@@ -27,11 +27,22 @@ Sistema completo de gestão de custos para confeitaria desenvolvido com React + 
 - **29/06/2025**: Implementado seletor de produto específico na evolução de custos do dashboard
 - **29/06/2025**: Corrigidos erros de validação no sidebar (Link aninhado) e query duplicada no histórico
 - **29/06/2025**: Adicionada linha de preço sugerido no gráfico quando produto específico é selecionado
+- **29/06/2025**: Corrigido formulário de edição de produtos - dados agora carregam corretamente
+- **29/06/2025**: Removido campo "Produto" desnecessário da seção receitas no formulário de produtos
+- **29/06/2025**: Implementados selects padronizados para categorias de produtos/ingredientes e unidades
+- **29/06/2025**: Melhorado layout da seção receitas com tamanhos proporcionais e ícone menor na lixeira
+- **29/06/2025**: Criado arquivo de constantes compartilhadas para categorias e unidades
+
+## Melhorias de Interface
+- **Selects Padronizados**: Categorias de produtos, ingredientes e unidades agora usam listas predefinidas
+- **Layout Responsivo**: Seção de receitas com grid de 12 colunas para melhor distribuição
+- **Validação Aprimorada**: Formulários com validação consistente e carregamento correto de dados
 
 ## Preferências do Usuário
 - **Idioma**: Português (sempre responder em português)
 - **Foco**: Gestão prática de custos de confeitaria
 - **Interface**: Simples e intuitiva para uso por confeiteiros
+- **Layout**: Campos maiores para seleção, ícones menores, selects ao invés de inputs livres
 
 ## Estado Atual
-Sistema funcionando corretamente com dados de exemplo. Dashboard agora permite visualizar evolução de custos tanto geral quanto por produto específico, atendendo à solicitação do usuário para melhor identificação da evolução por produto.
+Sistema funcionando corretamente com formulários de edição operacionais. Implementadas melhorias de usabilidade solicitadas incluindo selects padronizados, layout melhorado da seção receitas e correção do carregamento de dados para edição.

@@ -58,6 +58,9 @@ export const insertProductSchema = createInsertSchema(products).omit({
 
 export const insertRecipeSchema = createInsertSchema(recipes).omit({
   id: true,
+}).extend({
+  ingredientId: z.number().nullable(),
+  productIngredientId: z.number().nullable(),
 });
 
 export const insertPriceHistorySchema = createInsertSchema(priceHistory).omit({

@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Trash2 } from "lucide-react";
 import { insertProductSchema, insertRecipeSchema, type Product, type Ingredient } from "@shared/schema";
+import { PRODUCT_CATEGORIES, INGREDIENT_CATEGORIES, UNITS } from "@shared/constants";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -203,9 +204,23 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Categoria</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ex: Tortas" {...field} />
-                    </FormControl>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      value={field.value || ""}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma categoria" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {PRODUCT_CATEGORIES.map((category) => (
+                          <SelectItem key={category.value} value={category.value}>
+                            {category.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -278,7 +293,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => append({ ingredientId: null, productIngredientId: null, quantity: "", unit: "" })}
+                    onClick={() => append({ ingredientId: null, productIngredientId: null, quantity: "", unit: "kg" })}
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Adicionar Ingrediente
@@ -287,74 +302,97 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
               </CardHeader>
               <CardContent className="space-y-4">
                 {fields.map((field, index) => (
-                  <div key={field.id} className="grid grid-cols-4 gap-2 items-end">
-                    <FormField
-                      control={form.control}
-                      name={`recipes.${index}.ingredientId`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Ingrediente</FormLabel>
-                          <Select 
-                            onValueChange={(value) => {
-                              field.onChange(value === "null" ? null : parseInt(value));
-                            }} 
-                            value={field.value?.toString() || ""}
-                          >
+                  <div key={field.id} className="grid grid-cols-12 gap-3 items-end">
+                    <div className="col-span-5">
+                      <FormField
+                        control={form.control}
+                        name={`recipes.${index}.ingredientId`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Ingrediente</FormLabel>
+                            <Select 
+                              onValueChange={(value) => {
+                                field.onChange(value === "null" ? null : parseInt(value));
+                              }} 
+                              value={field.value?.toString() || ""}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione um ingrediente" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="null">Selecione...</SelectItem>
+                                {ingredients.map((ingredient) => (
+                                  <SelectItem key={ingredient.id} value={ingredient.id.toString()}>
+                                    {ingredient.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="col-span-3">
+                      <FormField
+                        control={form.control}
+                        name={`recipes.${index}.quantity`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Quantidade</FormLabel>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Ingrediente" />
-                              </SelectTrigger>
+                              <Input type="number" step="0.001" placeholder="0.5" {...field} />
                             </FormControl>
-                            <SelectContent>
-                              <SelectItem value="null">Selecione...</SelectItem>
-                              {ingredients.map((ingredient) => (
-                                <SelectItem key={ingredient.id} value={ingredient.id.toString()}>
-                                  {ingredient.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
-                    <FormField
-                      control={form.control}
-                      name={`recipes.${index}.quantity`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Quantidade</FormLabel>
-                          <FormControl>
-                            <Input type="number" step="0.001" placeholder="0.5" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="col-span-3">
+                      <FormField
+                        control={form.control}
+                        name={`recipes.${index}.unit`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Unidade</FormLabel>
+                            <Select 
+                              onValueChange={field.onChange} 
+                              value={field.value || ""}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Unidade" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {UNITS.map((unit) => (
+                                  <SelectItem key={unit.value} value={unit.value}>
+                                    {unit.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
-                    <FormField
-                      control={form.control}
-                      name={`recipes.${index}.unit`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Unidade</FormLabel>
-                          <FormControl>
-                            <Input placeholder="kg" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => remove(index)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="col-span-1 flex justify-center">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => remove(index)}
+                        className="h-9 w-9 p-0"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </CardContent>
