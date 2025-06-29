@@ -6,7 +6,8 @@ import {
   FileText, 
   Sprout, 
   ChefHat,
-  Calculator
+  Calculator,
+  TrendingUp
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +16,7 @@ const navigation = [
   { name: "Ingredientes", href: "/ingredients", icon: Sprout },
   { name: "Receitas", href: "/products", icon: ChefHat },
   { name: "Histórico de Preços", href: "/history", icon: History },
+  { name: "Histórico de Custos", href: "/costs-history", icon: TrendingUp },
   { name: "Relatórios", href: "/reports", icon: FileText },
 ];
 

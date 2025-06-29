@@ -44,6 +44,7 @@ export interface IStorage {
 
   // Cost Calculations
   calculateProductCost(productId: number): Promise<ProductCost>;
+  calculateProductCostAtPrice(productId: number, ingredientId: number, ingredientPrice: string): Promise<ProductCost>;
   getProductsUsingIngredient(ingredientId: number): Promise<number[]>;
   getProductsUsingProduct(productIngredientId: number): Promise<number[]>;
 }
@@ -248,6 +249,23 @@ export class MemStorage implements IStorage {
         newPrice: ingredient.price,
         changeReason: "Atualização manual",
       });
+
+      // Update costs for all products that use this ingredient
+      const affectedProductIds = await this.getProductsUsingIngredient(id);
+      for (const productId of affectedProductIds) {
+        // Calculate old and new costs for the product
+        const oldCost = await this.calculateProductCostAtPrice(productId, id, oldPrice);
+        const newCost = await this.calculateProductCost(productId);
+        
+        // Record product cost history
+        await this.createPriceHistory({
+          ingredientId: null,
+          productId: productId,
+          oldPrice: oldCost.totalCost.toString(),
+          newPrice: newCost.totalCost.toString(),
+          changeReason: `Alteração no preço do ingrediente: ${existing.name}`,
+        });
+      }
     }
 
     return updated;
@@ -454,6 +472,46 @@ export class MemStorage implements IStorage {
     }
 
     return Array.from(productIds);
+  }
+
+  async calculateProductCostAtPrice(productId: number, ingredientId: number, ingredientPrice: string): Promise<ProductCost> {
+    const recipes = await this.getRecipesByProduct(productId);
+    let totalCost = 0;
+
+    for (const recipe of recipes) {
+      if (recipe.ingredientId) {
+        let ingredientPrice_: string;
+        
+        // Use the specific price for the changed ingredient, or current price for others
+        if (recipe.ingredientId === ingredientId) {
+          ingredientPrice_ = ingredientPrice;
+        } else {
+          const ingredient = this.ingredients.get(recipe.ingredientId);
+          ingredientPrice_ = ingredient?.price || "0";
+        }
+        
+        const ingredientCost = parseFloat(ingredientPrice_);
+        const quantity = parseFloat(recipe.quantity);
+        totalCost += ingredientCost * quantity;
+      } else if (recipe.productIngredientId) {
+        // For product ingredients, calculate their cost recursively
+        const productIngredientCost = await this.calculateProductCostAtPrice(recipe.productIngredientId, ingredientId, ingredientPrice);
+        const quantity = parseFloat(recipe.quantity);
+        totalCost += productIngredientCost.totalCost * quantity;
+      }
+    }
+
+    const product = this.products.get(productId);
+    const marginPercentage = parseFloat(product?.marginPercentage || "60");
+    const margin = marginPercentage / 100;
+    const suggestedPrice = totalCost * (1 + margin);
+
+    return {
+      productId,
+      totalCost,
+      suggestedPrice,
+      margin: marginPercentage,
+    };
   }
 }
 

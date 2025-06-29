@@ -24,6 +24,12 @@ Sistema completo de gestão de custos para confeitaria desenvolvido com React + 
 - **Evolução por Produto**: Dashboard permite escolher produto específico para ver evolução de custos
 
 ## Alterações Recentes
+- **29/06/2025**: Criada página dedicada "Histórico de Custos" com registro automático de alterações:
+  - Novo menu "Histórico de Custos" na sidebar (ícone TrendingUp)
+  - Sistema automático registra mudanças nos custos quando ingredientes são alterados
+  - Gráfico de evolução dos custos por mês para produtos/receitas
+  - Lista detalhada com motivos das alterações automáticas
+- **29/06/2025**: Implementado método calculateProductCostAtPrice para cálculo histórico de custos
 - **29/06/2025**: Reestruturação completa da página de Histórico - separada em duas seções distintas:
   - Histórico de Preços de Ingredientes (azul, ícone Package)
   - Histórico de Custos de Receitas (verde, ícone ShoppingCart)
