@@ -119,6 +119,9 @@ export class MemStorage implements IStorage {
       { name: "Açaí na Tigela Premium", category: "Gelados", description: "Açaí com granola, frutas e mel", isAlsoIngredient: false, marginPercentage: "25" },
       { name: "Brownie com Nozes", category: "Doces", description: "Brownie denso com nozes caramelizadas", isAlsoIngredient: false, marginPercentage: "20" },
       { name: "Torta Holandesa", category: "Tortas", description: "Torta com creme e chocolate premium", isAlsoIngredient: false, marginPercentage: "15" },
+      
+      // Alta lucratividade adicional para teste
+      { name: "Beijinho Gourmet", category: "Doces", description: "Beijinho artesanal com coco premium", isAlsoIngredient: false, marginPercentage: "75" },
     ];
 
     sampleProducts.forEach((product) => {
@@ -187,6 +190,11 @@ export class MemStorage implements IStorage {
       { productId: 9, ingredientId: 7, productIngredientId: null, quantity: "0.3", unit: "kg" }, // Creme de Leite
       { productId: 9, ingredientId: 14, productIngredientId: null, quantity: "0.2", unit: "kg" }, // Nozes
       { productId: 9, ingredientId: 6, productIngredientId: null, quantity: "6", unit: "unidade" }, // Ovos
+
+      // Beijinho Gourmet (Product ID 10) - Alta lucratividade
+      { productId: 10, ingredientId: 2, productIngredientId: null, quantity: "0.395", unit: "kg" }, // Leite Condensado
+      { productId: 10, ingredientId: 5, productIngredientId: null, quantity: "0.05", unit: "kg" }, // Manteiga
+      { productId: 10, ingredientId: 4, productIngredientId: null, quantity: "0.1", unit: "kg" }, // Açúcar (para finalizar)
     ];
 
     sampleRecipes.forEach((recipe) => {
