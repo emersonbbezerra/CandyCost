@@ -238,12 +238,12 @@ export default function Reports() {
                   <SelectValue placeholder="Ordenar" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="profitMargin-desc">Lucratividade ↓</SelectItem>
-                  <SelectItem value="profitMargin-asc">Lucratividade ↑</SelectItem>
+                  <SelectItem value="profitMargin-desc">Maior Lucratividade</SelectItem>
+                  <SelectItem value="profitMargin-asc">Menor Lucratividade</SelectItem>
                   <SelectItem value="name-asc">Nome A-Z</SelectItem>
                   <SelectItem value="name-desc">Nome Z-A</SelectItem>
-                  <SelectItem value="cost-desc">Custo ↓</SelectItem>
-                  <SelectItem value="cost-asc">Custo ↑</SelectItem>
+                  <SelectItem value="cost-asc">Menor Custo</SelectItem>
+                  <SelectItem value="cost-desc">Maior Custo</SelectItem>
                 </SelectContent>
               </Select>
             </div>
