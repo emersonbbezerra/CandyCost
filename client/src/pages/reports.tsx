@@ -47,7 +47,7 @@ interface ReportsData {
 }
 
 export default function Reports() {
-  // Estados para filtros
+  // Estados para filtros da análise de lucratividade
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"name" | "profitMargin" | "cost">("profitMargin");
@@ -55,6 +55,14 @@ export default function Reports() {
   const [profitabilityFilter, setProfitabilityFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  // Estados para filtros dos ingredientes críticos
+  const [criticalSearchTerm, setCriticalSearchTerm] = useState("");
+  const [criticalCategoryFilter, setCriticalCategoryFilter] = useState("all");
+  const [criticalSortBy, setCriticalSortBy] = useState<"name" | "totalImpact" | "usageCount">("totalImpact");
+  const [criticalSortOrder, setCriticalSortOrder] = useState<"asc" | "desc">("desc");
+  const [criticalCurrentPage, setCriticalCurrentPage] = useState(1);
+  const criticalItemsPerPage = 5;
 
   const { data: ingredients = [] } = useQuery<Ingredient[]>({
     queryKey: ["/api/ingredients"],
@@ -131,6 +139,59 @@ export default function Reports() {
 
   // Calcular total de páginas
   const totalPages = Math.ceil(filteredProfitabilityData.length / itemsPerPage);
+
+  // Obter categorias únicas dos ingredientes
+  const ingredientCategories = useMemo(() => {
+    const categorySet = new Set(ingredients.map(i => i.category));
+    const uniqueCategories = Array.from(categorySet);
+    return uniqueCategories.sort();
+  }, [ingredients]);
+
+  // Filtrar e ordenar dados de ingredientes críticos
+  const filteredCriticalIngredients = useMemo(() => {
+    if (!reportsData?.criticalIngredients) return [];
+
+    let filtered = reportsData.criticalIngredients.filter(item => {
+      // Filtro por nome
+      const matchesSearch = item.ingredient.name.toLowerCase().includes(criticalSearchTerm.toLowerCase());
+      
+      // Filtro por categoria
+      const matchesCategory = criticalCategoryFilter === "all" || item.ingredient.category === criticalCategoryFilter;
+
+      return matchesSearch && matchesCategory;
+    });
+
+    // Ordenação
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (criticalSortBy) {
+        case "name":
+          comparison = a.ingredient.name.localeCompare(b.ingredient.name);
+          break;
+        case "totalImpact":
+          comparison = a.totalImpact - b.totalImpact;
+          break;
+        case "usageCount":
+          comparison = a.usageCount - b.usageCount;
+          break;
+      }
+
+      return criticalSortOrder === "asc" ? comparison : -comparison;
+    });
+
+    return filtered;
+  }, [reportsData?.criticalIngredients, criticalSearchTerm, criticalCategoryFilter, criticalSortBy, criticalSortOrder]);
+
+  // Calcular dados paginados para ingredientes críticos
+  const criticalPaginatedData = useMemo(() => {
+    const startIndex = (criticalCurrentPage - 1) * criticalItemsPerPage;
+    const endIndex = startIndex + criticalItemsPerPage;
+    return filteredCriticalIngredients.slice(startIndex, endIndex);
+  }, [filteredCriticalIngredients, criticalCurrentPage, criticalItemsPerPage]);
+
+  // Calcular total de páginas para ingredientes críticos
+  const criticalTotalPages = Math.ceil(filteredCriticalIngredients.length / criticalItemsPerPage);
 
   // Reset página quando filtros mudam
   const resetFilters = () => {
@@ -348,14 +409,64 @@ export default function Reports() {
               <AlertTriangle className="w-5 h-5 mr-2 text-orange-600" />
               Ingredientes Críticos
             </CardTitle>
+            
+            {/* Filtros para Ingredientes Críticos */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+              <Input
+                placeholder="Buscar ingrediente..."
+                value={criticalSearchTerm}
+                onChange={(e) => {
+                  setCriticalSearchTerm(e.target.value);
+                  setCriticalCurrentPage(1);
+                }}
+                className="w-full"
+              />
+              
+              <Select value={criticalCategoryFilter} onValueChange={(value) => {
+                setCriticalCategoryFilter(value);
+                setCriticalCurrentPage(1);
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as categorias</SelectItem>
+                  {ingredientCategories.map(category => (
+                    <SelectItem key={category} value={category}>{category}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={`${criticalSortBy}-${criticalSortOrder}`} onValueChange={(value) => {
+                const [newSortBy, newSortOrder] = value.split('-') as [typeof criticalSortBy, typeof criticalSortOrder];
+                setCriticalSortBy(newSortBy);
+                setCriticalSortOrder(newSortOrder);
+                setCriticalCurrentPage(1);
+              }}>
+                <SelectTrigger>
+                  {criticalSortOrder === "asc" ? <SortAsc className="w-4 h-4 mr-2" /> : <SortDesc className="w-4 h-4 mr-2" />}
+                  <SelectValue placeholder="Ordenar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="totalImpact-desc">Maior Impacto</SelectItem>
+                  <SelectItem value="totalImpact-asc">Menor Impacto</SelectItem>
+                  <SelectItem value="usageCount-desc">Mais Usado</SelectItem>
+                  <SelectItem value="usageCount-asc">Menos Usado</SelectItem>
+                  <SelectItem value="name-asc">Nome A-Z</SelectItem>
+                  <SelectItem value="name-desc">Nome Z-A</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {reportsData?.criticalIngredients.slice(0, 5).map(({ ingredient, usageCount, totalImpact }) => (
+              {criticalPaginatedData.map(({ ingredient, usageCount, totalImpact }) => (
                 <div key={ingredient.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
                     <p className="font-medium">{ingredient.name}</p>
-                    <p className="text-sm text-gray-600">Usado em {usageCount} receita{usageCount !== 1 ? 's' : ''}</p>
+                    <p className="text-sm text-gray-600">
+                      {ingredient.category} • Usado em {usageCount} receita{usageCount !== 1 ? 's' : ''}
+                    </p>
                   </div>
                   <div className="text-right">
                     <p className="font-medium">{formatCurrency(totalImpact)}</p>
@@ -363,7 +474,65 @@ export default function Reports() {
                   </div>
                 </div>
               ))}
+              {filteredCriticalIngredients.length === 0 && (
+                <p className="text-gray-500 text-center py-4">Nenhum ingrediente encontrado com os filtros aplicados.</p>
+              )}
             </div>
+            
+            {/* Paginação para Ingredientes Críticos */}
+            {criticalTotalPages > 1 && (
+              <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                <div className="text-sm text-gray-600">
+                  Mostrando {((criticalCurrentPage - 1) * criticalItemsPerPage) + 1} a {Math.min(criticalCurrentPage * criticalItemsPerPage, filteredCriticalIngredients.length)} de {filteredCriticalIngredients.length} ingredientes
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCriticalCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={criticalCurrentPage === 1}
+                  >
+                    Anterior
+                  </Button>
+                  
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: Math.min(5, criticalTotalPages) }, (_, i) => {
+                      let pageNumber;
+                      if (criticalTotalPages <= 5) {
+                        pageNumber = i + 1;
+                      } else if (criticalCurrentPage <= 3) {
+                        pageNumber = i + 1;
+                      } else if (criticalCurrentPage >= criticalTotalPages - 2) {
+                        pageNumber = criticalTotalPages - 4 + i;
+                      } else {
+                        pageNumber = criticalCurrentPage - 2 + i;
+                      }
+                      
+                      return (
+                        <Button
+                          key={pageNumber}
+                          variant={criticalCurrentPage === pageNumber ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCriticalCurrentPage(pageNumber)}
+                          className="w-8 h-8 p-0"
+                        >
+                          {pageNumber}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCriticalCurrentPage(prev => Math.min(prev + 1, criticalTotalPages))}
+                    disabled={criticalCurrentPage === criticalTotalPages}
+                  >
+                    Próxima
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
