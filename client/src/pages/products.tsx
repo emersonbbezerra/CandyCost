@@ -45,6 +45,7 @@ export default function Products() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
       toast({
         title: "Sucesso",
         description: "Produto excluído com sucesso!",

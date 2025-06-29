@@ -92,6 +92,7 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
       queryClient.invalidateQueries({ queryKey: ["/api/ingredients"] });
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
       
       const affectedCount = result.affectedProducts?.length || 0;
       toast({

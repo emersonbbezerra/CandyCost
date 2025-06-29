@@ -43,6 +43,7 @@ export default function Ingredients() {
       queryClient.invalidateQueries({ queryKey: ["/api/ingredients"] });
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
       toast({
         title: "Sucesso",
         description: "Ingrediente excluído com sucesso!",
