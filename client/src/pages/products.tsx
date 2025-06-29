@@ -23,6 +23,21 @@ export default function Products() {
     queryKey: ["/api/products"],
   });
 
+  // Query to get detailed product with recipes when needed
+  const { data: productDetails } = useQuery({
+    queryKey: ["/api/products", "details"],
+    queryFn: async () => {
+      const detailedProducts = await Promise.all(
+        products.map(async (product) => {
+          const response = await apiRequest("GET", `/api/products/${product.id}`);
+          return response.json();
+        })
+      );
+      return detailedProducts;
+    },
+    enabled: products.length > 0,
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
       await apiRequest("DELETE", `/api/products/${id}`);
@@ -163,6 +178,31 @@ export default function Products() {
                   <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
                 </div>
               )}
+
+              {/* Recipe ingredients display */}
+              {(() => {
+                const productDetail = productDetails?.find(p => p.id === product.id);
+                if (productDetail?.recipes && productDetail.recipes.length > 0) {
+                  return (
+                    <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Receita:</h4>
+                      <div className="space-y-1">
+                        {productDetail.recipes.map((recipe: any, index: number) => (
+                          <div key={index} className="text-xs text-gray-600 flex justify-between">
+                            <span>
+                              {recipe.ingredient ? recipe.ingredient.name : 
+                               recipe.productIngredient ? `${recipe.productIngredient.name} (Produto)` : 
+                               'Ingrediente não encontrado'}
+                            </span>
+                            <span>{recipe.quantity} {recipe.unit}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
               
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
