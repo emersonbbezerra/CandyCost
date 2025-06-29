@@ -81,6 +81,16 @@ export class MemStorage implements IStorage {
       { name: "Açúcar Cristal", category: "Açúcares", quantity: "5", unit: "kg", price: "18.90", brand: "União" },
       { name: "Manteiga sem Sal", category: "Laticínios", quantity: "0.5", unit: "kg", price: "15.20", brand: "Elegê" },
       { name: "Ovos", category: "Outros", quantity: "30", unit: "unidade", price: "18.00", brand: "Caipira" },
+      { name: "Creme de Leite", category: "Laticínios", quantity: "0.2", unit: "kg", price: "3.50", brand: "Nestlé" },
+      { name: "Açúcar de Confeiteiro", category: "Açúcares", quantity: "1", unit: "kg", price: "8.90", brand: "União" },
+      { name: "Essência de Baunilha", category: "Essências", quantity: "0.03", unit: "kg", price: "12.00", brand: "Mix" },
+      { name: "Fermento em Pó", category: "Fermentos", quantity: "0.1", unit: "kg", price: "4.20", brand: "Royal" },
+      { name: "Leite Integral", category: "Laticínios", quantity: "1", unit: "litro", price: "5.50", brand: "Itambé" },
+      { name: "Morango Fresco", category: "Frutas", quantity: "0.5", unit: "kg", price: "8.00", brand: "Local" },
+      { name: "Chocolate Branco", category: "Chocolates", quantity: "1", unit: "kg", price: "38.00", brand: "Harald" },
+      { name: "Nozes Picadas", category: "Oleaginosas", quantity: "0.2", unit: "kg", price: "25.00", brand: "Premium" },
+      { name: "Açaí Polpa", category: "Frutas", quantity: "1", unit: "kg", price: "15.00", brand: "Amazônia" },
+      { name: "Granola", category: "Cereais", quantity: "0.5", unit: "kg", price: "12.00", brand: "Mãe Terra" },
     ];
 
     sampleIngredients.forEach((ingredient) => {
@@ -95,9 +105,20 @@ export class MemStorage implements IStorage {
 
     // Sample products
     const sampleProducts: InsertProduct[] = [
+      // Alta lucratividade (>50%)
       { name: "Brigadeiro Gourmet", category: "Doces", description: "Brigadeiro cremoso de chocolate", isAlsoIngredient: true, marginPercentage: "70" },
-      { name: "Torta de Chocolate", category: "Tortas", description: "Torta de chocolate com cobertura", isAlsoIngredient: false, marginPercentage: "65" },
       { name: "Cupcake de Baunilha", category: "Cupcakes", description: "Cupcake com cobertura de baunilha", isAlsoIngredient: false, marginPercentage: "60" },
+      { name: "Trufa de Chocolate Branco", category: "Doces", description: "Trufa artesanal de chocolate branco", isAlsoIngredient: false, marginPercentage: "65" },
+      
+      // Lucratividade média (30-50%)
+      { name: "Torta de Chocolate", category: "Tortas", description: "Torta de chocolate com cobertura", isAlsoIngredient: false, marginPercentage: "35" },
+      { name: "Bolo de Morango", category: "Bolos", description: "Bolo com recheio de morango e chantilly", isAlsoIngredient: false, marginPercentage: "40" },
+      { name: "Cheesecake de Frutas Vermelhas", category: "Tortas", description: "Cheesecake cremoso com frutas", isAlsoIngredient: false, marginPercentage: "45" },
+      
+      // Baixa lucratividade (<30%)
+      { name: "Açaí na Tigela Premium", category: "Gelados", description: "Açaí com granola, frutas e mel", isAlsoIngredient: false, marginPercentage: "25" },
+      { name: "Brownie com Nozes", category: "Doces", description: "Brownie denso com nozes caramelizadas", isAlsoIngredient: false, marginPercentage: "20" },
+      { name: "Torta Holandesa", category: "Tortas", description: "Torta com creme e chocolate premium", isAlsoIngredient: false, marginPercentage: "15" },
     ];
 
     sampleProducts.forEach((product) => {
@@ -112,22 +133,60 @@ export class MemStorage implements IStorage {
 
     // Sample recipes
     const sampleRecipes: InsertRecipe[] = [
-      // Brigadeiro Gourmet (Product ID 1)
+      // Brigadeiro Gourmet (Product ID 1) - Alta lucratividade
       { productId: 1, ingredientId: 2, productIngredientId: null, quantity: "0.395", unit: "kg" }, // Leite Condensado
       { productId: 1, ingredientId: 3, productIngredientId: null, quantity: "0.2", unit: "kg" }, // Chocolate
       { productId: 1, ingredientId: 5, productIngredientId: null, quantity: "0.05", unit: "kg" }, // Manteiga
 
-      // Torta de Chocolate (Product ID 2)
-      { productId: 2, ingredientId: 1, productIngredientId: null, quantity: "0.3", unit: "kg" }, // Farinha
-      { productId: 2, ingredientId: 3, productIngredientId: null, quantity: "0.25", unit: "kg" }, // Chocolate
-      { productId: 2, ingredientId: 4, productIngredientId: null, quantity: "0.2", unit: "kg" }, // Açúcar
-      { productId: 2, ingredientId: 6, productIngredientId: null, quantity: "4", unit: "unidade" }, // Ovos
-      { productId: 2, productIngredientId: 1, ingredientId: null, quantity: "0.2", unit: "kg" }, // Brigadeiro como ingrediente
+      // Cupcake de Baunilha (Product ID 2) - Alta lucratividade
+      { productId: 2, ingredientId: 1, productIngredientId: null, quantity: "0.15", unit: "kg" }, // Farinha
+      { productId: 2, ingredientId: 4, productIngredientId: null, quantity: "0.1", unit: "kg" }, // Açúcar
+      { productId: 2, ingredientId: 6, productIngredientId: null, quantity: "2", unit: "unidade" }, // Ovos
+      { productId: 2, ingredientId: 9, productIngredientId: null, quantity: "0.005", unit: "kg" }, // Essência de Baunilha
 
-      // Cupcake de Baunilha (Product ID 3)
-      { productId: 3, ingredientId: 1, productIngredientId: null, quantity: "0.15", unit: "kg" }, // Farinha
-      { productId: 3, ingredientId: 4, productIngredientId: null, quantity: "0.1", unit: "kg" }, // Açúcar
-      { productId: 3, ingredientId: 6, productIngredientId: null, quantity: "2", unit: "unidade" }, // Ovos
+      // Trufa de Chocolate Branco (Product ID 3) - Alta lucratividade
+      { productId: 3, ingredientId: 13, productIngredientId: null, quantity: "0.3", unit: "kg" }, // Chocolate Branco
+      { productId: 3, ingredientId: 7, productIngredientId: null, quantity: "0.1", unit: "kg" }, // Creme de Leite
+      { productId: 3, ingredientId: 5, productIngredientId: null, quantity: "0.02", unit: "kg" }, // Manteiga
+
+      // Torta de Chocolate (Product ID 4) - Lucratividade média
+      { productId: 4, ingredientId: 1, productIngredientId: null, quantity: "0.3", unit: "kg" }, // Farinha
+      { productId: 4, ingredientId: 3, productIngredientId: null, quantity: "0.25", unit: "kg" }, // Chocolate
+      { productId: 4, ingredientId: 4, productIngredientId: null, quantity: "0.2", unit: "kg" }, // Açúcar
+      { productId: 4, ingredientId: 6, productIngredientId: null, quantity: "4", unit: "unidade" }, // Ovos
+      { productId: 4, productIngredientId: 1, ingredientId: null, quantity: "0.2", unit: "kg" }, // Brigadeiro como ingrediente
+
+      // Bolo de Morango (Product ID 5) - Lucratividade média
+      { productId: 5, ingredientId: 1, productIngredientId: null, quantity: "0.4", unit: "kg" }, // Farinha
+      { productId: 5, ingredientId: 4, productIngredientId: null, quantity: "0.25", unit: "kg" }, // Açúcar
+      { productId: 5, ingredientId: 6, productIngredientId: null, quantity: "6", unit: "unidade" }, // Ovos
+      { productId: 5, ingredientId: 11, productIngredientId: null, quantity: "0.3", unit: "litro" }, // Leite
+      { productId: 5, ingredientId: 12, productIngredientId: null, quantity: "0.5", unit: "kg" }, // Morango
+
+      // Cheesecake de Frutas Vermelhas (Product ID 6) - Lucratividade média
+      { productId: 6, ingredientId: 7, productIngredientId: null, quantity: "0.4", unit: "kg" }, // Creme de Leite
+      { productId: 6, ingredientId: 8, productIngredientId: null, quantity: "0.2", unit: "kg" }, // Açúcar de Confeiteiro
+      { productId: 6, ingredientId: 6, productIngredientId: null, quantity: "4", unit: "unidade" }, // Ovos
+      { productId: 6, ingredientId: 12, productIngredientId: null, quantity: "0.3", unit: "kg" }, // Morango
+
+      // Açaí na Tigela Premium (Product ID 7) - Baixa lucratividade
+      { productId: 7, ingredientId: 15, productIngredientId: null, quantity: "0.3", unit: "kg" }, // Açaí Polpa
+      { productId: 7, ingredientId: 16, productIngredientId: null, quantity: "0.1", unit: "kg" }, // Granola
+      { productId: 7, ingredientId: 12, productIngredientId: null, quantity: "0.1", unit: "kg" }, // Morango
+
+      // Brownie com Nozes (Product ID 8) - Baixa lucratividade
+      { productId: 8, ingredientId: 3, productIngredientId: null, quantity: "0.4", unit: "kg" }, // Chocolate
+      { productId: 8, ingredientId: 1, productIngredientId: null, quantity: "0.2", unit: "kg" }, // Farinha
+      { productId: 8, ingredientId: 14, productIngredientId: null, quantity: "0.15", unit: "kg" }, // Nozes
+      { productId: 8, ingredientId: 5, productIngredientId: null, quantity: "0.15", unit: "kg" }, // Manteiga
+      { productId: 8, ingredientId: 6, productIngredientId: null, quantity: "4", unit: "unidade" }, // Ovos
+
+      // Torta Holandesa (Product ID 9) - Baixa lucratividade
+      { productId: 9, ingredientId: 13, productIngredientId: null, quantity: "0.5", unit: "kg" }, // Chocolate Branco
+      { productId: 9, ingredientId: 3, productIngredientId: null, quantity: "0.3", unit: "kg" }, // Chocolate
+      { productId: 9, ingredientId: 7, productIngredientId: null, quantity: "0.3", unit: "kg" }, // Creme de Leite
+      { productId: 9, ingredientId: 14, productIngredientId: null, quantity: "0.2", unit: "kg" }, // Nozes
+      { productId: 9, ingredientId: 6, productIngredientId: null, quantity: "6", unit: "unidade" }, // Ovos
     ];
 
     sampleRecipes.forEach((recipe) => {
