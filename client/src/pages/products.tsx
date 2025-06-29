@@ -108,12 +108,12 @@ export default function Products() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900">Produtos</h2>
-            <p className="text-gray-600 mt-2">Gerencie produtos e receitas com cálculo de custos</p>
+            <h2 className="text-3xl font-bold text-gray-900">Receitas</h2>
+            <p className="text-gray-600 mt-2">Gerencie receitas e produtos com cálculo de custos</p>
           </div>
           <Button onClick={() => setIsFormOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
-            Novo Produto
+            Nova Receita
           </Button>
         </div>
       </div>
@@ -235,10 +235,10 @@ export default function Products() {
             <Card>
               <CardContent className="p-12 text-center">
                 <ChefHat className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500 mb-4">Nenhum produto cadastrado ainda.</p>
+                <p className="text-gray-500 mb-4">Nenhuma receita cadastrada ainda.</p>
                 <Button onClick={() => setIsFormOpen(true)}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Criar primeiro produto
+                  Criar primeira receita
                 </Button>
               </CardContent>
             </Card>
