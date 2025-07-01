@@ -101,21 +101,36 @@ export function useAuth() {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("/api/auth/logout", "POST");
+      const response = await apiRequest("POST", "/api/auth/logout");
+      return response.json();
     },
     onSuccess: () => {
+      // Clear all cached data
       queryClient.clear();
+      // Remove user data specifically
+      queryClient.setQueryData(["/api/auth/user"], null);
       toast({
         title: "Logout realizado",
         description: "Até logo!",
       });
+      // Reload the page to ensure clean state
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     },
     onError: (error: any) => {
+      console.error('Logout error:', error);
       toast({
         title: "Erro no logout",
         description: error.message || "Erro ao fazer logout",
         variant: "destructive",
       });
+      // Even if there's an error, try to clear local state
+      queryClient.clear();
+      queryClient.setQueryData(["/api/auth/user"], null);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     },
   });
 
