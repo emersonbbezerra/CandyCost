@@ -50,7 +50,7 @@ export function BackupRestore() {
       const backupData = {
         version: "1.0",
         timestamp: new Date().toISOString(),
-        application: "ConfeiCalc",
+        application: "CandyCost",
         data: {
           ingredients,
           products: productsWithRecipes,
@@ -153,8 +153,8 @@ export function BackupRestore() {
       const backupData = JSON.parse(fileContent);
 
       // Validar estrutura do backup
-      if (!backupData.application || backupData.application !== "ConfeiCalc") {
-        throw new Error("Arquivo de backup inválido - não é um backup do ConfeiCalc");
+      if (!backupData.application || backupData.application !== "CandyCost") {
+        throw new Error("Arquivo de backup inválido - não é um backup do CandyCost");
       }
 
       if (!backupData.data) {
@@ -276,7 +276,7 @@ export function BackupRestore() {
           </Button>
 
           <p className="text-xs text-gray-500">
-            Certifique-se de que o arquivo é um backup válido do ConfeiCalc antes de prosseguir.
+            Certifique-se de que o arquivo é um backup válido do CandyCost antes de prosseguir.
           </p>
         </CardContent>
       </Card>

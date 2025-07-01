@@ -63,7 +63,7 @@ export default function Login() {
           <div className="flex items-center justify-center mb-4">
             <ChefHat className="h-12 w-12 text-pink-600 dark:text-pink-400" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">ConfeiCalc</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">CandyCost</h1>
           <p className="text-gray-600 dark:text-gray-300 mt-2">
             Sistema de Gestão de Custos para Confeitaria
           </p>

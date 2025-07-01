@@ -1,4 +1,4 @@
-# Sistema de Gestão de Custos para Confeitaria (ConfeiCalc)
+# CandyCost - Sistema de Gestão de Custos para Confeitaria
 
 ## Visão Geral
 Sistema completo de gestão de custos para confeitaria desenvolvido com React + Express.js. Permite gerenciar ingredientes, produtos, receitas e histórico de preços com cálculo automático de custos de produção.
@@ -78,6 +78,11 @@ Sistema completo de gestão de custos para confeitaria desenvolvido com React + 
   - **Usuário Admin**: Criado automaticamente (admin@confeitaria.com / admin123!)
   - **Sidebar Personalizada**: Mostra informações do usuário, papel e botão de logout
   - **Sessões Persistentes**: Configuração segura com armazenamento no PostgreSQL
+- **01/07/2025**: REBRANDING COMPLETO PARA CANDYCOST:
+  - **Nome da Aplicação**: Alterado de ConfeiCalc para CandyCost em todos os componentes
+  - **Interface Atualizada**: Título, sidebar, tela de login e mensagens com novo nome
+  - **Sistema de Backup**: Validação atualizada para aceitar apenas backups do CandyCost
+  - **Branding Consistente**: Nome aplicado em todos os textos e validações do sistema
 
 ## Melhorias de Interface
 - **Selects Padronizados**: Categorias de produtos, ingredientes e unidades agora usam listas predefinidas

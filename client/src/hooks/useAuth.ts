@@ -85,7 +85,7 @@ export function useAuth() {
       queryClient.setQueryData(["/api/auth/user"], data.user);
       toast({
         title: "Conta criada com sucesso!",
-        description: `Bem-vindo(a) ao ConfeiCalc, ${data.user.firstName}!`,
+        description: `Bem-vindo(a) ao CandyCost, ${data.user.firstName}!`,
       });
     },
     onError: (error: any) => {

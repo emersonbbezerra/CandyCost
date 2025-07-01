@@ -46,7 +46,7 @@ export function Sidebar() {
             <Calculator className="text-white text-lg" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">ConfeiCalc</h1>
+            <h1 className="text-xl font-bold text-gray-900">CandyCost</h1>
             <p className="text-sm text-gray-500">Gestão de Custos</p>
           </div>
         </div>
