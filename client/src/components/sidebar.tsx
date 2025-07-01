@@ -7,7 +7,8 @@ import {
   Sprout, 
   ChefHat,
   Calculator,
-  TrendingUp
+  TrendingUp,
+  Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ const navigation = [
   { name: "Histórico de Preços", href: "/history", icon: History },
   { name: "Histórico de Custos", href: "/costs-history", icon: TrendingUp },
   { name: "Relatórios", href: "/reports", icon: FileText },
+  { name: "Sistema", href: "/system", icon: Settings },
 ];
 
 export function Sidebar() {

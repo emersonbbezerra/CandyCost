@@ -18,12 +18,10 @@ import {
   Search,
   SortAsc,
   SortDesc,
-  Filter,
-  Database
+  Filter
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { ExportReports } from "@/components/export-reports";
-import { BackupRestore } from "@/components/backup-restore";
 import type { Ingredient, Product, ProductCost } from "@shared/schema";
 
 interface ReportsData {
@@ -645,18 +643,7 @@ export default function Reports() {
         </CardContent>
       </Card>
 
-      {/* Seção de Backup e Restauração */}
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Database className="w-5 h-5 mr-2 text-purple-600" />
-            Backup e Restauração de Dados
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <BackupRestore />
-        </CardContent>
-      </Card>
+
     </div>
   );
 }

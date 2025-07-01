@@ -10,6 +10,7 @@ import Products from "@/pages/products";
 import History from "@/pages/history";
 import CostsHistory from "@/pages/costs-history";
 import Reports from "@/pages/reports";
+import System from "@/pages/system";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -25,6 +26,7 @@ function Router() {
           <Route path="/history" component={History} />
           <Route path="/costs-history" component={CostsHistory} />
           <Route path="/reports" component={Reports} />
+          <Route path="/system" component={System} />
           <Route component={NotFound} />
         </Switch>
       </main>

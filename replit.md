@@ -59,6 +59,10 @@ Sistema completo de gestão de custos para confeitaria desenvolvido com React + 
 - **29/06/2025**: Removido separador visual desnecessário e identificador "(Produto)" - produtos-ingredientes agora aparecem naturalmente na lista
 - **29/06/2025**: Alterado menu de navegação - removida opção "Produtos", mantendo apenas "Receitas" como nomenclatura principal
 - **29/06/2025**: Criada seção de Relatórios específica com análises diferenciadas do Dashboard
+- **01/07/2025**: REORGANIZAÇÃO COMPLETA DO MENU - SEPARAÇÃO DE RESPONSABILIDADES:
+  - **Nova seção "Sistema"**: Funcionalidades administrativas (backup, restauração, configurações)
+  - **Relatórios focados**: Apenas análises de dados e exportações
+  - **Menu preparado para expansão**: Estrutura pronta para usuários, configurações avançadas
 
 ## Melhorias de Interface
 - **Selects Padronizados**: Categorias de produtos, ingredientes e unidades agora usam listas predefinidas
