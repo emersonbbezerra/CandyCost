@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Sprout, Cookie, Calculator, TrendingUp } from "lucide-react";
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
+import { CostAlerts } from "@/components/cost-alerts";
 import type { Product, PriceHistory } from "@shared/schema";
 
 interface DashboardStats {
@@ -98,6 +99,9 @@ export default function Dashboard() {
         <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
         <p className="text-gray-600 mt-2">Visão geral dos custos de produção</p>
       </div>
+
+      {/* Alertas de Custos */}
+      <CostAlerts />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

@@ -24,6 +24,12 @@ Sistema completo de gestão de custos para confeitaria desenvolvido com React + 
 - **Evolução por Produto**: Dashboard permite escolher produto específico para ver evolução de custos
 
 ## Alterações Recentes
+- **29/06/2025**: FUNCIONALIDADES AVANÇADAS COMPLETAS:
+  - **Sistema de Alertas Inteligentes**: Detecta aumentos de preço e custos elevados automaticamente
+  - **Exportação de Relatórios**: CSV/JSON com dados completos para Excel e análise externa
+  - **Backup e Restauração**: Sistema completo de backup dos dados com download automático
+  - **Alertas de Custo**: Notificações quando ingredientes ficam caros demais por categoria
+  - **Relatórios Personalizados**: Múltiplos formatos de exportação (ingredientes, produtos, histórico)
 - **29/06/2025**: MELHORIAS COMPLETAS DE INTERFACE E USABILIDADE:
   - **Confirmações de Exclusão**: Diálogos elegantes para confirmar exclusões com avisos detalhados
   - **Filtros Avançados**: Busca por texto e filtros por categoria em ingredientes e produtos

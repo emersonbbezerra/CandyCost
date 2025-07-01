@@ -18,9 +18,12 @@ import {
   Search,
   SortAsc,
   SortDesc,
-  Filter
+  Filter,
+  Database
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { ExportReports } from "@/components/export-reports";
+import { BackupRestore } from "@/components/backup-restore";
 import type { Ingredient, Product, ProductCost } from "@shared/schema";
 
 interface ReportsData {
@@ -198,10 +201,7 @@ export default function Reports() {
     setCurrentPage(1);
   };
 
-  const handleExportReport = () => {
-    // Implementar exportação futura
-    alert("Funcionalidade de exportação será implementada em breve!");
-  };
+
 
   if (isLoading) {
     return (
@@ -226,11 +226,13 @@ export default function Reports() {
             <h2 className="text-3xl font-bold text-gray-900">Relatórios</h2>
             <p className="text-gray-600 mt-2">Análises detalhadas e insights do seu negócio</p>
           </div>
-          <Button onClick={handleExportReport} variant="outline">
-            <Download className="w-4 h-4 mr-2" />
-            Exportar Relatórios
-          </Button>
+
         </div>
+      </div>
+
+      {/* Componente de Exportação de Relatórios */}
+      <div className="mb-6">
+        <ExportReports />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -640,6 +642,19 @@ export default function Reports() {
               <p className="text-sm text-gray-600">Categorias ativas</p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Seção de Backup e Restauração */}
+      <Card className="lg:col-span-2">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Database className="w-5 h-5 mr-2 text-purple-600" />
+            Backup e Restauração de Dados
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <BackupRestore />
         </CardContent>
       </Card>
     </div>
