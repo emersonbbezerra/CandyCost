@@ -3,10 +3,121 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertIngredientSchema, insertProductSchema, insertRecipeSchema } from "@shared/schema";
 import { z } from "zod";
+import { setupAuth, isAuthenticated, isAdmin, userService } from "./auth";
+import passport from "passport";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Ingredients routes
-  app.get("/api/ingredients", async (_req, res) => {
+  // Setup authentication
+  await setupAuth(app);
+
+  // Create admin user on startup
+  try {
+    await userService.createAdminUser();
+    console.log("✓ Admin user created/verified");
+  } catch (error) {
+    console.error("Error creating admin user:", error);
+  }
+
+  // Authentication routes
+  app.post('/api/auth/login', (req, res, next) => {
+    passport.authenticate('local', (err: any, user: any, info: any) => {
+      if (err) {
+        return res.status(500).json({ message: 'Erro interno do servidor' });
+      }
+      if (!user) {
+        return res.status(401).json({ message: info.message || 'Credenciais inválidas' });
+      }
+      req.logIn(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: 'Erro ao fazer login' });
+        }
+        return res.json({
+          message: 'Login realizado com sucesso',
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role
+          }
+        });
+      });
+    })(req, res, next);
+  });
+
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const registerSchema = z.object({
+        email: z.string().email('Email inválido'),
+        password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
+        firstName: z.string().min(1, 'Nome é obrigatório'),
+        lastName: z.string().optional(),
+      });
+
+      const { email, password, firstName, lastName } = registerSchema.parse(req.body);
+
+      // Check if user already exists
+      const existingUser = await userService.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email já está em uso' });
+      }
+
+      // Create new user
+      const newUser = await userService.createUser({
+        email,
+        password,
+        firstName,
+        lastName,
+        role: 'user'
+      });
+
+      // Log the user in
+      req.logIn(newUser, (err) => {
+        if (err) {
+          return res.status(500).json({ message: 'Usuário criado, mas erro ao fazer login' });
+        }
+        return res.status(201).json({
+          message: 'Usuário criado com sucesso',
+          user: {
+            id: newUser.id,
+            email: newUser.email,
+            firstName: newUser.firstName,
+            lastName: newUser.lastName,
+            role: newUser.role
+          }
+        });
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
+      console.error('Register error:', error);
+      res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+  });
+
+  app.post('/api/auth/logout', (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).json({ message: 'Erro ao fazer logout' });
+      }
+      res.json({ message: 'Logout realizado com sucesso' });
+    });
+  });
+
+  app.get('/api/auth/user', isAuthenticated, (req, res) => {
+    const user = req.user as any;
+    res.json({
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role
+    });
+  });
+
+  // Ingredients routes (protected)
+  app.get("/api/ingredients", isAuthenticated, async (_req, res) => {
     try {
       const ingredients = await storage.getIngredients();
       res.json(ingredients);
@@ -15,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/ingredients/:id", async (req, res) => {
+  app.get("/api/ingredients/:id", isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const ingredient = await storage.getIngredient(id);
@@ -28,7 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/ingredients", async (req, res) => {
+  app.post("/api/ingredients", isAuthenticated, async (req, res) => {
     try {
       const data = insertIngredientSchema.parse(req.body);
       const ingredient = await storage.createIngredient(data);
@@ -41,7 +152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/ingredients/:id", async (req, res) => {
+  app.put("/api/ingredients/:id", isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const data = insertIngredientSchema.partial().parse(req.body);
@@ -59,7 +170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/ingredients/:id", async (req, res) => {
+  app.delete("/api/ingredients/:id", isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteIngredient(id);
@@ -424,8 +535,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Settings endpoints
-  app.get("/api/settings", async (_req, res) => {
+  // Settings endpoints (protected for authenticated users, updates only for admins)
+  app.get("/api/settings", isAuthenticated, async (_req, res) => {
     try {
       const settings = await storage.getSettings();
       res.json(settings);
@@ -435,7 +546,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/settings", async (req, res) => {
+  app.put("/api/settings", isAdmin, async (req, res) => {
     try {
       const updatedSettings = await storage.updateSettings(req.body);
       res.json(updatedSettings);
