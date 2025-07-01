@@ -149,6 +149,10 @@ function toast({ ...props }: Toast) {
     })
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
 
+  // Definir duração padrão baseada no tipo de toast
+  const defaultDuration = props.variant === "destructive" ? 5000 : 4000; // Erro: 5s, Sucesso: 4s
+  const duration = props.duration ?? defaultDuration;
+
   dispatch({
     type: "ADD_TOAST",
     toast: {
@@ -160,6 +164,13 @@ function toast({ ...props }: Toast) {
       },
     },
   })
+
+  // Auto dismiss após a duração especificada
+  if (duration > 0) {
+    setTimeout(() => {
+      dismiss()
+    }, duration)
+  }
 
   return {
     id: id,
@@ -188,4 +199,24 @@ function useToast() {
   }
 }
 
-export { useToast, toast }
+// Helper function para mensagens de sucesso
+function successToast(title: string, description?: string) {
+  return toast({
+    title,
+    description,
+    className: "border-green-200 bg-green-50 text-green-900 dark:border-green-800 dark:bg-green-950 dark:text-green-50",
+    duration: 4000,
+  })
+}
+
+// Helper function para mensagens de erro
+function errorToast(title: string, description?: string) {
+  return toast({
+    title,
+    description,
+    variant: "destructive",
+    duration: 5000,
+  })
+}
+
+export { useToast, toast, successToast, errorToast }

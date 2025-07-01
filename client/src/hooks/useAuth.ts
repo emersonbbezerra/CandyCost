@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { successToast, errorToast } from "@/hooks/use-toast";
 
 export interface User {
   id: string;
@@ -23,7 +23,6 @@ export interface RegisterData {
 }
 
 export function useAuth() {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: user, isLoading, error } = useQuery({
@@ -64,10 +63,10 @@ export function useAuth() {
     },
     onSuccess: (data: any) => {
       queryClient.setQueryData(["/api/auth/user"], data.user);
-      toast({
-        title: "Login realizado com sucesso!",
-        description: `Bem-vindo(a), ${data.user.firstName}!`,
-      });
+      successToast(
+        "Login realizado com sucesso!",
+        `Bem-vindo(a), ${data.user.firstName}!`
+      );
     },
     onError: (error: any) => {
       // Remove códigos de status HTTP da mensagem
@@ -82,11 +81,7 @@ export function useAuth() {
         errorMessage = "Dados inválidos. Verifique as informações digitadas.";
       }
       
-      toast({
-        title: "Erro no login",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      errorToast("Erro no login", errorMessage);
     },
   });
 
@@ -97,10 +92,10 @@ export function useAuth() {
     },
     onSuccess: (data: any) => {
       queryClient.setQueryData(["/api/auth/user"], data.user);
-      toast({
-        title: "Conta criada com sucesso!",
-        description: `Bem-vindo(a) ao CandyCost, ${data.user.firstName}!`,
-      });
+      successToast(
+        "Conta criada com sucesso!",
+        `Bem-vindo(a) ao CandyCost, ${data.user.firstName}!`
+      );
       // Redirect to dashboard after successful registration
       setTimeout(() => {
         window.location.href = "/";
@@ -123,11 +118,7 @@ export function useAuth() {
         errorMessage = "Erro interno do servidor. Tente novamente em alguns instantes.";
       }
       
-      toast({
-        title: "Erro no cadastro",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      errorToast("Erro no cadastro", errorMessage);
     },
   });
 
@@ -141,10 +132,10 @@ export function useAuth() {
       queryClient.clear();
       // Remove user data specifically
       queryClient.setQueryData(["/api/auth/user"], null);
-      toast({
-        title: "Logout realizado",
-        description: "Até logo!",
-      });
+      successToast(
+        "Logout realizado",
+        "Até logo!"
+      );
       // Reload the page to ensure clean state
       setTimeout(() => {
         window.location.reload();
@@ -152,11 +143,10 @@ export function useAuth() {
     },
     onError: (error: any) => {
       console.error('Logout error:', error);
-      toast({
-        title: "Erro no logout",
-        description: error.message || "Erro ao fazer logout",
-        variant: "destructive",
-      });
+      errorToast(
+        "Erro no logout",
+        error.message || "Erro ao fazer logout"
+      );
       // Even if there's an error, try to clear local state
       queryClient.clear();
       queryClient.setQueryData(["/api/auth/user"], null);

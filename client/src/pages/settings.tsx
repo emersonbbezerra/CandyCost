@@ -18,7 +18,7 @@ import {
   Bell,
   Info
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { successToast, errorToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 interface SystemSettings {
@@ -46,7 +46,6 @@ const defaultSettings: SystemSettings = {
 export default function Settings() {
   const [settings, setSettings] = useState<SystemSettings>(defaultSettings);
   const [dataLoaded, setDataLoaded] = useState(false);
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Carregar configurações do backend
@@ -74,18 +73,17 @@ export default function Settings() {
     },
     onSuccess: (savedSettings) => {
       setSettings(savedSettings);
-      toast({
-        title: "Configurações Salvas",
-        description: "Suas preferências foram atualizadas com sucesso!",
-      });
+      successToast(
+        "Configurações Salvas",
+        "Suas preferências foram atualizadas com sucesso!"
+      );
       queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
     },
     onError: (error: any) => {
-      toast({
-        title: "Erro ao Salvar",
-        description: error.message || "Não foi possível salvar as configurações. Tente novamente.",
-        variant: "destructive",
-      });
+      errorToast(
+        "Erro ao Salvar",
+        error.message || "Não foi possível salvar as configurações. Tente novamente."
+      );
     }
   });
 
@@ -95,10 +93,10 @@ export default function Settings() {
 
   const handleReset = () => {
     setSettings(defaultSettings);
-    toast({
-      title: "Configurações Resetadas",
-      description: "Todas as configurações foram restauradas para os valores padrão.",
-    });
+    successToast(
+      "Configurações Resetadas",
+      "Todas as configurações foram restauradas para os valores padrão."
+    );
   };
 
   if (isLoading) {
