@@ -132,8 +132,9 @@ export const userService = {
   },
 
   async createAdminUser(): Promise<User> {
-    const adminEmail = "admin@confeitaria.com";
-    const adminPassword = "admin123!";
+    // In production, use environment variables for initial admin
+    const adminEmail = process.env.INITIAL_ADMIN_EMAIL || "admin@confeitaria.com";
+    const adminPassword = process.env.INITIAL_ADMIN_PASSWORD || "admin123!";
     
     // Check if admin already exists
     const existingAdmin = await this.getUserByEmail(adminEmail);
@@ -148,5 +149,52 @@ export const userService = {
       lastName: "Sistema",
       role: "admin"
     });
+  },
+
+  // Promote existing user to admin (for production use)
+  async promoteToAdmin(userEmail: string): Promise<User | null> {
+    const user = await this.getUserByEmail(userEmail);
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    if (user.role === 'admin') {
+      throw new Error('Usuário já é administrador');
+    }
+
+    const [updatedUser] = await db
+      .update(users)
+      .set({ role: 'admin', updatedAt: new Date() })
+      .where(eq(users.id, user.id))
+      .returning();
+
+    console.log(`✓ User ${userEmail} promoted to admin`);
+    return updatedUser;
+  },
+
+  // Create first admin via command line (production strategy)
+  async initializeFirstAdmin(email: string, password: string, firstName: string, lastName?: string): Promise<User> {
+    // Check if any admin exists
+    const [existingAdmin] = await db
+      .select()
+      .from(users)
+      .where(eq(users.role, 'admin'))
+      .limit(1);
+
+    if (existingAdmin) {
+      throw new Error('Sistema já possui um administrador. Use a função de promoção.');
+    }
+
+    // Create the first admin
+    const adminUser = await this.createUser({
+      email,
+      password,
+      firstName,
+      lastName: lastName || null,
+      role: "admin"
+    });
+
+    console.log(`✓ First admin created: ${email}`);
+    return adminUser;
   }
 };

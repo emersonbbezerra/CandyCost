@@ -83,6 +83,14 @@ Sistema completo de gestão de custos para confeitaria desenvolvido com React + 
   - **Interface Atualizada**: Título, sidebar, tela de login e mensagens com novo nome
   - **Sistema de Backup**: Validação atualizada para aceitar apenas backups do CandyCost
   - **Branding Consistente**: Nome aplicado em todos os textos e validações do sistema
+- **01/07/2025**: ESTRATÉGIAS AVANÇADAS DE SEGURANÇA PARA PRODUÇÃO IMPLEMENTADAS:
+  - **Variáveis de Ambiente**: Suporte a INITIAL_ADMIN_EMAIL e INITIAL_ADMIN_PASSWORD para configuração segura
+  - **CLI Administrativo**: Ferramenta completa de linha de comando para gerenciamento de usuários
+  - **Interface de Gerenciamento**: Página administrativa para promoção e listagem de usuários
+  - **APIs Protegidas**: Rotas administrativas com dupla autenticação (isAuthenticated + isAdmin)
+  - **Múltiplas Estratégias**: Variáveis de ambiente, CLI e interface web para diferentes cenários
+  - **Documentação Completa**: Guia detalhado de segurança para implantação em produção
+  - **Validações Robustas**: Verificação de senhas complexas e prevenção de duplicação de admins
 
 ## Melhorias de Interface
 - **Selects Padronizados**: Categorias de produtos, ingredientes e unidades agora usam listas predefinidas

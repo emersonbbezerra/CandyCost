@@ -11,7 +11,8 @@ import {
   Settings,
   LogOut,
   User,
-  Shield
+  Shield,
+  Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -74,6 +75,25 @@ export function Sidebar() {
               </li>
             );
           })}
+          
+          {/* Admin-only menu items */}
+          {isAdmin && (
+            <li>
+              <Link href="/user-management">
+                <div
+                  className={cn(
+                    "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors font-medium cursor-pointer",
+                    location === "/user-management"
+                      ? "text-primary bg-primary/10"
+                      : "text-gray-700 hover:bg-gray-100"
+                  )}
+                >
+                  <Users className="w-5 h-5" />
+                  <span>Usuários</span>
+                </div>
+              </Link>
+            </li>
+          )}
         </ul>
       </nav>
 

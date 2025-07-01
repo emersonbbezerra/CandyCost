@@ -13,6 +13,7 @@ import CostsHistory from "@/pages/costs-history";
 import Reports from "@/pages/reports";
 import System from "@/pages/system";
 import Settings from "@/pages/settings";
+import UserManagement from "@/pages/user-management";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -51,6 +52,7 @@ function Router() {
           <Route path="/reports" component={Reports} />
           <Route path="/system" component={System} />
           <Route path="/settings" component={Settings} />
+          {user?.role === 'admin' && <Route path="/user-management" component={UserManagement} />}
           <Route component={NotFound} />
         </Switch>
       </main>

@@ -1,9 +1,10 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertIngredientSchema, insertProductSchema, insertRecipeSchema } from "@shared/schema";
+import { insertIngredientSchema, insertProductSchema, insertRecipeSchema, users } from "@shared/schema";
 import { z } from "zod";
 import { setupAuth, isAuthenticated, isAdmin, userService } from "./auth";
+import { db } from "./db";
 import passport from "passport";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -114,6 +115,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       lastName: user.lastName,
       role: user.role
     });
+  });
+
+  // Admin-only routes for user management
+  app.post('/api/admin/promote-user', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: 'Email é obrigatório' });
+      }
+
+      const promotedUser = await userService.promoteToAdmin(email);
+      res.json({ 
+        message: 'Usuário promovido a administrador com sucesso',
+        user: promotedUser 
+      });
+    } catch (error: any) {
+      console.error('Error promoting user:', error);
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.get('/api/admin/users', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const allUsers = await db.select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        role: users.role,
+        createdAt: users.createdAt
+      }).from(users);
+
+      res.json(allUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      res.status(500).json({ message: 'Erro ao buscar usuários' });
+    }
   });
 
   // Ingredients routes (protected)
