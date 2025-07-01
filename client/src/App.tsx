@@ -14,6 +14,8 @@ import Reports from "@/pages/reports";
 import System from "@/pages/system";
 import Settings from "@/pages/settings";
 import UserManagement from "@/pages/user-management";
+import UserManagementAdmin from "@/pages/user-management-admin";
+import Profile from "@/pages/profile";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -52,7 +54,8 @@ function Router() {
           <Route path="/reports" component={Reports} />
           <Route path="/system" component={System} />
           <Route path="/settings" component={Settings} />
-          {user?.role === 'admin' && <Route path="/user-management" component={UserManagement} />}
+          <Route path="/profile" component={Profile} />
+          {user?.role === 'admin' && <Route path="/user-management" component={UserManagementAdmin} />}
           <Route component={NotFound} />
         </Switch>
       </main>

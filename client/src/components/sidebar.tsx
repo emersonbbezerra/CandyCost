@@ -11,6 +11,7 @@ import {
   Settings,
   LogOut,
   User,
+  UserCircle,
   Shield,
   Users
 } from "lucide-react";
@@ -117,15 +118,27 @@ export function Sidebar() {
             </div>
           </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full flex items-center space-x-2"
-          onClick={() => logout()}
-        >
-          <LogOut className="h-4 w-4" />
-          <span>Sair</span>
-        </Button>
+        <div className="space-y-2">
+          <Link href="/profile">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full flex items-center space-x-2"
+            >
+              <UserCircle className="h-4 w-4" />
+              <span>Meu Perfil</span>
+            </Button>
+          </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full flex items-center space-x-2"
+            onClick={() => logout()}
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Sair</span>
+          </Button>
+        </div>
       </div>
     </aside>
   );

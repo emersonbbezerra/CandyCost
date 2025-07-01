@@ -6,7 +6,7 @@ import connectPg from "connect-pg-simple";
 import type { Express, RequestHandler } from "express";
 import { db } from "./db";
 import { users, type User, type UpsertUser } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 const PgSession = connectPg(session);
 
@@ -24,9 +24,8 @@ passport.use(new LocalStrategy(
         return done(null, false, { message: 'Email não encontrado.' });
       }
 
-      // For now, we'll store passwords in the ID field temporarily
-      // This will be improved with proper password hashing
-      const isValidPassword = await bcrypt.compare(password, user.id);
+      // Check password
+      const isValidPassword = await bcrypt.compare(password, user.password);
       
       if (!isValidPassword) {
         return done(null, false, { message: 'Senha incorreta.' });
@@ -196,5 +195,56 @@ export const userService = {
 
     console.log(`✓ First admin created: ${email}`);
     return adminUser;
+  },
+
+  async updateUser(userId: string, userData: { firstName?: string; lastName?: string; email?: string; role?: string }): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        ...userData,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+
+    if (!updatedUser) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    return updatedUser;
+  },
+
+  async updateUserPassword(userId: string, hashedPassword: string): Promise<void> {
+    await db
+      .update(users)
+      .set({
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+    
+    // Update password separately using SQL
+    await db.execute(sql`UPDATE users SET password = ${hashedPassword} WHERE id = ${userId}`);
+  },
+
+  async deleteUser(userId: string): Promise<void> {
+    await db.delete(users).where(eq(users.id, userId));
+  },
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select({
+      id: users.id,
+      email: users.email,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      profileImageUrl: users.profileImageUrl,
+      role: users.role,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt
+    }).from(users);
+  },
+
+  async getUserWithPassword(userId: string): Promise<any> {
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    return user;
   }
 };
