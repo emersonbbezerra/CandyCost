@@ -89,6 +89,10 @@ export function useAuth() {
         title: "Conta criada com sucesso!",
         description: `Bem-vindo(a) ao CandyCost, ${data.user.firstName}!`,
       });
+      // Redirect to dashboard after successful registration
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1500);
     },
     onError: (error: any) => {
       toast({

@@ -91,6 +91,12 @@ Sistema completo de gestão de custos para confeitaria desenvolvido com React + 
   - **Múltiplas Estratégias**: Variáveis de ambiente, CLI e interface web para diferentes cenários
   - **Documentação Completa**: Guia detalhado de segurança para implantação em produção
   - **Validações Robustas**: Verificação de senhas complexas e prevenção de duplicação de admins
+- **01/07/2025**: MELHORIAS NO SISTEMA DE CADASTRO E AUTENTICAÇÃO:
+  - **Problema Solucionado**: Erro 404 após cadastro de usuário corrigido com redirecionamento automático
+  - **Validação de Senha Forte**: Implementada tanto no frontend quanto backend
+  - **Critérios Obrigatórios**: Mínimo 8 caracteres, maiúscula, minúscula, número e caractere especial
+  - **Interface Melhorada**: Dicas visuais de critérios de senha no formulário de cadastro
+  - **Redirecionamento Automático**: Usuário é direcionado ao dashboard após cadastro bem-sucedido
 
 ## Melhorias de Interface
 - **Selects Padronizados**: Categorias de produtos, ingredientes e unidades agora usam listas predefinidas

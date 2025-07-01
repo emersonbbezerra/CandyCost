@@ -18,7 +18,12 @@ const loginSchema = z.object({
 
 const registerSchema = z.object({
   email: z.string().email("Email inválido"),
-  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+  password: z.string()
+    .min(8, "Senha deve ter pelo menos 8 caracteres")
+    .regex(/^(?=.*[a-z])/, "Senha deve conter pelo menos uma letra minúscula")
+    .regex(/^(?=.*[A-Z])/, "Senha deve conter pelo menos uma letra maiúscula") 
+    .regex(/^(?=.*\d)/, "Senha deve conter pelo menos um número")
+    .regex(/^(?=.*[@$!%*?&])/, "Senha deve conter pelo menos um caractere especial (@$!%*?&)"),
   firstName: z.string().min(1, "Nome é obrigatório"),
   lastName: z.string().optional(),
 });
@@ -202,14 +207,21 @@ export default function Login() {
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Senha</FormLabel>
+                          <FormLabel>Senha Segura</FormLabel>
                           <FormControl>
                             <Input
                               type="password"
-                              placeholder="Mínimo 6 caracteres"
+                              placeholder="Crie uma senha forte"
                               {...field}
                             />
                           </FormControl>
+                          <div className="text-xs text-gray-600 mt-1 space-y-1">
+                            <p>✓ Mínimo 8 caracteres</p>
+                            <p>✓ Pelo menos 1 maiúscula (A-Z)</p>
+                            <p>✓ Pelo menos 1 minúscula (a-z)</p>
+                            <p>✓ Pelo menos 1 número (0-9)</p>
+                            <p>✓ Pelo menos 1 símbolo (@$!%*?&)</p>
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}

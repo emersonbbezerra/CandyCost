@@ -50,7 +50,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const registerSchema = z.object({
         email: z.string().email('Email inválido'),
-        password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
+        password: z.string()
+          .min(8, 'Senha deve ter pelo menos 8 caracteres')
+          .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, 
+            'Senha deve conter pelo menos: 1 letra minúscula, 1 maiúscula, 1 número e 1 caractere especial (@$!%*?&)'),
         firstName: z.string().min(1, 'Nome é obrigatório'),
         lastName: z.string().optional(),
       });
