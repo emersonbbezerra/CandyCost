@@ -50,6 +50,10 @@ export interface IStorage {
 
   // Data Management
   clearAllData(): Promise<void>;
+  
+  // System Settings
+  getSettings(): Promise<any>;
+  updateSettings(settings: any): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -57,6 +61,7 @@ export class MemStorage implements IStorage {
   private products: Map<number, Product>;
   private recipes: Map<number, Recipe>;
   private priceHistory: Map<number, PriceHistory>;
+  private settings: any;
   private currentIngredientId: number;
   private currentProductId: number;
   private currentRecipeId: number;
@@ -71,6 +76,18 @@ export class MemStorage implements IStorage {
     this.currentProductId = 1;
     this.currentRecipeId = 1;
     this.currentHistoryId = 1;
+
+    // Initialize settings with defaults
+    this.settings = {
+      defaultMarginPercentage: 60,
+      priceIncreaseAlertThreshold: 20,
+      highCostAlertThreshold: 50,
+      enableCostAlerts: true,
+      enablePriceAlerts: true,
+      autoCalculateMargins: true,
+      currencySymbol: "R$",
+      businessName: "Minha Confeitaria"
+    };
 
     // Initialize with sample data
     this.initializeSampleData();
@@ -528,6 +545,15 @@ export class MemStorage implements IStorage {
     this.currentProductId = 1;
     this.currentRecipeId = 1;
     this.currentHistoryId = 1;
+  }
+
+  async getSettings(): Promise<any> {
+    return { ...this.settings };
+  }
+
+  async updateSettings(newSettings: any): Promise<any> {
+    this.settings = { ...this.settings, ...newSettings };
+    return { ...this.settings };
   }
 }
 

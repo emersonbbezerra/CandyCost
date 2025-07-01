@@ -424,6 +424,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Settings endpoints
+  app.get("/api/settings", async (_req, res) => {
+    try {
+      const settings = await storage.getSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Erro ao buscar configurações:", error);
+      res.status(500).json({ message: "Erro interno ao buscar configurações" });
+    }
+  });
+
+  app.put("/api/settings", async (req, res) => {
+    try {
+      const updatedSettings = await storage.updateSettings(req.body);
+      res.json(updatedSettings);
+    } catch (error) {
+      console.error("Erro ao salvar configurações:", error);
+      res.status(500).json({ message: "Erro interno ao salvar configurações" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

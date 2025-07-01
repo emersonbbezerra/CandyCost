@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,40 +45,45 @@ const defaultSettings: SystemSettings = {
 
 export default function Settings() {
   const [settings, setSettings] = useState<SystemSettings>(defaultSettings);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Simular carregamento das configurações (em uma implementação real viria do backend)
+  // Carregar configurações do backend
   const { data: currentSettings, isLoading } = useQuery({
     queryKey: ["/api/settings"],
     queryFn: async () => {
-      // Por enquanto retorna configurações padrão
-      return defaultSettings;
+      const response = await fetch("/api/settings");
+      if (!response.ok) throw new Error("Erro ao carregar configurações");
+      return response.json();
     }
   });
 
-  // Atualizar configurações quando dados carregarem
-  if (currentSettings && currentSettings !== settings) {
-    setSettings(currentSettings);
-  }
+  // Atualizar configurações quando dados carregarem (apenas uma vez)
+  useEffect(() => {
+    if (currentSettings && !isLoading && !dataLoaded) {
+      setSettings(currentSettings);
+      setDataLoaded(true);
+    }
+  }, [currentSettings, isLoading, dataLoaded]);
 
   const saveSettingsMutation = useMutation({
     mutationFn: async (newSettings: SystemSettings) => {
-      // Por enquanto simula salvamento (em implementação real enviaria para backend)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return newSettings;
+      const response = await apiRequest("PUT", "/api/settings", newSettings);
+      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (savedSettings) => {
+      setSettings(savedSettings);
       toast({
         title: "Configurações Salvas",
         description: "Suas preferências foram atualizadas com sucesso!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Erro ao Salvar",
-        description: "Não foi possível salvar as configurações. Tente novamente.",
+        description: error.message || "Não foi possível salvar as configurações. Tente novamente.",
         variant: "destructive",
       });
     }
