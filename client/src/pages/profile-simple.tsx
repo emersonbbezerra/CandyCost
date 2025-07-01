@@ -74,12 +74,14 @@ export default function ProfileSimple() {
 
   // Set form values when user data loads
   useEffect(() => {
-    if (user && !profileForm.formState.isDirty) {
-      profileForm.setValue("firstName", user.firstName || "");
-      profileForm.setValue("lastName", user.lastName || "");
-      profileForm.setValue("email", user.email || "");
+    if (user) {
+      profileForm.reset({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        email: user.email || "",
+      });
     }
-  }, [user, profileForm]);
+  }, [user]);
 
   // Update profile mutation
   const updateProfileMutation = useMutation({

@@ -70,9 +70,21 @@ export function useAuth() {
       });
     },
     onError: (error: any) => {
+      // Remove códigos de status HTTP da mensagem
+      let errorMessage = error.message || "Credenciais inválidas";
+      
+      // Se a mensagem contém código HTTP, extrair apenas a parte útil
+      if (errorMessage.includes("401:")) {
+        errorMessage = "Email ou senha incorretos. Verifique suas credenciais.";
+      } else if (errorMessage.includes("500:")) {
+        errorMessage = "Erro interno do servidor. Tente novamente.";
+      } else if (errorMessage.includes("400:")) {
+        errorMessage = "Dados inválidos. Verifique as informações digitadas.";
+      }
+      
       toast({
         title: "Erro no login",
-        description: error.message || "Credenciais inválidas",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -95,9 +107,25 @@ export function useAuth() {
       }, 1500);
     },
     onError: (error: any) => {
+      // Remove códigos de status HTTP da mensagem
+      let errorMessage = error.message || "Erro ao criar conta";
+      
+      // Se a mensagem contém código HTTP, extrair apenas a parte útil
+      if (errorMessage.includes("400:")) {
+        if (errorMessage.includes("Email")) {
+          errorMessage = "Este email já está sendo usado. Tente fazer login ou use outro email.";
+        } else if (errorMessage.includes("senha")) {
+          errorMessage = "A senha não atende aos requisitos de segurança.";
+        } else {
+          errorMessage = "Dados inválidos. Verifique as informações digitadas.";
+        }
+      } else if (errorMessage.includes("500:")) {
+        errorMessage = "Erro interno do servidor. Tente novamente em alguns instantes.";
+      }
+      
       toast({
         title: "Erro no cadastro",
-        description: error.message || "Erro ao criar conta",
+        description: errorMessage,
         variant: "destructive",
       });
     },
