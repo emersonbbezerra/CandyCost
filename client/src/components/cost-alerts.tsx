@@ -26,62 +26,70 @@ export function CostAlerts() {
     queryKey: ["/api/price-history"],
   });
 
-  // Gerar alertas baseado nos dados
+  const { data: settings } = useQuery({
+    queryKey: ["/api/settings"],
+    queryFn: async () => {
+      const response = await fetch("/api/settings");
+      if (!response.ok) throw new Error("Erro ao carregar configurações");
+      return response.json();
+    }
+  });
+
+  // Gerar alertas baseado nos dados e configurações
   const generateAlerts = (): CostAlert[] => {
     const alerts: CostAlert[] = [];
+    
+    // Se configurações não carregaram ou alertas estão desabilitados, retornar vazio
+    if (!settings) return [];
+    
     const recentHistory = priceHistory.filter(h => 
       h.ingredientId && new Date(h.createdAt).getTime() > Date.now() - (7 * 24 * 60 * 60 * 1000)
     );
 
-    // Alertas de aumento de preço (últimos 7 dias)
-    recentHistory.forEach(history => {
-      const ingredient = ingredients.find(i => i.id === history.ingredientId);
-      if (!ingredient) return;
+    // Alertas de aumento de preço (apenas se habilitado)
+    if (settings.enablePriceAlerts) {
+      recentHistory.forEach(history => {
+        const ingredient = ingredients.find(i => i.id === history.ingredientId);
+        if (!ingredient) return;
 
-      const oldPrice = parseFloat(history.oldPrice);
-      const newPrice = parseFloat(history.newPrice);
-      const percentage = ((newPrice - oldPrice) / oldPrice) * 100;
+        const oldPrice = parseFloat(history.oldPrice);
+        const newPrice = parseFloat(history.newPrice);
+        const percentage = ((newPrice - oldPrice) / oldPrice) * 100;
 
-      if (percentage > 20) {
-        alerts.push({
-          type: "price_increase",
-          title: `Aumento significativo detectado`,
-          description: `${ingredient.name} aumentou ${percentage.toFixed(1)}% nos últimos 7 dias`,
-          ingredient,
-          percentage,
-          severity: percentage > 50 ? "high" : percentage > 30 ? "medium" : "low"
-        });
-      }
-    });
+        // Usar threshold das configurações
+        const threshold = settings.priceIncreaseAlertThreshold || 20;
+        if (percentage > threshold) {
+          alerts.push({
+            type: "price_increase",
+            title: `Aumento significativo detectado`,
+            description: `${ingredient.name} aumentou ${percentage.toFixed(1)}% nos últimos 7 dias`,
+            ingredient,
+            percentage,
+            severity: percentage > threshold * 2.5 ? "high" : percentage > threshold * 1.5 ? "medium" : "low"
+          });
+        }
+      });
+    }
 
-    // Alertas de ingredientes com custo alto por unidade
-    ingredients.forEach(ingredient => {
-      const unitCost = parseFloat(ingredient.price) / parseFloat(ingredient.quantity);
-      
-      // Definir limites baseado na categoria
-      const limits = {
-        "Chocolates": 50,
-        "Especiarias": 30,
-        "Oleaginosas": 40,
-        "Laticínios": 20,
-        "Farinhas": 15,
-        "Açúcares": 10,
-        "Frutas": 25,
-        "Outros": 20
-      };
-
-      const limit = limits[ingredient.category as keyof typeof limits] || 20;
-      
-      if (unitCost > limit) {
-        alerts.push({
-          type: "high_cost",
-          title: `Custo elevado detectado`,
-          description: `${ingredient.name} tem custo de ${formatCurrency(unitCost)} por ${ingredient.unit}`,
-          ingredient,
-          severity: unitCost > limit * 2 ? "high" : "medium"
-        });
-      }
-    });
+    // Alertas de ingredientes com custo alto (apenas se habilitado)
+    if (settings.enableCostAlerts) {
+      ingredients.forEach(ingredient => {
+        const unitCost = parseFloat(ingredient.price) / parseFloat(ingredient.quantity);
+        
+        // Usar threshold das configurações
+        const threshold = settings.highCostAlertThreshold || 50;
+        
+        if (unitCost > threshold) {
+          alerts.push({
+            type: "high_cost",
+            title: `Custo elevado detectado`,
+            description: `${ingredient.name} tem custo de ${formatCurrency(unitCost)} por ${ingredient.unit}`,
+            ingredient,
+            severity: unitCost > threshold * 2 ? "high" : "medium"
+          });
+        }
+      });
+    }
 
     return alerts.filter(alert => {
       const alertId = `${alert.type}-${alert.ingredient?.id}`;

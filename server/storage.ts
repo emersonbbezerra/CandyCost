@@ -458,7 +458,14 @@ export class MemStorage implements IStorage {
       }
     }
 
-    const marginPercentage = parseFloat(product.marginPercentage);
+    // Usar margem padrão das configurações se cálculo automático estiver habilitado
+    let marginPercentage: number;
+    if (this.settings.autoCalculateMargins && product?.marginPercentage === "60") {
+      marginPercentage = this.settings.defaultMarginPercentage || 60;
+    } else {
+      marginPercentage = parseFloat(product?.marginPercentage || this.settings.defaultMarginPercentage?.toString() || "60");
+    }
+    
     const suggestedPrice = totalCost * (1 + marginPercentage / 100);
     const margin = suggestedPrice - totalCost;
 
@@ -522,7 +529,15 @@ export class MemStorage implements IStorage {
     }
 
     const product = this.products.get(productId);
-    const marginPercentage = parseFloat(product?.marginPercentage || "60");
+    
+    // Usar margem padrão das configurações se cálculo automático estiver habilitado
+    let marginPercentage: number;
+    if (this.settings.autoCalculateMargins && product?.marginPercentage === "60") {
+      marginPercentage = this.settings.defaultMarginPercentage || 60;
+    } else {
+      marginPercentage = parseFloat(product?.marginPercentage || this.settings.defaultMarginPercentage?.toString() || "60");
+    }
+    
     const margin = marginPercentage / 100;
     const suggestedPrice = totalCost * (1 + margin);
 
