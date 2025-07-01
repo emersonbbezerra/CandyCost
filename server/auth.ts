@@ -109,8 +109,9 @@ export const userService = {
     const userId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
     
     const newUser: UpsertUser = {
-      id: hashedPassword, // Temporarily store password hash in ID field
+      id: userId,
       email: userData.email,
+      password: hashedPassword,
       firstName: userData.firstName || null,
       lastName: userData.lastName || null,
       role: userData.role || 'user',
