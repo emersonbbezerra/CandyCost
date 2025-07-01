@@ -50,8 +50,8 @@ export default function System() {
           </CardContent>
         </Card>
 
-        {/* Configurações do Sistema - Futuro */}
-        <Card className="hover:shadow-lg transition-shadow opacity-60">
+        {/* Configurações do Sistema */}
+        <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => window.location.href = '/settings'}>
           <CardHeader>
             <CardTitle className="flex items-center text-lg">
               <Settings className="w-5 h-5 mr-2 text-purple-600" />
@@ -60,11 +60,11 @@ export default function System() {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-600 mb-4">
-              Configure preferências gerais, categorias padrão e parâmetros do sistema.
+              Configure margens, alertas, símbolos de moeda e preferências do sistema.
             </p>
-            <div className="flex items-center text-xs text-gray-500">
+            <div className="flex items-center text-xs text-green-600">
               <Server className="w-3 h-3 mr-1" />
-              <span>Em breve</span>
+              <span>Disponível</span>
             </div>
           </CardContent>
         </Card>
