@@ -6,12 +6,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2, History } from "lucide-react";
+import { Plus, Search, Edit, Trash2, History, Filter } from "lucide-react";
 import { IngredientForm } from "@/components/ingredient-form";
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
 import type { Ingredient } from "@shared/schema";
+import { INGREDIENT_CATEGORIES } from "@shared/constants";
 
 const categoryColors = {
   "Laticínios": "bg-green-100 text-green-800",
@@ -27,6 +29,8 @@ export default function Ingredients() {
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | undefined>();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [ingredientToDelete, setIngredientToDelete] = useState<Ingredient | null>(null);
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -71,8 +75,15 @@ export default function Ingredients() {
   };
 
   const handleDelete = (ingredient: Ingredient) => {
-    if (confirm(`Tem certeza que deseja excluir o ingrediente "${ingredient.name}"?`)) {
-      deleteMutation.mutate(ingredient.id);
+    setIngredientToDelete(ingredient);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (ingredientToDelete) {
+      deleteMutation.mutate(ingredientToDelete.id);
+      setDeleteConfirmOpen(false);
+      setIngredientToDelete(null);
     }
   };
 
@@ -128,20 +139,22 @@ export default function Ingredients() {
                 />
               </div>
             </div>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Todas as categorias" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as categorias</SelectItem>
-                <SelectItem value="Laticínios">Laticínios</SelectItem>
-                <SelectItem value="Farinhas">Farinhas</SelectItem>
-                <SelectItem value="Açúcares">Açúcares</SelectItem>
-                <SelectItem value="Chocolates">Chocolates</SelectItem>
-                <SelectItem value="Frutas">Frutas</SelectItem>
-                <SelectItem value="Outros">Outros</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center space-x-2">
+              <Filter className="w-4 h-4 text-gray-400" />
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Todas as categorias" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as categorias</SelectItem>
+                  {INGREDIENT_CATEGORIES.map((category) => (
+                    <SelectItem key={category.value} value={category.value}>
+                      {category.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -247,6 +260,17 @@ export default function Ingredients() {
         open={isFormOpen}
         onOpenChange={handleFormClose}
         ingredient={editingIngredient}
+      />
+
+      <ConfirmationDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Confirmar Exclusão"
+        description={`Tem certeza que deseja excluir o ingrediente "${ingredientToDelete?.name}"? Esta ação não pode ser desfeita e pode afetar receitas que usam este ingrediente.`}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        onConfirm={confirmDelete}
+        variant="destructive"
       />
     </div>
   );

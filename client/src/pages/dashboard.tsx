@@ -195,37 +195,73 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
+            <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis tickFormatter={(value) => formatCurrency(value)} />
-                  <Tooltip formatter={(value, name) => [
-                    formatCurrency(Number(value)), 
-                    name === 'cost' ? 'Custo de Produção' : 'Preço Sugerido'
-                  ]} />
+                <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis 
+                    dataKey="month" 
+                    fontSize={12}
+                    tick={{ fill: '#6b7280' }}
+                  />
+                  <YAxis 
+                    tickFormatter={(value) => formatCurrency(value)}
+                    fontSize={12}
+                    tick={{ fill: '#6b7280' }}
+                    label={{ value: 'Valor (R$)', angle: -90, position: 'insideLeft' }}
+                  />
+                  <Tooltip 
+                    formatter={(value, name) => [
+                      formatCurrency(Number(value)), 
+                      name === 'cost' ? 'Custo de Produção' : 'Preço Sugerido'
+                    ]}
+                    labelFormatter={(label) => `Mês: ${label}`}
+                    contentStyle={{
+                      backgroundColor: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    }}
+                  />
                   <Line 
                     type="monotone" 
                     dataKey="cost" 
-                    stroke="hsl(207, 90%, 54%)" 
-                    strokeWidth={2}
-                    dot={{ fill: "hsl(207, 90%, 54%)" }}
+                    stroke="#3b82f6" 
+                    strokeWidth={3}
+                    dot={{ fill: "#3b82f6", strokeWidth: 2, r: 5 }}
+                    activeDot={{ r: 8, stroke: "#3b82f6", strokeWidth: 2 }}
                     name="cost"
                   />
                   {selectedProduct && selectedProduct !== "general" && (
                     <Line 
                       type="monotone" 
                       dataKey="suggestedPrice" 
-                      stroke="hsl(125, 60%, 45%)" 
-                      strokeWidth={2}
-                      dot={{ fill: "hsl(125, 60%, 45%)" }}
+                      stroke="#10b981" 
+                      strokeWidth={3}
+                      dot={{ fill: "#10b981", strokeWidth: 2, r: 5 }}
+                      activeDot={{ r: 8, stroke: "#10b981", strokeWidth: 2 }}
                       name="suggestedPrice"
+                      strokeDasharray="5 5"
                     />
                   )}
                 </LineChart>
               </ResponsiveContainer>
             </div>
+            
+            {selectedProduct && selectedProduct !== "general" && (
+              <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center text-sm text-green-700">
+                  <div className="flex items-center mr-6">
+                    <div className="w-4 h-0.5 bg-blue-500 mr-2"></div>
+                    <span>Custo de Produção</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-4 h-0.5 bg-green-500 border-t-2 border-dashed border-green-500 mr-2"></div>
+                    <span>Preço Sugerido</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 

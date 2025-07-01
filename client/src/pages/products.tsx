@@ -1,20 +1,28 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, History, ChefHat, Layers } from "lucide-react";
+import { Plus, Edit, Trash2, History, ChefHat, Layers, Search, Filter } from "lucide-react";
 import { ProductForm } from "@/components/product-form";
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
 import type { Product, ProductCost } from "@shared/schema";
+import { PRODUCT_CATEGORIES } from "@shared/constants";
 
 type ProductWithCost = Product & { cost?: ProductCost };
 
 export default function Products() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductWithCost | undefined>();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<ProductWithCost | null>(null);
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -79,8 +87,15 @@ export default function Products() {
   };
 
   const handleDelete = (product: ProductWithCost) => {
-    if (confirm(`Tem certeza que deseja excluir o produto "${product.name}"?`)) {
-      deleteMutation.mutate(product.id);
+    setProductToDelete(product);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (productToDelete) {
+      deleteMutation.mutate(productToDelete.id);
+      setDeleteConfirmOpen(false);
+      setProductToDelete(null);
     }
   };
 
@@ -88,6 +103,14 @@ export default function Products() {
     setIsFormOpen(false);
     setEditingProduct(undefined);
   };
+
+  // Filtrar produtos baseado na pesquisa e categoria
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.category.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
 
   if (isLoading) {
     return (
@@ -119,9 +142,44 @@ export default function Products() {
         </div>
       </div>
 
+      {/* Search and Filters */}
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-4">
+            <div className="flex-1 max-w-md">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Buscar receitas..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Filter className="w-4 h-4 text-gray-400" />
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Todas as categorias" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as categorias</SelectItem>
+                  {PRODUCT_CATEGORIES.map((category) => (
+                    <SelectItem key={category.value} value={category.value}>
+                      {category.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Products Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map((product) => (
+        {filteredProducts.map((product) => (
           <Card key={product.id} className="overflow-hidden">
             <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
               <ChefHat className="w-16 h-16 text-gray-400" />
@@ -231,6 +289,23 @@ export default function Products() {
           </Card>
         ))}
         
+        {filteredProducts.length === 0 && products.length > 0 && (
+          <div className="col-span-full">
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500 mb-4">Nenhuma receita encontrada com os filtros aplicados.</p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => { setSearchTerm(""); setCategoryFilter("all"); }}
+                >
+                  Limpar filtros
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+        
         {products.length === 0 && (
           <div className="col-span-full">
             <Card>
@@ -251,6 +326,17 @@ export default function Products() {
         open={isFormOpen}
         onOpenChange={handleFormClose}
         product={editingProduct}
+      />
+
+      <ConfirmationDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Confirmar Exclusão"
+        description={`Tem certeza que deseja excluir a receita "${productToDelete?.name}"? Esta ação não pode ser desfeita e irá remover todas as receitas associadas.`}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        onConfirm={confirmDelete}
+        variant="destructive"
       />
     </div>
   );

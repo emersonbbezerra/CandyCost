@@ -12,6 +12,7 @@ import { INGREDIENT_CATEGORIES, UNITS } from "@shared/constants";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { formatCurrency } from "@/lib/utils";
 import { useEffect } from "react";
 
 interface IngredientFormProps {
@@ -214,19 +215,35 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Preço de Compra (R$)</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" placeholder="12.50" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+            <div className="bg-blue-50 p-4 rounded-lg space-y-4">
+              <h4 className="font-medium text-gray-900 text-sm">Informações de Preço</h4>
+              <FormField
+                control={form.control}
+                name="price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Preço de Compra (R$)</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" placeholder="12.50" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              {/* Calculadora de custo unitário */}
+              {form.watch("price") && form.watch("quantity") && (
+                <div className="bg-white p-3 rounded border">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Custo por unidade:</span>
+                    <span className="font-semibold text-blue-600">
+                      {formatCurrency(parseFloat(form.watch("price") || "0") / parseFloat(form.watch("quantity") || "1"))}
+                      {form.watch("unit") && ` por ${UNITS.find(u => u.value === form.watch("unit"))?.label}`}
+                    </span>
+                  </div>
+                </div>
               )}
-            />
+            </div>
 
             <FormField
               control={form.control}

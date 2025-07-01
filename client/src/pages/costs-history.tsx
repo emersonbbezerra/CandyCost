@@ -92,28 +92,96 @@ export default function CostsHistory() {
             </Select>
           </div>
 
-          {/* Chart de evolução dos custos */}
+          {/* Gráficos aprimorados de evolução dos custos */}
           {productChartArray.length > 0 ? (
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold mb-4">Evolução dos Custos por Mês</h3>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={productChartArray}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip 
-                      formatter={(value: any) => [`${value.toFixed(1)}%`, "Variação Média"]}
-                      labelFormatter={(label) => `Mês: ${label}`}
-                    />
-                    <Bar dataKey="avgIncrease" fill="#10b981" name="Variação Média %" />
-                  </BarChart>
-                </ResponsiveContainer>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <div className="bg-white p-6 rounded-lg border">
+                <h3 className="text-lg font-semibold mb-4 flex items-center">
+                  <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
+                  Variação de Custos por Mês
+                </h3>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={productChartArray}>
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                      <XAxis 
+                        dataKey="month" 
+                        fontSize={12}
+                        tick={{ fill: '#6b7280' }}
+                      />
+                      <YAxis 
+                        fontSize={12}
+                        tick={{ fill: '#6b7280' }}
+                        label={{ value: 'Variação (%)', angle: -90, position: 'insideLeft' }}
+                      />
+                      <Tooltip 
+                        formatter={(value: any) => [`${value.toFixed(1)}%`, "Variação Média"]}
+                        labelFormatter={(label) => `Mês: ${label}`}
+                        contentStyle={{
+                          backgroundColor: '#f8fafc',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Bar 
+                        dataKey="avgIncrease" 
+                        fill="#10b981" 
+                        name="Variação Média %" 
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg border">
+                <h3 className="text-lg font-semibold mb-4 flex items-center">
+                  <ShoppingCart className="w-5 h-5 mr-2 text-blue-600" />
+                  Número de Alterações por Mês
+                </h3>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={productChartArray}>
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                      <XAxis 
+                        dataKey="month" 
+                        fontSize={12}
+                        tick={{ fill: '#6b7280' }}
+                      />
+                      <YAxis 
+                        fontSize={12}
+                        tick={{ fill: '#6b7280' }}
+                        label={{ value: 'Alterações', angle: -90, position: 'insideLeft' }}
+                      />
+                      <Tooltip 
+                        formatter={(value: any) => [`${value}`, "Alterações"]}
+                        labelFormatter={(label) => `Mês: ${label}`}
+                        contentStyle={{
+                          backgroundColor: '#f8fafc',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="changes" 
+                        stroke="#3b82f6" 
+                        strokeWidth={3}
+                        dot={{ fill: '#3b82f6', strokeWidth: 2, r: 6 }}
+                        activeDot={{ r: 8, stroke: '#3b82f6', strokeWidth: 2 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             </div>
           ) : (
-            <div className="h-64 flex items-center justify-center text-gray-500 mb-8">
-              <p>Nenhum histórico de custos disponível ainda</p>
+            <div className="h-64 flex items-center justify-center text-gray-500 mb-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+              <div className="text-center">
+                <TrendingUp className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-lg font-medium mb-2">Nenhum histórico de custos disponível</p>
+                <p className="text-sm text-gray-400">Altere o preço de algum ingrediente para começar a ver os dados</p>
+              </div>
             </div>
           )}
 
