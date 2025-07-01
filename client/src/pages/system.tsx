@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Settings, Database, Users, Shield, Download, Upload, Server } from "lucide-react";
+import { Settings, Database, Shield, Download, Upload, Server } from "lucide-react";
 import { BackupRestore } from "@/components/backup-restore";
 
 export default function System() {
@@ -27,25 +27,6 @@ export default function System() {
             <div className="flex items-center text-xs text-gray-500">
               <Download className="w-3 h-3 mr-1" />
               <span>Backup automático disponível</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Gerenciamento de Usuários - Futuro */}
-        <Card className="hover:shadow-lg transition-shadow opacity-60">
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg">
-              <Users className="w-5 h-5 mr-2 text-green-600" />
-              Usuários
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 mb-4">
-              Gerencie usuários, permissões e controle de acesso ao sistema.
-            </p>
-            <div className="flex items-center text-xs text-gray-500">
-              <Shield className="w-3 h-3 mr-1" />
-              <span>Em breve</span>
             </div>
           </CardContent>
         </Card>
