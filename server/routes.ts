@@ -326,6 +326,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Backup restore endpoint
+  app.post("/api/restore-backup", async (req, res) => {
+    try {
+      const { backupData } = req.body;
+      
+      if (!backupData || !backupData.data) {
+        return res.status(400).json({ message: "Dados de backup inválidos" });
+      }
+
+      const { ingredients, products, priceHistory } = backupData.data;
+
+      // Clear existing data before restore
+      await storage.clearAllData();
+      
+      // Restore ingredients
+      if (ingredients && Array.isArray(ingredients)) {
+        for (const ingredient of ingredients) {
+          try {
+            await storage.createIngredient({
+              name: ingredient.name,
+              category: ingredient.category,
+              quantity: ingredient.quantity,
+              unit: ingredient.unit,
+              price: ingredient.cost || ingredient.price,
+              brand: ingredient.supplier || ingredient.brand
+            });
+          } catch (error) {
+            console.warn(`Erro ao restaurar ingrediente ${ingredient.name}:`, error);
+          }
+        }
+      }
+
+      // Restore products with recipes
+      if (products && Array.isArray(products)) {
+        for (const product of products) {
+          try {
+            const newProduct = await storage.createProduct({
+              name: product.name,
+              category: product.category,
+              description: product.description,
+              isAlsoIngredient: product.isAlsoIngredient || false,
+              marginPercentage: product.marginPercentage || "30"
+            });
+
+            // Restore recipes if they exist
+            if (product.recipes && Array.isArray(product.recipes)) {
+              for (const recipe of product.recipes) {
+                try {
+                  await storage.createRecipe({
+                    productId: newProduct.id,
+                    ingredientId: recipe.ingredientId || null,
+                    productIngredientId: recipe.productIngredientId || null,
+                    quantity: recipe.quantity,
+                    unit: recipe.unit || "unidade"
+                  });
+                } catch (error) {
+                  console.warn(`Erro ao restaurar receita para produto ${product.name}:`, error);
+                }
+              }
+            }
+          } catch (error) {
+            console.warn(`Erro ao restaurar produto ${product.name}:`, error);
+          }
+        }
+      }
+
+      // Restore price history
+      if (priceHistory && Array.isArray(priceHistory)) {
+        for (const history of priceHistory) {
+          try {
+            await storage.createPriceHistory({
+              ingredientId: history.ingredientId || null,
+              productId: history.productId || null,
+              oldPrice: history.oldValue || history.oldPrice,
+              newPrice: history.newValue || history.newPrice,
+              changeReason: history.reason || history.changeReason
+            });
+          } catch (error) {
+            console.warn(`Erro ao restaurar histórico:`, error);
+          }
+        }
+      }
+
+      res.json({ 
+        message: "Backup restaurado com sucesso", 
+        timestamp: new Date().toISOString(),
+        restored: {
+          ingredients: ingredients?.length || 0,
+          products: products?.length || 0,
+          priceHistory: priceHistory?.length || 0
+        }
+      });
+    } catch (error) {
+      console.error("Erro ao restaurar backup:", error);
+      res.status(500).json({ message: "Erro interno ao restaurar backup" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

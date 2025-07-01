@@ -47,6 +47,9 @@ export interface IStorage {
   calculateProductCostAtPrice(productId: number, ingredientId: number, ingredientPrice: string): Promise<ProductCost>;
   getProductsUsingIngredient(ingredientId: number): Promise<number[]>;
   getProductsUsingProduct(productIngredientId: number): Promise<number[]>;
+
+  // Data Management
+  clearAllData(): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -512,6 +515,19 @@ export class MemStorage implements IStorage {
       suggestedPrice,
       margin: marginPercentage,
     };
+  }
+
+  async clearAllData(): Promise<void> {
+    this.ingredients.clear();
+    this.products.clear();
+    this.recipes.clear();
+    this.priceHistory.clear();
+    
+    // Reset IDs
+    this.currentIngredientId = 1;
+    this.currentProductId = 1;
+    this.currentRecipeId = 1;
+    this.currentHistoryId = 1;
   }
 }
 

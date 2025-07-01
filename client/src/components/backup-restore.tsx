@@ -8,11 +8,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Download, Upload, Database, AlertTriangle, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
 
 export function BackupRestore() {
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [backupDataToRestore, setBackupDataToRestore] = useState<any>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -103,60 +106,78 @@ export function BackupRestore() {
 
   const restoreMutation = useMutation({
     mutationFn: async (backupData: any) => {
-      // Esta função seria implementada no backend para restaurar dados
-      const response = await apiRequest("POST", "/api/restore", backupData);
+      const response = await apiRequest("POST", "/api/restore-backup", {
+        backupData
+      });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       // Invalidar todas as queries para recarregar dados
       queryClient.invalidateQueries({ queryKey: ["/api/ingredients"] });
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/reports"] });
       
       toast({
         title: "Restauração Concluída",
-        description: "Dados restaurados com sucesso!",
+        description: `Backup restaurado com sucesso! ${data.restored.ingredients} ingredientes, ${data.restored.products} produtos e ${data.restored.priceHistory} registros de histórico foram restaurados.`,
       });
+      
+      // Limpar estados
       setSelectedFile(null);
+      setBackupDataToRestore(null);
+      setIsRestoring(false);
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Erro na Restauração",
-        description: "Não foi possível restaurar os dados. Verifique o arquivo.",
+        description: error.message || "Não foi possível restaurar os dados. Verifique o arquivo.",
         variant: "destructive",
       });
     },
   });
 
   const handleRestore = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile) {
+      toast({
+        title: "Erro",
+        description: "Selecione um arquivo de backup para restaurar",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    setIsRestoring(true);
     try {
       const fileContent = await selectedFile.text();
       const backupData = JSON.parse(fileContent);
 
       // Validar estrutura do backup
-      if (!backupData.data || !backupData.data.ingredients || !backupData.data.products) {
-        throw new Error("Arquivo de backup inválido");
+      if (!backupData.application || backupData.application !== "ConfeiCalc") {
+        throw new Error("Arquivo de backup inválido - não é um backup do ConfeiCalc");
       }
 
-      // Por enquanto, mostrar alerta que seria implementado no backend
-      toast({
-        title: "Funcionalidade em Desenvolvimento",
-        description: "A restauração de backup será implementada na próxima versão. Dados válidos detectados no arquivo.",
-      });
+      if (!backupData.data) {
+        throw new Error("Arquivo de backup corrompido - dados não encontrados");
+      }
 
-    } catch (error) {
+      // Mostrar dados do backup e pedir confirmação
+      setBackupDataToRestore(backupData);
+      setShowConfirmDialog(true);
+
+    } catch (error: any) {
       toast({
-        title: "Erro na Restauração",
-        description: "Arquivo de backup inválido ou corrompido.",
+        title: "Erro ao Ler Backup",
+        description: error.message || "Arquivo de backup inválido ou corrompido.",
         variant: "destructive",
       });
-    } finally {
-      setIsRestoring(false);
     }
+  };
+
+  const confirmRestore = () => {
+    setShowConfirmDialog(false);
+    setIsRestoring(true);
+    restoreMutation.mutate(backupDataToRestore);
   };
 
   return (
@@ -259,6 +280,18 @@ export function BackupRestore() {
           </p>
         </CardContent>
       </Card>
+
+      {/* Diálogo de Confirmação de Restauração */}
+      <ConfirmationDialog
+        open={showConfirmDialog}
+        onOpenChange={setShowConfirmDialog}
+        title="⚠️ Confirmar Restauração de Backup"
+        description={`Esta operação irá SUBSTITUIR TODOS os dados atuais pelos dados do backup.\n\nDados que serão restaurados:\n• ${backupDataToRestore?.data?.ingredients?.length || 0} ingredientes\n• ${backupDataToRestore?.data?.products?.length || 0} produtos/receitas\n• ${backupDataToRestore?.data?.priceHistory?.length || 0} registros de histórico\n\nData do backup: ${backupDataToRestore?.timestamp ? new Date(backupDataToRestore.timestamp).toLocaleString('pt-BR') : 'Não informada'}\n\n❌ ATENÇÃO: Esta ação não pode ser desfeita!\n\n✅ Recomendação: Faça um backup dos dados atuais antes de prosseguir.`}
+        confirmText="Sim, Restaurar"
+        cancelText="Cancelar"
+        onConfirm={confirmRestore}
+        variant="destructive"
+      />
     </div>
   );
 }
