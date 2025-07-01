@@ -35,10 +35,8 @@ const userEditSchema = z.object({
 const passwordResetSchema = z.object({
   newPassword: z.string()
     .min(8, 'Nova senha deve ter pelo menos 8 caracteres')
-    .regex(/^(?=.*[a-z])/, "Nova senha deve conter pelo menos uma letra minúscula")
-    .regex(/^(?=.*[A-Z])/, "Nova senha deve conter pelo menos uma letra maiúscula") 
-    .regex(/^(?=.*\d)/, "Nova senha deve conter pelo menos um número")
-    .regex(/^(?=.*[@$!%*?&])/, "Nova senha deve conter pelo menos um caractere especial (@$!%*?&)"),
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#+\-_=.])[A-Za-z\d@$!%*?&#+\-_=.]+$/, 
+      "Nova senha deve conter pelo menos: 1 letra minúscula, 1 maiúscula, 1 número e 1 caractere especial (@$!%*?&#+-_.=)"),
   confirmPassword: z.string()
 });
 
@@ -538,7 +536,7 @@ export default function UserManagementAdmin() {
                       <p>✓ Pelo menos 1 maiúscula (A-Z)</p>
                       <p>✓ Pelo menos 1 minúscula (a-z)</p>
                       <p>✓ Pelo menos 1 número (0-9)</p>
-                      <p>✓ Pelo menos 1 símbolo (@$!%*?&)</p>
+                      <p>✓ Pelo menos 1 símbolo (@$!%*?&#+-_.=)</p>
                     </div>
                     <FormMessage />
                   </FormItem>
