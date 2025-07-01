@@ -69,16 +69,15 @@ export function useAuth() {
       );
     },
     onError: (error: any) => {
-      // Remove códigos de status HTTP da mensagem
-      let errorMessage = error.message || "Credenciais inválidas";
+      // Extrair apenas a mensagem amigável do servidor
+      let errorMessage = error.message || "Email ou senha incorretos. Verifique suas informações.";
       
       // Se a mensagem contém código HTTP, extrair apenas a parte útil
-      if (errorMessage.includes("401:")) {
-        errorMessage = "Email ou senha incorretos. Verifique suas credenciais.";
-      } else if (errorMessage.includes("500:")) {
-        errorMessage = "Erro interno do servidor. Tente novamente.";
-      } else if (errorMessage.includes("400:")) {
-        errorMessage = "Dados inválidos. Verifique as informações digitadas.";
+      if (errorMessage.includes(":")) {
+        const parts = errorMessage.split(":");
+        if (parts.length > 1) {
+          errorMessage = parts.slice(1).join(":").trim();
+        }
       }
       
       errorToast("Erro no login", errorMessage);
@@ -102,20 +101,15 @@ export function useAuth() {
       }, 1500);
     },
     onError: (error: any) => {
-      // Remove códigos de status HTTP da mensagem
-      let errorMessage = error.message || "Erro ao criar conta";
+      // Extrair apenas a mensagem amigável do servidor
+      let errorMessage = error.message || "Erro ao criar conta. Verifique os dados e tente novamente.";
       
       // Se a mensagem contém código HTTP, extrair apenas a parte útil
-      if (errorMessage.includes("400:")) {
-        if (errorMessage.includes("Email")) {
-          errorMessage = "Este email já está sendo usado. Tente fazer login ou use outro email.";
-        } else if (errorMessage.includes("senha")) {
-          errorMessage = "A senha não atende aos requisitos de segurança.";
-        } else {
-          errorMessage = "Dados inválidos. Verifique as informações digitadas.";
+      if (errorMessage.includes(":")) {
+        const parts = errorMessage.split(":");
+        if (parts.length > 1) {
+          errorMessage = parts.slice(1).join(":").trim();
         }
-      } else if (errorMessage.includes("500:")) {
-        errorMessage = "Erro interno do servidor. Tente novamente em alguns instantes.";
       }
       
       errorToast("Erro no cadastro", errorMessage);

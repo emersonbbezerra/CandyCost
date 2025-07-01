@@ -25,14 +25,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/auth/login', (req, res, next) => {
     passport.authenticate('local', (err: any, user: any, info: any) => {
       if (err) {
-        return res.status(500).json({ message: 'Erro interno do servidor' });
+        return res.status(500).json({ message: 'Ocorreu um problema no sistema. Tente novamente em alguns minutos.' });
       }
       if (!user) {
-        return res.status(401).json({ message: info.message || 'Credenciais inválidas' });
+        return res.status(401).json({ message: info.message || 'Email ou senha incorretos. Verifique suas informações.' });
       }
       req.logIn(user, (err) => {
         if (err) {
-          return res.status(500).json({ message: 'Erro ao fazer login' });
+          return res.status(500).json({ message: 'Problema no sistema durante o login. Tente novamente.' });
         }
         return res.json({
           message: 'Login realizado com sucesso',
@@ -65,7 +65,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if user already exists
       const existingUser = await userService.getUserByEmail(email);
       if (existingUser) {
-        return res.status(400).json({ message: 'Email já está em uso' });
+        return res.status(400).json({ message: 'Este email já está cadastrado. Use outro email ou faça login.' });
       }
 
       // Create new user
@@ -80,7 +80,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log the user in
       req.logIn(newUser, (err) => {
         if (err) {
-          return res.status(500).json({ message: 'Usuário criado, mas erro ao fazer login' });
+          return res.status(500).json({ message: 'Conta criada com sucesso, mas houve um problema no login automático. Tente fazer login manualmente.' });
         }
         return res.status(201).json({
           message: 'Usuário criado com sucesso',
@@ -98,7 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: error.errors[0].message });
       }
       console.error('Register error:', error);
-      res.status(500).json({ message: 'Erro interno do servidor' });
+      res.status(500).json({ message: 'Ocorreu um problema no cadastro. Tente novamente em alguns minutos.' });
     }
   });
 
@@ -106,14 +106,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     req.logout((err) => {
       if (err) {
         console.error('Logout error:', err);
-        return res.status(500).json({ message: 'Erro ao fazer logout' });
+        return res.status(500).json({ message: 'Houve um problema ao sair da conta. Tente novamente.' });
       }
       
       // Destroy the session
       req.session.destroy((destroyErr) => {
         if (destroyErr) {
           console.error('Session destroy error:', destroyErr);
-          return res.status(500).json({ message: 'Erro ao limpar sessão' });
+          return res.status(500).json({ message: 'Problema ao finalizar a sessão. Tente novamente.' });
         }
         
         // Clear the session cookie

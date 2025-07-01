@@ -88,7 +88,7 @@ export const isAuthenticated: RequestHandler = (req, res, next) => {
   if (req.isAuthenticated()) {
     return next();
   }
-  res.status(401).json({ message: "Não autorizado. Faça login para continuar." });
+  res.status(401).json({ message: "Você precisa estar logado para acessar esta funcionalidade." });
 };
 
 // Admin authorization middleware
@@ -96,7 +96,7 @@ export const isAdmin: RequestHandler = (req, res, next) => {
   if (req.isAuthenticated() && (req.user as User)?.role === 'admin') {
     return next();
   }
-  res.status(403).json({ message: "Acesso negado. Apenas administradores têm permissão." });
+  res.status(403).json({ message: "Esta funcionalidade é exclusiva para administradores. Entre em contato com o responsável pelo sistema." });
 };
 
 // User service functions
