@@ -15,7 +15,7 @@ import System from "@/pages/system";
 import Settings from "@/pages/settings";
 import UserManagement from "@/pages/user-management";
 import UserManagementAdmin from "@/pages/user-management-admin";
-import Profile from "@/pages/profile";
+import Profile from "@/pages/profile-simple";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 

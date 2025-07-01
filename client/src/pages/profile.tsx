@@ -76,7 +76,7 @@ export default function Profile() {
         email: user.email || "",
       });
     }
-  }, [user, profileForm]);
+  }, [user]);
 
   // Password form
   const passwordForm = useForm<PasswordForm>({
