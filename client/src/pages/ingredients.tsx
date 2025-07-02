@@ -112,15 +112,15 @@ export default function Ingredients() {
   return (
     <div className="p-4 lg:p-8">
       <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900">Ingredientes</h2>
-            <p className="text-gray-600 mt-2">Gerencie todos os ingredientes e insumos</p>
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">Ingredientes</h2>
+          <p className="text-gray-600 mt-2">Gerencie todos os ingredientes e insumos</p>
+          <div className="mt-4">
+            <Button onClick={() => setIsFormOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Ingrediente
+            </Button>
           </div>
-          <Button onClick={() => setIsFormOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Ingrediente
-          </Button>
         </div>
       </div>
 
