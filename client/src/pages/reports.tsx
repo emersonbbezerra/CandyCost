@@ -217,7 +217,7 @@ export default function Reports() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 lg:p-8">
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>

@@ -112,7 +112,7 @@ export default function History() {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-4 lg:p-8">
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900">Histórico de Alterações</h2>
         <p className="text-gray-600 mt-2">Acompanhe a evolução dos preços de ingredientes e custos de receitas</p>

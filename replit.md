@@ -131,6 +131,13 @@ Sistema completo de gestão de custos para confeitaria desenvolvido com React + 
   - **Responsividade Completa**: Breakpoint em 1024px (lg) para alternar entre desktop e mobile
   - **Usabilidade Aprimorada**: Fechamento automático do menu móvel ao navegar entre páginas
   - **Hierarquia Preservada**: Submenu Sistema mantém funcionalidade completa em dispositivos móveis
+- **02/07/2025**: OTIMIZAÇÃO COMPLETA PARA DISPOSITIVOS MÓVEIS - SCROLLBAR HORIZONTAL ELIMINADA:
+  - **Interface de Ingredientes**: Tabela substituída por cards responsivos em smartphones (lg:hidden/lg:block)
+  - **Padding Responsivo**: Todas as páginas com padding adaptativo (p-4 lg:p-8) para evitar overflow
+  - **Cards Mobile**: Interface com cards organizados verticalmente com informações completas
+  - **Tabela Desktop**: Mantida tabela completa em telas grandes com overflow-x-auto quando necessário
+  - **Layout Otimizado**: Eliminação total de scrollbar horizontal em todas as páginas
+  - **Experiência Consistente**: Design uniforme entre desktop e mobile mantendo todas as funcionalidades
 
 ## Melhorias de Interface
 - **Selects Padronizados**: Categorias de produtos, ingredientes e unidades agora usam listas predefinidas

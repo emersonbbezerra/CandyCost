@@ -123,7 +123,7 @@ export default function Settings() {
 
   if (isLoading) {
     return (
-      <div className="p-8">
+      <div className="p-4 lg:p-8">
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-1/4"></div>
           <div className="h-4 bg-gray-200 rounded w-1/2"></div>
@@ -134,7 +134,7 @@ export default function Settings() {
   }
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-4 lg:p-8 max-w-4xl">
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 flex items-center">
           <SettingsIcon className="w-8 h-8 mr-3 text-blue-600" />

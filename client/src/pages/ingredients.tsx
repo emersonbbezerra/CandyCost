@@ -110,7 +110,7 @@ export default function Ingredients() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 lg:p-8">
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
@@ -159,31 +159,95 @@ export default function Ingredients() {
         </CardContent>
       </Card>
 
-      {/* Ingredients Table */}
+      {/* Ingredients List */}
       <Card>
         <CardHeader>
           <CardTitle>Lista de Ingredientes ({filteredIngredients.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Ingrediente</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Embalagem</TableHead>
-                <TableHead>Preço</TableHead>
-                <TableHead>Custo/Unidade</TableHead>
-                <TableHead>Última Atualização</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredIngredients.map((ingredient) => (
-                <TableRow key={ingredient.id}>
-                  <TableCell>
+          {/* Desktop Table */}
+          <div className="hidden lg:block overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Ingrediente</TableHead>
+                  <TableHead>Categoria</TableHead>
+                  <TableHead>Embalagem</TableHead>
+                  <TableHead>Preço</TableHead>
+                  <TableHead>Custo/Unidade</TableHead>
+                  <TableHead>Última Atualização</TableHead>
+                  <TableHead>Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredIngredients.map((ingredient) => (
+                  <TableRow key={ingredient.id}>
+                    <TableCell>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                          <span className="text-primary font-bold text-sm">
+                            {ingredient.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">{ingredient.name}</div>
+                          {ingredient.brand && (
+                            <div className="text-sm text-gray-500">{ingredient.brand}</div>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        className={categoryColors[ingredient.category as keyof typeof categoryColors] || categoryColors.Outros}
+                      >
+                        {ingredient.category}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{ingredient.quantity} {ingredient.unit}</TableCell>
+                    <TableCell className="font-medium">
+                      {formatCurrency(parseFloat(ingredient.price))}
+                    </TableCell>
+                    <TableCell className="text-gray-500">
+                      {formatCurrency(calculateUnitCost(ingredient))} / {ingredient.unit}
+                    </TableCell>
+                    <TableCell className="text-gray-500">
+                      {formatRelativeTime(new Date(ingredient.updatedAt))}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(ingredient)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(ingredient)}
+                          disabled={deleteMutation.isPending}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="lg:hidden space-y-4">
+            {filteredIngredients.map((ingredient) => (
+              <Card key={ingredient.id} className="border border-gray-200">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                        <span className="text-primary font-bold text-sm">
+                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                        <span className="text-primary font-bold">
                           {ingredient.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
@@ -194,26 +258,7 @@ export default function Ingredients() {
                         )}
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge 
-                      className={categoryColors[ingredient.category as keyof typeof categoryColors] || categoryColors.Outros}
-                    >
-                      {ingredient.category}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{ingredient.quantity} {ingredient.unit}</TableCell>
-                  <TableCell className="font-medium">
-                    {formatCurrency(parseFloat(ingredient.price))}
-                  </TableCell>
-                  <TableCell className="text-gray-500">
-                    {formatCurrency(calculateUnitCost(ingredient))} / {ingredient.unit}
-                  </TableCell>
-                  <TableCell className="text-gray-500">
-                    {formatRelativeTime(new Date(ingredient.updatedAt))}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-1">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -230,11 +275,48 @@ export default function Ingredients() {
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">Categoria:</span>
+                      <Badge 
+                        className={categoryColors[ingredient.category as keyof typeof categoryColors] || categoryColors.Outros}
+                      >
+                        {ingredient.category}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">Embalagem:</span>
+                      <span className="text-sm font-medium">{ingredient.quantity} {ingredient.unit}</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">Preço:</span>
+                      <span className="text-sm font-bold text-green-600">
+                        {formatCurrency(parseFloat(ingredient.price))}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">Custo/Unidade:</span>
+                      <span className="text-sm text-gray-600">
+                        {formatCurrency(calculateUnitCost(ingredient))} / {ingredient.unit}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between border-t pt-2 mt-2">
+                      <span className="text-xs text-gray-400">Atualizado:</span>
+                      <span className="text-xs text-gray-500">
+                        {formatRelativeTime(new Date(ingredient.updatedAt))}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
           {filteredIngredients.length === 0 && (
             <div className="text-center py-8 text-gray-500">

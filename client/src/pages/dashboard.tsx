@@ -94,7 +94,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 lg:p-8">
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
         <p className="text-gray-600 mt-2">Visão geral dos custos de produção</p>
