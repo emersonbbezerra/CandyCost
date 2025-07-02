@@ -223,7 +223,7 @@ export default function UserManagementAdmin() {
   }
 
   return (
-    <div className="p-2 md:p-4 lg:p-8 space-y-4 md:space-y-6 overflow-x-hidden">
+    <div className="p-4 lg:p-8">
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 flex items-center">
           <Users className="w-8 h-8 mr-3 text-blue-600" />
@@ -233,38 +233,38 @@ export default function UserManagementAdmin() {
       </div>
 
       {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 lg:gap-6 mb-4 md:mb-6 lg:mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card>
-          <CardContent className="p-3 md:p-4 lg:p-6">
-            <div className="flex items-center space-x-2 md:space-x-3">
-              <Users className="h-6 w-6 md:h-8 md:w-8 text-blue-500" />
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-3">
+              <Users className="h-8 w-8 text-blue-500" />
               <div className="min-w-0">
-                <p className="text-xs md:text-sm text-gray-600">Total de Usuários</p>
-                <p className="text-xl md:text-2xl font-bold">{users.length}</p>
+                <p className="text-sm text-gray-600">Total de Usuários</p>
+                <p className="text-2xl font-bold">{users.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardContent className="p-3 md:p-4 lg:p-6">
-            <div className="flex items-center space-x-2 md:space-x-3">
-              <Crown className="h-6 w-6 md:h-8 md:w-8 text-yellow-500" />
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-3">
+              <Crown className="h-8 w-8 text-yellow-500" />
               <div className="min-w-0">
-                <p className="text-xs md:text-sm text-gray-600">Administradores</p>
-                <p className="text-xl md:text-2xl font-bold">{adminUsers.length}</p>
+                <p className="text-sm text-gray-600">Administradores</p>
+                <p className="text-2xl font-bold">{adminUsers.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardContent className="p-3 md:p-4 lg:p-6">
-            <div className="flex items-center space-x-2 md:space-x-3">
-              <Shield className="h-6 w-6 md:h-8 md:w-8 text-green-500" />
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-3">
+              <Shield className="h-8 w-8 text-green-500" />
               <div className="min-w-0">
-                <p className="text-xs md:text-sm text-gray-600">Usuários Padrão</p>
-                <p className="text-xl md:text-2xl font-bold">{regularUsers.length}</p>
+                <p className="text-sm text-gray-600">Usuários Padrão</p>
+                <p className="text-2xl font-bold">{regularUsers.length}</p>
               </div>
             </div>
           </CardContent>
