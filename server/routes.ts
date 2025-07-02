@@ -776,6 +776,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Configurações administrativas (apenas admins)
   app.put("/api/settings", isAdmin, async (req, res) => {
     try {
       const updatedSettings = await storage.updateSettings(req.body);
@@ -783,6 +784,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao salvar configurações:", error);
       res.status(500).json({ message: "Erro interno ao salvar configurações" });
+    }
+  });
+
+  // Configurações pessoais (usuários comuns podem alterar)
+  app.put("/api/settings/personal", isAuthenticated, async (req, res) => {
+    try {
+      const { enablePriceAlerts, enableCostAlerts } = req.body;
+      
+      // Validar que apenas configurações permitidas estão sendo alteradas
+      const allowedPersonalSettings: any = {};
+      
+      if (typeof enablePriceAlerts === 'boolean') {
+        allowedPersonalSettings.enablePriceAlerts = enablePriceAlerts;
+      }
+      
+      if (typeof enableCostAlerts === 'boolean') {
+        allowedPersonalSettings.enableCostAlerts = enableCostAlerts;
+      }
+
+      // Verificar se pelo menos uma configuração válida foi enviada
+      if (Object.keys(allowedPersonalSettings).length === 0) {
+        return res.status(400).json({ 
+          message: "Nenhuma configuração pessoal válida foi enviada." 
+        });
+      }
+
+      const updatedSettings = await storage.updateSettings(allowedPersonalSettings);
+      res.json(updatedSettings);
+    } catch (error) {
+      console.error("Erro ao salvar preferências pessoais:", error);
+      res.status(500).json({ message: "Erro ao salvar suas preferências. Tente novamente." });
     }
   });
 

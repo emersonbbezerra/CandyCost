@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { successToast, errorToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 
 interface SystemSettings {
   defaultMarginPercentage: number;
@@ -47,6 +48,10 @@ export default function Settings() {
   const [settings, setSettings] = useState<SystemSettings>(defaultSettings);
   const [dataLoaded, setDataLoaded] = useState(false);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  
+  // Verificar se o usuário é admin para determinar quais configurações podem ser alteradas
+  const isAdmin = user?.role === 'admin';
 
   // Carregar configurações do backend
   const { data: currentSettings, isLoading } = useQuery({
@@ -68,14 +73,31 @@ export default function Settings() {
 
   const saveSettingsMutation = useMutation({
     mutationFn: async (newSettings: SystemSettings) => {
-      const response = await apiRequest("PUT", "/api/settings", newSettings);
+      // Escolher rota baseada no papel do usuário
+      let endpoint = "/api/settings/personal";
+      let settingsToSend = newSettings;
+      
+      if (isAdmin) {
+        // Admin pode alterar todas as configurações
+        endpoint = "/api/settings";
+      } else {
+        // Usuário comum só pode alterar configurações pessoais
+        settingsToSend = {
+          enablePriceAlerts: newSettings.enablePriceAlerts,
+          enableCostAlerts: newSettings.enableCostAlerts
+        } as SystemSettings;
+      }
+      
+      const response = await apiRequest("PUT", endpoint, settingsToSend);
       return response.json();
     },
     onSuccess: (savedSettings) => {
       setSettings(savedSettings);
       successToast(
         "Configurações Salvas",
-        "Suas preferências foram atualizadas com sucesso!"
+        isAdmin 
+          ? "Todas as configurações do sistema foram atualizadas!"
+          : "Suas preferências pessoais foram atualizadas!"
       );
       queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
     },
@@ -116,11 +138,22 @@ export default function Settings() {
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 flex items-center">
           <SettingsIcon className="w-8 h-8 mr-3 text-blue-600" />
-          Configurações do Sistema
+          {isAdmin ? 'Configurações do Sistema' : 'Minhas Preferências'}
         </h2>
         <p className="text-gray-600 mt-2">
-          Personalize o comportamento do sistema de acordo com suas necessidades
+          {isAdmin 
+            ? 'Configure todas as definições do sistema para sua confeitaria'
+            : 'Personalize suas preferências de notificações'
+          }
         </p>
+        {!isAdmin && (
+          <Alert className="mt-4">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              Algumas configurações são restritas a administradores. Entre em contato com seu administrador para alterações no sistema.
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
 
       <div className="space-y-6">
@@ -141,6 +174,7 @@ export default function Settings() {
                   value={settings.businessName}
                   onChange={(e) => setSettings({...settings, businessName: e.target.value})}
                   placeholder="Ex: Doces da Maria"
+                  disabled={!isAdmin}
                 />
               </div>
               <div>
@@ -148,6 +182,7 @@ export default function Settings() {
                 <Select 
                   value={settings.currencySymbol} 
                   onValueChange={(value) => setSettings({...settings, currencySymbol: value})}
+                  disabled={!isAdmin}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -184,6 +219,7 @@ export default function Settings() {
                     max="500"
                     value={settings.defaultMarginPercentage}
                     onChange={(e) => setSettings({...settings, defaultMarginPercentage: parseInt(e.target.value) || 0})}
+                    disabled={!isAdmin}
                   />
                   <Percent className="w-4 h-4 text-gray-500" />
                 </div>
@@ -196,6 +232,7 @@ export default function Settings() {
                   id="autoMargins"
                   checked={settings.autoCalculateMargins}
                   onCheckedChange={(checked) => setSettings({...settings, autoCalculateMargins: checked})}
+                  disabled={!isAdmin}
                 />
                 <Label htmlFor="autoMargins" className="text-sm">
                   Calcular margens automaticamente
@@ -236,6 +273,7 @@ export default function Settings() {
                         max="100"
                         value={settings.priceIncreaseAlertThreshold}
                         onChange={(e) => setSettings({...settings, priceIncreaseAlertThreshold: parseInt(e.target.value) || 0})}
+                        disabled={!isAdmin}
                       />
                       <TrendingUp className="w-4 h-4 text-gray-500" />
                     </div>
@@ -267,6 +305,7 @@ export default function Settings() {
                         step="0.01"
                         value={settings.highCostAlertThreshold}
                         onChange={(e) => setSettings({...settings, highCostAlertThreshold: parseFloat(e.target.value) || 0})}
+                        disabled={!isAdmin}
                       />
                       <DollarSign className="w-4 h-4 text-gray-500" />
                     </div>

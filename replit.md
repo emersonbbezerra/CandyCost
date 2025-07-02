@@ -103,6 +103,13 @@ Sistema completo de gestão de custos para confeitaria desenvolvido com React + 
   - **QueryClient Corrigido**: Extração automática de mensagens amigáveis do servidor sem códigos de status
   - **Tratamento de Erro Simplificado**: Frontend e backend trabalham juntos para mostrar apenas mensagens claras
   - **Experiência do Usuário Melhorada**: Todas as interações do sistema agora usam linguagem natural e compreensível
+- **02/07/2025**: SISTEMA AVANÇADO DE SEGURANÇA E CONTROLE DE ACESSO IMPLEMENTADO:
+  - **Separação de Configurações**: Criadas rotas distintas para configurações administrativas e pessoais
+  - **Interface Adaptativa**: Página de configurações se adapta automaticamente ao papel do usuário (admin/user)
+  - **Controles Visuais**: Campos administrativos desabilitados para usuários comuns com feedback visual claro
+  - **Rota Segura Personal**: /api/settings/personal permite apenas alteração de enablePriceAlerts e enableCostAlerts
+  - **Validação Robusta**: Backend valida permissões e filtra configurações baseado no papel do usuário
+  - **Alertas Informativos**: Mensagens explicativas sobre restrições de acesso para usuários não-administradores
 
 ## Melhorias de Interface
 - **Selects Padronizados**: Categorias de produtos, ingredientes e unidades agora usam listas predefinidas
