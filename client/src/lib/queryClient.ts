@@ -9,8 +9,8 @@ async function throwIfResNotOk(res: Response) {
       const message = errorData.message || errorData.error || "Erro na operação";
       throw new Error(message);
     } catch {
-      // Se não conseguir fazer parse do JSON, usar o texto como está
-      const message = responseText || res.statusText || "Erro na operação";
+      // Se não conseguir fazer parse do JSON, usar apenas uma mensagem genérica
+      const message = "Erro na operação. Tente novamente.";
       throw new Error(message);
     }
   }
