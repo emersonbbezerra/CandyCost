@@ -15,7 +15,7 @@ import {
   Shield,
   Users
 } from "lucide-react";
-import logoPath from "@assets/logo_1751417549374.png";
+
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -45,12 +45,8 @@ export function Sidebar() {
     <aside className="w-64 bg-white shadow-lg border-r border-gray-200 fixed h-full z-10 flex flex-col">
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 flex items-center justify-center">
-            <img 
-              src={logoPath} 
-              alt="CandyCost Logo" 
-              className="w-full h-full object-contain"
-            />
+          <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+            <Calculator className="text-white text-lg" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">CandyCost</h1>

@@ -10,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { ChefHat, LogIn, UserPlus } from "lucide-react";
-import logoPath from "@assets/logo_1751417549374.png";
+
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -67,11 +67,7 @@ export default function Login() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <img 
-              src={logoPath} 
-              alt="CandyCost Logo" 
-              className="h-16 w-auto object-contain"
-            />
+            <ChefHat className="h-12 w-12 text-pink-600 dark:text-pink-400" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">CandyCost</h1>
           <p className="text-gray-600 dark:text-gray-300 mt-2">

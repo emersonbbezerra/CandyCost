@@ -110,12 +110,12 @@ Sistema completo de gestão de custos para confeitaria desenvolvido com React + 
   - **Rota Segura Personal**: /api/settings/personal permite apenas alteração de enablePriceAlerts e enableCostAlerts
   - **Validação Robusta**: Backend valida permissões e filtra configurações baseado no papel do usuário
   - **Alertas Informativos**: Mensagens explicativas sobre restrições de acesso para usuários não-administradores
-- **02/07/2025**: INTEGRAÇÃO COMPLETA DO LOGO OFICIAL CANDYCOST:
-  - **Logo na Sidebar**: Substituído ícone Calculator pelo logo oficial fornecido pelo usuário
-  - **Logo na Tela de Login**: Substituído ícone ChefHat pelo logo oficial para branding consistente
-  - **Dimensionamento Adequado**: Logo redimensionado adequadamente para cada contexto (12x12 na sidebar, 16h na login)
-  - **Acessibilidade**: Adicionados textos alternativos apropriados para leitores de tela
-  - **Experiência de Marca Unificada**: Logo aplicado em todos os pontos principais de contato com o usuário
+- **02/07/2025**: REVERSÃO DO LOGO OFICIAL POR QUESTÕES DE CONTRASTE:
+  - **Problema Identificado**: Logo PNG contém partes brancas que não contrastam bem com fundo da aplicação
+  - **Sidebar Restaurada**: Voltou ao ícone Calculator original com fundo colorido para melhor visibilidade
+  - **Login Restaurado**: Voltou ao ícone ChefHat original em rosa para manter identidade visual
+  - **Decisão do Usuário**: Preferência por manter os ícones originais ao invés de logo com baixo contraste
+  - **Identidade Visual**: Mantida consistência com nome "CandyCost" e cores adequadas ao contexto
 
 ## Melhorias de Interface
 - **Selects Padronizados**: Categorias de produtos, ingredientes e unidades agora usam listas predefinidas
