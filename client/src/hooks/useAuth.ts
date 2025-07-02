@@ -69,17 +69,7 @@ export function useAuth() {
       );
     },
     onError: (error: any) => {
-      // Extrair apenas a mensagem amigável do servidor
-      let errorMessage = error.message || "Email ou senha incorretos. Verifique suas informações.";
-      
-      // Se a mensagem contém código HTTP, extrair apenas a parte útil
-      if (errorMessage.includes(":")) {
-        const parts = errorMessage.split(":");
-        if (parts.length > 1) {
-          errorMessage = parts.slice(1).join(":").trim();
-        }
-      }
-      
+      const errorMessage = error.message || "Email ou senha incorretos. Verifique suas informações.";
       errorToast("Erro no login", errorMessage);
     },
   });
@@ -101,17 +91,7 @@ export function useAuth() {
       }, 1500);
     },
     onError: (error: any) => {
-      // Extrair apenas a mensagem amigável do servidor
-      let errorMessage = error.message || "Erro ao criar conta. Verifique os dados e tente novamente.";
-      
-      // Se a mensagem contém código HTTP, extrair apenas a parte útil
-      if (errorMessage.includes(":")) {
-        const parts = errorMessage.split(":");
-        if (parts.length > 1) {
-          errorMessage = parts.slice(1).join(":").trim();
-        }
-      }
-      
+      const errorMessage = error.message || "Erro ao criar conta. Verifique os dados e tente novamente.";
       errorToast("Erro no cadastro", errorMessage);
     },
   });
