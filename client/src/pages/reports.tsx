@@ -222,7 +222,7 @@ export default function Reports() {
       <div className="mb-6 lg:mb-8">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
           <div>
-            <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 flex items-center">
+            <h2 className="text-3xl font-bold text-gray-900 flex items-center">
               <BarChart className="w-8 h-8 mr-3 text-blue-600" />
               Relatórios
             </h2>

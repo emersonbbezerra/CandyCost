@@ -125,7 +125,7 @@ export default function History() {
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-4">
           <Package className="w-6 h-6 text-blue-600" />
-          <h3 className="text-2xl font-bold text-gray-900">Histórico de Preços de Ingredientes</h3>
+          <h3 className="text-xl font-bold text-gray-900">Histórico de Preços de Ingredientes</h3>
         </div>
 
         <Card className="mb-6">
@@ -217,7 +217,7 @@ export default function History() {
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-4">
           <ShoppingCart className="w-6 h-6 text-green-600" />
-          <h3 className="text-2xl font-bold text-gray-900">Histórico de Custos de Receitas</h3>
+          <h3 className="text-xl font-bold text-gray-900">Histórico de Custos de Receitas</h3>
         </div>
 
         <Card>
