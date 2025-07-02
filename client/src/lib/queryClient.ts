@@ -3,13 +3,16 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const responseText = await res.text();
+    console.log("DEBUG - Response text:", responseText); // Log para debug
     try {
       // Tentar fazer parse do JSON para extrair apenas a mensagem
       const errorData = JSON.parse(responseText);
       const message = errorData.message || errorData.error || "Erro na operação";
+      console.log("DEBUG - Final message:", message); // Log para debug
       throw new Error(message);
-    } catch {
+    } catch (parseError) {
       // Se não conseguir fazer parse do JSON, usar apenas uma mensagem genérica
+      console.log("DEBUG - Parse error, usando mensagem genérica"); // Log para debug
       const message = "Erro na operação. Tente novamente.";
       throw new Error(message);
     }
