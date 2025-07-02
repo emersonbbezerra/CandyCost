@@ -223,7 +223,7 @@ export default function UserManagementAdmin() {
   }
 
   return (
-    <div className="p-4 lg:p-8 space-y-6">
+    <div className="p-2 md:p-4 lg:p-8 space-y-4 md:space-y-6 overflow-x-hidden">
       <div className="flex items-center space-x-3">
         <Users className="h-8 w-8 text-primary" />
         <div>
@@ -233,38 +233,38 @@ export default function UserManagementAdmin() {
       </div>
 
       {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 lg:gap-6 mb-4 md:mb-6 lg:mb-8">
         <Card>
-          <CardContent className="p-4 md:p-6">
-            <div className="flex items-center space-x-3">
-              <Users className="h-8 w-8 text-blue-500" />
-              <div>
-                <p className="text-sm text-gray-600">Total de Usuários</p>
-                <p className="text-2xl font-bold">{users.length}</p>
+          <CardContent className="p-3 md:p-4 lg:p-6">
+            <div className="flex items-center space-x-2 md:space-x-3">
+              <Users className="h-6 w-6 md:h-8 md:w-8 text-blue-500" />
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm text-gray-600">Total de Usuários</p>
+                <p className="text-xl md:text-2xl font-bold">{users.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardContent className="p-4 md:p-6">
-            <div className="flex items-center space-x-3">
-              <Crown className="h-8 w-8 text-yellow-500" />
-              <div>
-                <p className="text-sm text-gray-600">Administradores</p>
-                <p className="text-2xl font-bold">{adminUsers.length}</p>
+          <CardContent className="p-3 md:p-4 lg:p-6">
+            <div className="flex items-center space-x-2 md:space-x-3">
+              <Crown className="h-6 w-6 md:h-8 md:w-8 text-yellow-500" />
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm text-gray-600">Administradores</p>
+                <p className="text-xl md:text-2xl font-bold">{adminUsers.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
         <Card>
-          <CardContent className="p-4 md:p-6">
-            <div className="flex items-center space-x-3">
-              <Shield className="h-8 w-8 text-green-500" />
-              <div>
-                <p className="text-sm text-gray-600">Usuários Padrão</p>
-                <p className="text-2xl font-bold">{regularUsers.length}</p>
+          <CardContent className="p-3 md:p-4 lg:p-6">
+            <div className="flex items-center space-x-2 md:space-x-3">
+              <Shield className="h-6 w-6 md:h-8 md:w-8 text-green-500" />
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm text-gray-600">Usuários Padrão</p>
+                <p className="text-xl md:text-2xl font-bold">{regularUsers.length}</p>
               </div>
             </div>
           </CardContent>
@@ -296,8 +296,8 @@ export default function UserManagementAdmin() {
                   key={user.id} 
                   className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-3 md:p-4 border rounded-lg bg-yellow-50 space-y-2 lg:space-y-0"
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                  <div className="flex items-center space-x-2 md:space-x-4">
+                    <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-yellow-100 flex items-center justify-center">
                       <Crown className="h-5 w-5 text-yellow-600" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -373,8 +373,8 @@ export default function UserManagementAdmin() {
                   key={user.id} 
                   className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-3 md:p-4 border rounded-lg space-y-2 lg:space-y-0"
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                  <div className="flex items-center space-x-2 md:space-x-4">
+                    <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-green-100 flex items-center justify-center">
                       <Shield className="h-5 w-5 text-green-600" />
                     </div>
                     <div className="min-w-0 flex-1">
