@@ -224,12 +224,12 @@ export default function UserManagementAdmin() {
 
   return (
     <div className="p-2 md:p-4 lg:p-8 space-y-4 md:space-y-6 overflow-x-hidden">
-      <div className="flex items-center space-x-3">
-        <Users className="h-8 w-8 text-primary" />
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Gerenciamento de Usuários</h1>
-          <p className="text-gray-600">Gerencie usuários do sistema CandyCost</p>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 flex items-center">
+          <Users className="w-8 h-8 mr-3 text-blue-600" />
+          Gerenciamento de Usuários
+        </h1>
+        <p className="text-gray-600 mt-2">Gerencie usuários do sistema CandyCost</p>
       </div>
 
       {/* Estatísticas */}

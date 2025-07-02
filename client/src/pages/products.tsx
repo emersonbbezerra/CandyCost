@@ -140,7 +140,10 @@ export default function Products() {
     <div className="p-4 lg:p-8">
       <div className="mb-8">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">Receitas</h2>
+          <h2 className="text-3xl font-bold text-gray-900 flex items-center">
+            <ChefHat className="w-8 h-8 mr-3 text-blue-600" />
+            Receitas
+          </h2>
           <p className="text-gray-600 mt-2">Gerencie receitas e produtos com cálculo de custos</p>
           <div className="mt-4">
             <Button onClick={() => setIsFormOpen(true)}>

@@ -67,7 +67,10 @@ export default function CostsHistory() {
   return (
     <div className="p-4 lg:p-8">
       <div className="mb-6 lg:mb-8">
-        <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">Histórico de Custos de Receitas</h2>
+        <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 flex items-center">
+          <TrendingUp className="w-8 h-8 mr-3 text-blue-600" />
+          Histórico de Custos de Receitas
+        </h2>
         <p className="text-gray-600 mt-2">Acompanhe como as alterações de preços de ingredientes afetam os custos dos seus produtos</p>
       </div>
 

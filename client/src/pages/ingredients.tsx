@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2, History, Filter } from "lucide-react";
+import { Plus, Search, Edit, Trash2, History, Filter, Package } from "lucide-react";
 import { IngredientForm } from "@/components/ingredient-form";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { apiRequest } from "@/lib/queryClient";
@@ -122,7 +122,10 @@ export default function Ingredients() {
     <div className="p-4 lg:p-8">
       <div className="mb-8">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">Ingredientes</h2>
+          <h2 className="text-3xl font-bold text-gray-900 flex items-center">
+            <Package className="w-8 h-8 mr-3 text-blue-600" />
+            Ingredientes
+          </h2>
           <p className="text-gray-600 mt-2">Gerencie todos os ingredientes e insumos</p>
           <div className="mt-4">
             <Button onClick={() => setIsFormOpen(true)}>
