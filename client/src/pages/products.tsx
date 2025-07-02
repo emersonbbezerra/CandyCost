@@ -23,6 +23,8 @@ export default function Products() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<ProductWithCost | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -112,6 +114,13 @@ export default function Products() {
     return matchesSearch && matchesCategory;
   });
 
+  // Paginação
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   if (isLoading) {
     return (
       <div className="p-8">
@@ -152,14 +161,20 @@ export default function Products() {
                 <Input
                   placeholder="Buscar receitas..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
                   className="pl-10"
                 />
               </div>
             </div>
             <div className="flex items-center space-x-2">
               <Filter className="w-4 h-4 text-gray-400" />
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <Select value={categoryFilter} onValueChange={(value) => {
+                setCategoryFilter(value);
+                setCurrentPage(1);
+              }}>
                 <SelectTrigger className="w-48">
                   <SelectValue placeholder="Todas as categorias" />
                 </SelectTrigger>
@@ -179,7 +194,7 @@ export default function Products() {
 
       {/* Products Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProducts.map((product) => (
+        {paginatedProducts.map((product) => (
           <Card key={product.id} className="overflow-hidden">
             <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
               <ChefHat className="w-16 h-16 text-gray-400" />
@@ -288,7 +303,83 @@ export default function Products() {
             </CardContent>
           </Card>
         ))}
-        
+      </div>
+
+      {/* Paginação */}
+      {filteredProducts.length > 0 && totalPages > 1 && (
+        <div className="flex justify-center items-center mt-8 space-x-2">
+          {/* Desktop Pagination */}
+          <div className="hidden lg:flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Anterior
+            </Button>
+            
+            <div className="flex items-center space-x-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const startPage = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
+                const page = startPage + i;
+                
+                if (page > totalPages) return null;
+                
+                return (
+                  <Button
+                    key={page}
+                    variant={currentPage === page ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(page)}
+                    className="w-10"
+                  >
+                    {page}
+                  </Button>
+                );
+              })}
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              Próximo
+            </Button>
+          </div>
+
+          {/* Mobile Pagination */}
+          <div className="lg:hidden flex items-center justify-center space-x-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3"
+            >
+              ‹
+            </Button>
+            
+            <span className="text-sm text-gray-600 min-w-[100px] text-center">
+              Página {currentPage} de {totalPages}
+            </span>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3"
+            >
+              ›
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
         {filteredProducts.length === 0 && products.length > 0 && (
           <div className="col-span-full">
             <Card>

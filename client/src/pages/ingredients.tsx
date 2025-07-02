@@ -31,6 +31,8 @@ export default function Ingredients() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [ingredientToDelete, setIngredientToDelete] = useState<Ingredient | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -68,6 +70,13 @@ export default function Ingredients() {
     const matchesCategory = categoryFilter === "all" || ingredient.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
+
+  // Paginação
+  const totalPages = Math.ceil(filteredIngredients.length / itemsPerPage);
+  const paginatedIngredients = filteredIngredients.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const handleEdit = (ingredient: Ingredient) => {
     setEditingIngredient(ingredient);
@@ -134,14 +143,20 @@ export default function Ingredients() {
                 <Input
                   placeholder="Buscar ingredientes..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
                   className="pl-10"
                 />
               </div>
             </div>
             <div className="flex items-center space-x-2">
               <Filter className="w-4 h-4 text-gray-400" />
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <Select value={categoryFilter} onValueChange={(value) => {
+                setCategoryFilter(value);
+                setCurrentPage(1);
+              }}>
                 <SelectTrigger className="w-48">
                   <SelectValue placeholder="Todas as categorias" />
                 </SelectTrigger>
@@ -180,7 +195,7 @@ export default function Ingredients() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredIngredients.map((ingredient) => (
+                {paginatedIngredients.map((ingredient) => (
                   <TableRow key={ingredient.id}>
                     <TableCell>
                       <div className="flex items-center space-x-3">
@@ -241,7 +256,7 @@ export default function Ingredients() {
 
           {/* Mobile Cards */}
           <div className="lg:hidden space-y-4">
-            {filteredIngredients.map((ingredient) => (
+            {paginatedIngredients.map((ingredient) => (
               <Card key={ingredient.id} className="border border-gray-200">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
@@ -317,6 +332,80 @@ export default function Ingredients() {
               </Card>
             ))}
           </div>
+
+          {/* Paginação */}
+          {filteredIngredients.length > 0 && totalPages > 1 && (
+            <div className="flex justify-center items-center mt-6 space-x-2">
+              {/* Desktop Pagination */}
+              <div className="hidden lg:flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Anterior
+                </Button>
+                
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const startPage = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
+                    const page = startPage + i;
+                    
+                    if (page > totalPages) return null;
+                    
+                    return (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(page)}
+                        className="w-10"
+                      >
+                        {page}
+                      </Button>
+                    );
+                  })}
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Próximo
+                </Button>
+              </div>
+
+              {/* Mobile Pagination */}
+              <div className="lg:hidden flex items-center justify-center space-x-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3"
+                >
+                  ‹
+                </Button>
+                
+                <span className="text-sm text-gray-600 min-w-[100px] text-center">
+                  Página {currentPage} de {totalPages}
+                </span>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3"
+                >
+                  ›
+                </Button>
+              </div>
+            </div>
+          )}
 
           {filteredIngredients.length === 0 && (
             <div className="text-center py-8 text-gray-500">

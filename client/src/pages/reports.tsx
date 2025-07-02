@@ -225,12 +225,11 @@ export default function Reports() {
             <p className="text-gray-600 mt-2">Análises detalhadas e insights do seu negócio</p>
           </div>
 
+          {/* Botão de Exportar no cabeçalho */}
+          <div>
+            <ExportReports />
+          </div>
         </div>
-      </div>
-
-      {/* Componente de Exportação de Relatórios */}
-      <div className="mb-6">
-        <ExportReports />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

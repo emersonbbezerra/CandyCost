@@ -223,11 +223,11 @@ export default function UserManagementAdmin() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 lg:p-8 space-y-6">
       <div className="flex items-center space-x-3">
         <Users className="h-8 w-8 text-primary" />
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gerenciamento de Usuários</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Gerenciamento de Usuários</h1>
           <p className="text-gray-600">Gerencie usuários do sistema CandyCost</p>
         </div>
       </div>
@@ -294,27 +294,27 @@ export default function UserManagementAdmin() {
               {adminUsers.map((user) => (
                 <div 
                   key={user.id} 
-                  className="flex items-center justify-between p-4 border rounded-lg bg-yellow-50"
+                  className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-4 border rounded-lg bg-yellow-50 space-y-3 lg:space-y-0"
                 >
                   <div className="flex items-center space-x-4">
                     <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
                       <Crown className="h-5 w-5 text-yellow-600" />
                     </div>
-                    <div>
-                      <p className="font-medium">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">
                         {user.firstName} {user.lastName || ""}
                       </p>
-                      <p className="text-sm text-gray-600 flex items-center">
-                        <Mail className="h-4 w-4 mr-1" />
-                        {user.email}
+                      <p className="text-sm text-gray-600 flex items-center truncate">
+                        <Mail className="h-4 w-4 mr-1 flex-shrink-0" />
+                        <span className="truncate">{user.email}</span>
                       </p>
                       <p className="text-xs text-gray-500 flex items-center">
-                        <CalendarDays className="h-3 w-3 mr-1" />
+                        <CalendarDays className="h-3 w-3 mr-1 flex-shrink-0" />
                         Criado em {formatDate(user.createdAt)}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center justify-end lg:justify-start space-x-2">
                     <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
                       Administrador
                     </Badge>
@@ -365,27 +365,27 @@ export default function UserManagementAdmin() {
               {regularUsers.map((user) => (
                 <div 
                   key={user.id} 
-                  className="flex items-center justify-between p-4 border rounded-lg"
+                  className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-4 border rounded-lg space-y-3 lg:space-y-0"
                 >
                   <div className="flex items-center space-x-4">
                     <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
                       <Shield className="h-5 w-5 text-green-600" />
                     </div>
-                    <div>
-                      <p className="font-medium">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">
                         {user.firstName} {user.lastName || ""}
                       </p>
-                      <p className="text-sm text-gray-600 flex items-center">
-                        <Mail className="h-4 w-4 mr-1" />
-                        {user.email}
+                      <p className="text-sm text-gray-600 flex items-center truncate">
+                        <Mail className="h-4 w-4 mr-1 flex-shrink-0" />
+                        <span className="truncate">{user.email}</span>
                       </p>
                       <p className="text-xs text-gray-500 flex items-center">
-                        <CalendarDays className="h-3 w-3 mr-1" />
+                        <CalendarDays className="h-3 w-3 mr-1 flex-shrink-0" />
                         Criado em {formatDate(user.createdAt)}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center justify-end lg:justify-start space-x-2">
                     <Badge variant="outline" className="text-green-700 border-green-300">
                       Usuário
                     </Badge>
