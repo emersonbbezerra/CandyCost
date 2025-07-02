@@ -102,6 +102,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET route for logout (for direct browser navigation)
+  app.get('/api/logout', (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        console.error('Logout error:', err);
+        return res.redirect('/?error=logout');
+      }
+      
+      // Destroy the session
+      req.session.destroy((destroyErr) => {
+        if (destroyErr) {
+          console.error('Session destroy error:', destroyErr);
+          return res.redirect('/?error=session');
+        }
+        
+        // Clear the session cookie and redirect
+        res.clearCookie('connect.sid');
+        res.redirect('/');
+      });
+    });
+  });
+
+  // POST route for logout (for API calls)
   app.post('/api/auth/logout', (req, res) => {
     req.logout((err) => {
       if (err) {
