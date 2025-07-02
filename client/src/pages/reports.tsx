@@ -347,21 +347,23 @@ export default function Reports() {
             
             {/* Paginação */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6 pt-4 border-t">
-                <div className="text-sm text-gray-600">
-                  Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, filteredProfitabilityData.length)} de {filteredProfitabilityData.length} produtos
+              <div className="mt-6 pt-4 border-t">
+                <div className="text-sm text-gray-600 text-center mb-4">
+                  Página {currentPage} de {totalPages} ({filteredProfitabilityData.length} produtos)
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center justify-center space-x-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
+                    className="flex-shrink-0"
                   >
-                    Anterior
+                    <span className="hidden sm:inline">Anterior</span>
+                    <span className="sm:hidden">‹</span>
                   </Button>
                   
-                  <div className="flex items-center space-x-1">
+                  <div className="hidden sm:flex items-center space-x-1">
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       let pageNumber;
                       if (totalPages <= 5) {
@@ -388,13 +390,19 @@ export default function Reports() {
                     })}
                   </div>
                   
+                  <div className="sm:hidden flex items-center space-x-2">
+                    <span className="text-sm text-gray-600">{currentPage}/{totalPages}</span>
+                  </div>
+                  
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
+                    className="flex-shrink-0"
                   >
-                    Próxima
+                    <span className="hidden sm:inline">Próxima</span>
+                    <span className="sm:hidden">›</span>
                   </Button>
                 </div>
               </div>
@@ -481,21 +489,23 @@ export default function Reports() {
             
             {/* Paginação para Ingredientes Críticos */}
             {criticalTotalPages > 1 && (
-              <div className="flex items-center justify-between mt-6 pt-4 border-t">
-                <div className="text-sm text-gray-600">
-                  Mostrando {((criticalCurrentPage - 1) * criticalItemsPerPage) + 1} a {Math.min(criticalCurrentPage * criticalItemsPerPage, filteredCriticalIngredients.length)} de {filteredCriticalIngredients.length} ingredientes
+              <div className="mt-6 pt-4 border-t">
+                <div className="text-sm text-gray-600 text-center mb-4">
+                  Página {criticalCurrentPage} de {criticalTotalPages} ({filteredCriticalIngredients.length} ingredientes)
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center justify-center space-x-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setCriticalCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={criticalCurrentPage === 1}
+                    className="flex-shrink-0"
                   >
-                    Anterior
+                    <span className="hidden sm:inline">Anterior</span>
+                    <span className="sm:hidden">‹</span>
                   </Button>
                   
-                  <div className="flex items-center space-x-1">
+                  <div className="hidden sm:flex items-center space-x-1">
                     {Array.from({ length: Math.min(5, criticalTotalPages) }, (_, i) => {
                       let pageNumber;
                       if (criticalTotalPages <= 5) {
@@ -522,13 +532,19 @@ export default function Reports() {
                     })}
                   </div>
                   
+                  <div className="sm:hidden flex items-center space-x-2">
+                    <span className="text-sm text-gray-600">{criticalCurrentPage}/{criticalTotalPages}</span>
+                  </div>
+                  
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setCriticalCurrentPage(prev => Math.min(prev + 1, criticalTotalPages))}
                     disabled={criticalCurrentPage === criticalTotalPages}
+                    className="flex-shrink-0"
                   >
-                    Próxima
+                    <span className="hidden sm:inline">Próxima</span>
+                    <span className="sm:hidden">›</span>
                   </Button>
                 </div>
               </div>
