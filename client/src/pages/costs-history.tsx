@@ -66,7 +66,7 @@ export default function CostsHistory() {
 
   return (
     <div className="p-4 lg:p-8">
-      <div className="mb-6 lg:mb-8">
+      <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 flex items-center">
           <TrendingUp className="w-8 h-8 mr-3 text-blue-600" />
           Histórico de Custos de Receitas
@@ -97,9 +97,9 @@ export default function CostsHistory() {
 
           {/* Gráficos aprimorados de evolução dos custos */}
           {productChartArray.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">
-              <div className="bg-white p-4 lg:p-6 rounded-lg border">
-                <h3 className="text-base lg:text-lg font-semibold mb-4 flex items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <div className="bg-white p-6 rounded-lg border">
+                <h3 className="text-lg font-semibold mb-4 flex items-center">
                   <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
                   Variação de Custos por Mês
                 </h3>
@@ -137,8 +137,8 @@ export default function CostsHistory() {
                 </div>
               </div>
 
-              <div className="bg-white p-4 lg:p-6 rounded-lg border">
-                <h3 className="text-base lg:text-lg font-semibold mb-4 flex items-center">
+              <div className="bg-white p-6 rounded-lg border">
+                <h3 className="text-lg font-semibold mb-4 flex items-center">
                   <ShoppingCart className="w-5 h-5 mr-2 text-blue-600" />
                   Número de Alterações por Mês
                 </h3>

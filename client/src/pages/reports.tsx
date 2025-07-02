@@ -219,20 +219,14 @@ export default function Reports() {
 
   return (
     <div className="p-4 lg:p-8">
-      <div className="mb-6 lg:mb-8">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 flex items-center">
-              <BarChart className="w-8 h-8 mr-3 text-blue-600" />
-              Relatórios
-            </h2>
-            <p className="text-gray-600 mt-2">Análises detalhadas e insights do seu negócio</p>
-          </div>
-
-          {/* Botão de Exportar no cabeçalho */}
-          <div className="lg:ml-6">
-            <ExportReports />
-          </div>
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-gray-900 flex items-center">
+          <BarChart className="w-8 h-8 mr-3 text-blue-600" />
+          Relatórios
+        </h2>
+        <p className="text-gray-600 mt-2">Análises detalhadas e insights do seu negócio</p>
+        <div className="mt-4">
+          <ExportReports />
         </div>
       </div>
 
