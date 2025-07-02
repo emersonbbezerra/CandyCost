@@ -53,6 +53,7 @@ function Router() {
           <Route path="/costs-history" component={CostsHistory} />
           <Route path="/reports" component={Reports} />
           <Route path="/system" component={System} />
+          <Route path="/system/backup" component={System} />
           <Route path="/settings" component={Settings} />
           <Route path="/profile" component={Profile} />
           {user?.role === 'admin' && <Route path="/user-management" component={UserManagementAdmin} />}

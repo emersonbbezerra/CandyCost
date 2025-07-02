@@ -116,6 +116,13 @@ Sistema completo de gestão de custos para confeitaria desenvolvido com React + 
   - **Login Restaurado**: Voltou ao ícone ChefHat original em rosa para manter identidade visual
   - **Decisão do Usuário**: Preferência por manter os ícones originais ao invés de logo com baixo contraste
   - **Identidade Visual**: Mantida consistência com nome "CandyCost" e cores adequadas ao contexto
+- **02/07/2025**: REORGANIZAÇÃO COMPLETA DO MENU SISTEMA COM SUBMENU EXPANDÍVEL:
+  - **Submenu Inteligente**: Menu "Sistema" agora possui submenu expandível com navegação direta
+  - **Opções de Submenu**: "Backup & Restauração" (ícone Database) e "Configurações" (ícone Cog)
+  - **Página Simplificada**: Removidos cards desnecessários da página Sistema - agora mostra apenas conteúdo de Backup & Restauração
+  - **Navegação Otimizada**: Acesso direto às funcionalidades via sidebar sem necessidade de cards intermediários
+  - **Interface Melhorada**: Ícones de expansão (ChevronDown/ChevronRight) indicam estado do submenu
+  - **Rotas Funcionais**: /system/backup e /settings acessíveis diretamente via submenu
 
 ## Melhorias de Interface
 - **Selects Padronizados**: Categorias de produtos, ingredientes e unidades agora usam listas predefinidas

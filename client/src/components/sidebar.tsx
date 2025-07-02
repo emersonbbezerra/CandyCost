@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { 
   BarChart3, 
@@ -13,7 +14,11 @@ import {
   User,
   UserCircle,
   Shield,
-  Users
+  Users,
+  ChevronDown,
+  ChevronRight,
+  Database,
+  Cog
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -28,12 +33,28 @@ const navigation = [
   { name: "Histórico de Preços", href: "/history", icon: History },
   { name: "Histórico de Custos", href: "/costs-history", icon: TrendingUp },
   { name: "Relatórios", href: "/reports", icon: FileText },
-  { name: "Sistema", href: "/system", icon: Settings },
+  { 
+    name: "Sistema", 
+    icon: Settings,
+    subMenu: [
+      { name: "Backup & Restauração", href: "/system/backup", icon: Database },
+      { name: "Configurações", href: "/settings", icon: Cog },
+    ]
+  },
 ];
 
 export function Sidebar() {
   const [location] = useLocation();
   const { user, logout, isAdmin } = useAuth();
+  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
+
+  const toggleMenu = (menuName: string) => {
+    setExpandedMenus(prev => 
+      prev.includes(menuName) 
+        ? prev.filter(name => name !== menuName)
+        : [...prev, menuName]
+    );
+  };
 
   const getUserInitials = (firstName: string, lastName?: string) => {
     if (!firstName) return "U";
@@ -58,24 +79,78 @@ export function Sidebar() {
       <nav className="p-4 flex-1">
         <ul className="space-y-2">
           {navigation.map((item) => {
-            const isActive = location === item.href;
-            return (
-              <li key={item.name}>
-                <Link href={item.href}>
+            if (item.subMenu) {
+              // Menu with submenu
+              const isExpanded = expandedMenus.includes(item.name);
+              const isSubMenuActive = item.subMenu.some(subItem => location === subItem.href);
+              
+              return (
+                <li key={item.name}>
                   <div
+                    onClick={() => toggleMenu(item.name)}
                     className={cn(
-                      "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors font-medium cursor-pointer",
-                      isActive
+                      "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors font-medium cursor-pointer justify-between",
+                      isSubMenuActive
                         ? "text-primary bg-primary/10"
                         : "text-gray-700 hover:bg-gray-100"
                     )}
                   >
-                    <item.icon className="w-5 h-5" />
-                    <span>{item.name}</span>
+                    <div className="flex items-center space-x-3">
+                      <item.icon className="w-5 h-5" />
+                      <span>{item.name}</span>
+                    </div>
+                    {isExpanded ? 
+                      <ChevronDown className="w-4 h-4" /> : 
+                      <ChevronRight className="w-4 h-4" />
+                    }
                   </div>
-                </Link>
-              </li>
-            );
+                  {isExpanded && (
+                    <ul className="ml-4 mt-2 space-y-1">
+                      {item.subMenu.map((subItem) => {
+                        const isSubActive = location === subItem.href;
+                        return (
+                          <li key={subItem.name}>
+                            <Link href={subItem.href}>
+                              <div
+                                className={cn(
+                                  "flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors font-medium cursor-pointer",
+                                  isSubActive
+                                    ? "text-primary bg-primary/10"
+                                    : "text-gray-600 hover:bg-gray-50"
+                                )}
+                              >
+                                <subItem.icon className="w-4 h-4" />
+                                <span className="text-sm">{subItem.name}</span>
+                              </div>
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </li>
+              );
+            } else {
+              // Regular menu item
+              const isActive = location === item.href;
+              return (
+                <li key={item.name}>
+                  <Link href={item.href}>
+                    <div
+                      className={cn(
+                        "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors font-medium cursor-pointer",
+                        isActive
+                          ? "text-primary bg-primary/10"
+                          : "text-gray-700 hover:bg-gray-100"
+                      )}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span>{item.name}</span>
+                    </div>
+                  </Link>
+                </li>
+              );
+            }
           })}
           
           {/* Admin-only menu items */}
