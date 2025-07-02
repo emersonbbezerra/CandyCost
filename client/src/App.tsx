@@ -44,8 +44,7 @@ function Router() {
     <div className="min-h-screen flex bg-gray-50">
       <Sidebar />
       <main className="lg:ml-64 flex-1 pt-16 lg:pt-0">
-        <div className="p-6">
-          <Switch>
+        <Switch>
             <Route path="/" component={Dashboard} />
             <Route path="/ingredients" component={Ingredients} />
             <Route path="/products" component={Products} />
@@ -60,7 +59,6 @@ function Router() {
             {user?.role === 'admin' && <Route path="/user-management" component={UserManagementAdmin} />}
             <Route component={NotFound} />
           </Switch>
-        </div>
       </main>
     </div>
   );

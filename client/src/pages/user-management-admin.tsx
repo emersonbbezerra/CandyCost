@@ -233,9 +233,9 @@ export default function UserManagementAdmin() {
       </div>
 
       {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center space-x-3">
               <Users className="h-8 w-8 text-blue-500" />
               <div>
@@ -247,7 +247,7 @@ export default function UserManagementAdmin() {
         </Card>
         
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center space-x-3">
               <Crown className="h-8 w-8 text-yellow-500" />
               <div>
@@ -259,7 +259,7 @@ export default function UserManagementAdmin() {
         </Card>
         
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center space-x-3">
               <Shield className="h-8 w-8 text-green-500" />
               <div>
@@ -272,7 +272,7 @@ export default function UserManagementAdmin() {
       </div>
 
       {/* Lista de Administradores */}
-      <Card className="mb-8">
+      <Card className="mb-6 md:mb-8">
         <CardHeader>
           <CardTitle className="flex items-center">
             <Crown className="h-5 w-5 mr-2 text-yellow-500" />
@@ -294,7 +294,7 @@ export default function UserManagementAdmin() {
               {adminUsers.map((user) => (
                 <div 
                   key={user.id} 
-                  className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-4 border rounded-lg bg-yellow-50 space-y-3 lg:space-y-0"
+                  className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-3 md:p-4 border rounded-lg bg-yellow-50 space-y-2 lg:space-y-0"
                 >
                   <div className="flex items-center space-x-4">
                     <div className="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center">
@@ -314,7 +314,7 @@ export default function UserManagementAdmin() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end lg:justify-start space-y-2 sm:space-y-0 sm:space-x-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end lg:justify-start space-y-1 sm:space-y-0 sm:space-x-2">
                     <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 w-fit">
                       Administrador
                     </Badge>
@@ -371,7 +371,7 @@ export default function UserManagementAdmin() {
               {regularUsers.map((user) => (
                 <div 
                   key={user.id} 
-                  className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-4 border rounded-lg space-y-3 lg:space-y-0"
+                  className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-3 md:p-4 border rounded-lg space-y-2 lg:space-y-0"
                 >
                   <div className="flex items-center space-x-4">
                     <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
@@ -391,7 +391,7 @@ export default function UserManagementAdmin() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end lg:justify-start space-y-2 sm:space-y-0 sm:space-x-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end lg:justify-start space-y-1 sm:space-y-0 sm:space-x-2">
                     <Badge variant="outline" className="text-green-700 border-green-300 w-fit">
                       Usuário
                     </Badge>
