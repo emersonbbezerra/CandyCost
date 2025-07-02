@@ -97,6 +97,12 @@ Sistema completo de gestão de custos para confeitaria desenvolvido com React + 
   - **Critérios Obrigatórios**: Mínimo 8 caracteres, maiúscula, minúscula, número e caractere especial
   - **Interface Melhorada**: Dicas visuais de critérios de senha no formulário de cadastro
   - **Redirecionamento Automático**: Usuário é direcionado ao dashboard após cadastro bem-sucedido
+- **02/07/2025**: COMUNICAÇÃO COMPLETAMENTE AMIGÁVEL IMPLEMENTADA:
+  - **Eliminação Total de Códigos**: Removidos todos os códigos HTTP e técnicos das mensagens do usuário
+  - **Sistema Toast Refinado**: Mensagens aparecem apenas com texto direto e educado para o usuário final
+  - **QueryClient Corrigido**: Extração automática de mensagens amigáveis do servidor sem códigos de status
+  - **Tratamento de Erro Simplificado**: Frontend e backend trabalham juntos para mostrar apenas mensagens claras
+  - **Experiência do Usuário Melhorada**: Todas as interações do sistema agora usam linguagem natural e compreensível
 
 ## Melhorias de Interface
 - **Selects Padronizados**: Categorias de produtos, ingredientes e unidades agora usam listas predefinidas
