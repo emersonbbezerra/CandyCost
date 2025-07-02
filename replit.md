@@ -118,11 +118,19 @@ Sistema completo de gestão de custos para confeitaria desenvolvido com React + 
   - **Identidade Visual**: Mantida consistência com nome "CandyCost" e cores adequadas ao contexto
 - **02/07/2025**: REORGANIZAÇÃO COMPLETA DO MENU SISTEMA COM SUBMENU EXPANDÍVEL:
   - **Submenu Inteligente**: Menu "Sistema" agora possui submenu expandível com navegação direta
-  - **Opções de Submenu**: "Backup & Restauração" (ícone Database) e "Configurações" (ícone Cog)
+  - **Opções de Submenu**: "Backup & Restauração" (ícone Database), "Configurações" (ícone Cog) e "Gerenciar Usuários" (admin-only)
   - **Página Simplificada**: Removidos cards desnecessários da página Sistema - agora mostra apenas conteúdo de Backup & Restauração
   - **Navegação Otimizada**: Acesso direto às funcionalidades via sidebar sem necessidade de cards intermediários
   - **Interface Melhorada**: Ícones de expansão (ChevronDown/ChevronRight) indicam estado do submenu
-  - **Rotas Funcionais**: /system/backup e /settings acessíveis diretamente via submenu
+  - **Rotas Funcionais**: /system/backup, /settings e /user-management acessíveis diretamente via submenu
+- **02/07/2025**: SISTEMA TOTALMENTE RESPONSIVO E MOBILE-FIRST IMPLEMENTADO:
+  - **Menu Hamburger**: Botão fixo no canto superior esquerdo para dispositivos móveis
+  - **Sidebar Deslizante**: Transição suave com overlay escuro para fechamento automático
+  - **Scroll Inteligente**: Barra de rolagem na sidebar para visualizar todas as opções em telas pequenas
+  - **Layout Adaptativo**: Margem automática ajustada (lg:ml-64) e padding mobile (pt-16 lg:pt-0)
+  - **Responsividade Completa**: Breakpoint em 1024px (lg) para alternar entre desktop e mobile
+  - **Usabilidade Aprimorada**: Fechamento automático do menu móvel ao navegar entre páginas
+  - **Hierarquia Preservada**: Submenu Sistema mantém funcionalidade completa em dispositivos móveis
 
 ## Melhorias de Interface
 - **Selects Padronizados**: Categorias de produtos, ingredientes e unidades agora usam listas predefinidas

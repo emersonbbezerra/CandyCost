@@ -43,22 +43,24 @@ function Router() {
   return (
     <div className="min-h-screen flex bg-gray-50">
       <Sidebar />
-      <main className="ml-64 flex-1">
-        <Switch>
-          <Route path="/" component={Dashboard} />
-          <Route path="/ingredients" component={Ingredients} />
-          <Route path="/products" component={Products} />
-          <Route path="/recipes" component={Products} />
-          <Route path="/history" component={History} />
-          <Route path="/costs-history" component={CostsHistory} />
-          <Route path="/reports" component={Reports} />
-          <Route path="/system" component={System} />
-          <Route path="/system/backup" component={System} />
-          <Route path="/settings" component={Settings} />
-          <Route path="/profile" component={Profile} />
-          {user?.role === 'admin' && <Route path="/user-management" component={UserManagementAdmin} />}
-          <Route component={NotFound} />
-        </Switch>
+      <main className="lg:ml-64 flex-1 pt-16 lg:pt-0">
+        <div className="p-6">
+          <Switch>
+            <Route path="/" component={Dashboard} />
+            <Route path="/ingredients" component={Ingredients} />
+            <Route path="/products" component={Products} />
+            <Route path="/recipes" component={Products} />
+            <Route path="/history" component={History} />
+            <Route path="/costs-history" component={CostsHistory} />
+            <Route path="/reports" component={Reports} />
+            <Route path="/system" component={System} />
+            <Route path="/system/backup" component={System} />
+            <Route path="/settings" component={Settings} />
+            <Route path="/profile" component={Profile} />
+            {user?.role === 'admin' && <Route path="/user-management" component={UserManagementAdmin} />}
+            <Route component={NotFound} />
+          </Switch>
+        </div>
       </main>
     </div>
   );
