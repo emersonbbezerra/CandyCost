@@ -314,26 +314,32 @@ export default function UserManagementAdmin() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-end lg:justify-start space-x-2">
-                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end lg:justify-start space-y-2 sm:space-y-0 sm:space-x-2">
+                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 w-fit">
                       Administrador
                     </Badge>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEditUser(user)}
-                    >
-                      <Edit className="h-4 w-4 mr-1" />
-                      Editar
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleResetPassword(user)}
-                    >
-                      <KeyRound className="h-4 w-4 mr-1" />
-                      Resetar Senha
-                    </Button>
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditUser(user)}
+                        className="flex-1 sm:flex-none"
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        <span className="hidden sm:inline">Editar</span>
+                        <span className="sm:hidden">Editar</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleResetPassword(user)}
+                        className="flex-1 sm:flex-none"
+                      >
+                        <KeyRound className="h-4 w-4 mr-1" />
+                        <span className="hidden sm:inline">Resetar Senha</span>
+                        <span className="sm:hidden">Senha</span>
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -385,34 +391,42 @@ export default function UserManagementAdmin() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-end lg:justify-start space-x-2">
-                    <Badge variant="outline" className="text-green-700 border-green-300">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end lg:justify-start space-y-2 sm:space-y-0 sm:space-x-2">
+                    <Badge variant="outline" className="text-green-700 border-green-300 w-fit">
                       Usuário
                     </Badge>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEditUser(user)}
-                    >
-                      <Edit className="h-4 w-4 mr-1" />
-                      Editar
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleResetPassword(user)}
-                    >
-                      <KeyRound className="h-4 w-4 mr-1" />
-                      Resetar Senha
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDeleteUser(user)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Excluir
-                    </Button>
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditUser(user)}
+                        className="flex-1 sm:flex-none"
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        <span className="hidden sm:inline">Editar</span>
+                        <span className="sm:hidden">Editar</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleResetPassword(user)}
+                        className="flex-1 sm:flex-none"
+                      >
+                        <KeyRound className="h-4 w-4 mr-1" />
+                        <span className="hidden sm:inline">Resetar Senha</span>
+                        <span className="sm:hidden">Senha</span>
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteUser(user)}
+                        className="flex-1 sm:flex-none"
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        <span className="hidden sm:inline">Excluir</span>
+                        <span className="sm:hidden">Excluir</span>
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
