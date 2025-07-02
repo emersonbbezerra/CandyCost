@@ -65,9 +65,9 @@ export default function CostsHistory() {
   };
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900">Histórico de Custos de Receitas</h2>
+    <div className="p-4 lg:p-8">
+      <div className="mb-6 lg:mb-8">
+        <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">Histórico de Custos de Receitas</h2>
         <p className="text-gray-600 mt-2">Acompanhe como as alterações de preços de ingredientes afetam os custos dos seus produtos</p>
       </div>
 
@@ -78,7 +78,7 @@ export default function CostsHistory() {
               Filtrar por Produto/Receita
             </label>
             <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-              <SelectTrigger className="w-64">
+              <SelectTrigger className="w-full sm:w-64">
                 <SelectValue placeholder="Todos os produtos" />
               </SelectTrigger>
               <SelectContent>
@@ -94,13 +94,13 @@ export default function CostsHistory() {
 
           {/* Gráficos aprimorados de evolução dos custos */}
           {productChartArray.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4 flex items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">
+              <div className="bg-white p-4 lg:p-6 rounded-lg border">
+                <h3 className="text-base lg:text-lg font-semibold mb-4 flex items-center">
                   <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
                   Variação de Custos por Mês
                 </h3>
-                <div className="h-64">
+                <div className="h-48 lg:h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={productChartArray}>
                       <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
@@ -134,12 +134,12 @@ export default function CostsHistory() {
                 </div>
               </div>
 
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4 flex items-center">
+              <div className="bg-white p-4 lg:p-6 rounded-lg border">
+                <h3 className="text-base lg:text-lg font-semibold mb-4 flex items-center">
                   <ShoppingCart className="w-5 h-5 mr-2 text-blue-600" />
                   Número de Alterações por Mês
                 </h3>
-                <div className="h-64">
+                <div className="h-48 lg:h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={productChartArray}>
                       <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
@@ -190,12 +190,12 @@ export default function CostsHistory() {
             <h3 className="text-lg font-semibold mb-4">Alterações Recentes nos Custos</h3>
             <div className="space-y-3">
               {recentProductChanges.map((change: PriceHistory) => (
-                <div key={change.id} className="flex items-start space-x-4 p-4 bg-green-50 rounded-lg border border-green-100">
+                <div key={change.id} className="flex flex-col sm:flex-row sm:items-start space-y-2 sm:space-y-0 sm:space-x-4 p-4 bg-green-50 rounded-lg border border-green-100">
                   <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                     <ShoppingCart className="text-green-600 w-5 h-5" />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-gray-900 font-medium">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-gray-900 font-medium truncate">
                       {getProductName(change.productId)}
                     </p>
                     <p className="text-gray-600 text-sm">
@@ -208,7 +208,7 @@ export default function CostsHistory() {
                       {formatDate(new Date(change.createdAt))}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right flex-shrink-0">
                     <span className={`px-3 py-1 text-sm font-medium rounded-full ${
                       parseFloat(change.newPrice) > parseFloat(change.oldPrice)
                         ? "bg-red-100 text-red-700"

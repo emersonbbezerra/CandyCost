@@ -218,15 +218,15 @@ export default function Reports() {
 
   return (
     <div className="p-4 lg:p-8">
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
+      <div className="mb-6 lg:mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900">Relatórios</h2>
+            <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">Relatórios</h2>
             <p className="text-gray-600 mt-2">Análises detalhadas e insights do seu negócio</p>
           </div>
 
           {/* Botão de Exportar no cabeçalho */}
-          <div>
+          <div className="lg:ml-6">
             <ExportReports />
           </div>
         </div>
@@ -242,7 +242,7 @@ export default function Reports() {
             </CardTitle>
             
             {/* Filtros */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mt-4">
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
                 <Input
@@ -311,12 +311,12 @@ export default function Reports() {
           <CardContent>
             <div className="space-y-4">
               {paginatedData.map(({ product, cost, profitMargin }) => (
-                <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="font-medium">{product.name}</p>
+                <div key={product.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-gray-50 rounded-lg space-y-2 sm:space-y-0">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium truncate">{product.name}</p>
                     <p className="text-sm text-gray-600">{formatCurrency(cost.totalCost)} → {formatCurrency(cost.suggestedPrice)}</p>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center justify-end sm:justify-start space-x-2 flex-shrink-0">
                     <Badge 
                       variant={profitMargin > 50 ? "default" : profitMargin > 30 ? "secondary" : "destructive"}
                       className={
@@ -418,7 +418,7 @@ export default function Reports() {
             </CardTitle>
             
             {/* Filtros para Ingredientes Críticos */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 mt-4">
               <Input
                 placeholder="Buscar ingrediente..."
                 value={criticalSearchTerm}
@@ -468,14 +468,14 @@ export default function Reports() {
           <CardContent>
             <div className="space-y-4">
               {criticalPaginatedData.map(({ ingredient, usageCount, totalImpact }) => (
-                <div key={ingredient.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="font-medium">{ingredient.name}</p>
+                <div key={ingredient.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-gray-50 rounded-lg space-y-2 sm:space-y-0">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium truncate">{ingredient.name}</p>
                     <p className="text-sm text-gray-600">
                       {ingredient.category} • Usado em {usageCount} receita{usageCount !== 1 ? 's' : ''}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right sm:text-right flex-shrink-0">
                     <p className="font-medium">{formatCurrency(totalImpact)}</p>
                     <p className="text-sm text-gray-600">Impacto total</p>
                   </div>
