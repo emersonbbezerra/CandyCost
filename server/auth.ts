@@ -7,6 +7,7 @@ import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { db } from "./db";
+import { findUserByEmail, verifyPassword } from "./utils/authUtils";
 
 const PgSession = connectPg(session);
 
@@ -18,17 +19,17 @@ passport.use(new LocalStrategy(
   },
   async (email, password, done) => {
     try {
-      const [user] = await db.select().from(users).where(eq(users.email, email));
+      const user = await findUserByEmail(email);
       
       if (!user) {
-        return done(null, false, { message: 'Email não encontrado.' });
+        return done(null, false, { message: 'Email ou senha inválidos.' });
       }
 
       // Check password
-      const isValidPassword = await bcrypt.compare(password, user.password);
+      const isValidPassword = await verifyPassword(password, user.password);
       
       if (!isValidPassword) {
-        return done(null, false, { message: 'Senha incorreta.' });
+        return done(null, false, { message: 'Email ou senha inválidos.' });
       }
 
       return done(null, user);

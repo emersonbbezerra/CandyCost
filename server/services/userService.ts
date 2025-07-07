@@ -1,11 +1,11 @@
 import { users, type UpsertUser, type User } from "@shared/schema";
-import bcrypt from "bcryptjs";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import type { RequestHandler } from "express";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { db } from "../db";
 import { auditLog } from "../utils/auditLogger";
+import { findUserByEmail, hashPassword, verifyPassword } from "../utils/authUtils";
 
 // Configure Passport Local Strategy
 passport.use(new LocalStrategy(
@@ -15,17 +15,17 @@ passport.use(new LocalStrategy(
   },
   async (email, password, done) => {
     try {
-      const [user] = await db.select().from(users).where(eq(users.email, email));
+      const user = await findUserByEmail(email);
       
       if (!user) {
-        return done(null, false, { message: 'Email não encontrado.' });
+        return done(null, false, { message: 'Email ou senha inválidos.' });
       }
 
       // Check password
-      const isValidPassword = await bcrypt.compare(password, user.password);
+      const isValidPassword = await verifyPassword(password, user.password);
       
       if (!isValidPassword) {
-        return done(null, false, { message: 'Senha incorreta.' });
+        return done(null, false, { message: 'Email ou senha inválidos.' });
       }
 
       return done(null, user);
@@ -43,7 +43,7 @@ passport.serializeUser((user: any, done) => {
 // Deserialize user from session
 passport.deserializeUser(async (id: string, done) => {
   try {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
+    const user = await userService.getUserById(id);
     done(null, user);
   } catch (error) {
     done(error);
@@ -82,10 +82,13 @@ export const isAdmin: RequestHandler = (req, res, next) => {
 export const userService = {
   async createUser(userData: { email: string; password: string; firstName?: string; lastName?: string; role?: string }): Promise<User> {
     // Hash password
-    const hashedPassword = await bcrypt.hash(userData.password, 12);
+    const hashedPassword = await hashPassword(userData.password);
     
     // Generate unique ID
-    const userId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    // Prefer using crypto.randomUUID() for unique IDs if available
+    const userId = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : Date.now().toString() + Math.random().toString(36).substring(2, 11);
     
     const newUser: UpsertUser = {
       id: userId,
@@ -215,12 +218,10 @@ export const userService = {
     await db
       .update(users)
       .set({
+        password: hashedPassword,
         updatedAt: new Date(),
       })
       .where(eq(users.id, userId));
-    
-    // Update password separately using SQL
-    await db.execute(sql`UPDATE users SET password = ${hashedPassword} WHERE id = ${userId}`);
   },
 
   async deleteUser(userId: string): Promise<void> {
@@ -245,11 +246,4 @@ export const userService = {
     return user || null;
   },
 
-  async hashPassword(password: string): Promise<string> {
-    return await bcrypt.hash(password, 12);
-  },
-
-  async verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
-    return await bcrypt.compare(password, hashedPassword);
-  }
 };
