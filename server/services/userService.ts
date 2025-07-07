@@ -1,4 +1,5 @@
 import { users, type UpsertUser, type User } from "@shared/schema";
+
 import { eq } from "drizzle-orm";
 import type { RequestHandler } from "express";
 import passport from "passport";

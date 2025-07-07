@@ -4,6 +4,7 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import { db } from "../db";
 import { userService } from "../services/userService";
+import { hashPassword, verifyPassword } from "../utils/authUtils";
 
 export const promoteUser = async (req: Request, res: Response) => {
   try {
@@ -103,13 +104,13 @@ export const changeUserPassword = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Usuário não encontrado" });
     }
 
-    const isCurrentPasswordValid = await userService.verifyPassword(currentPassword, user.password);
+    const isCurrentPasswordValid = await verifyPassword(currentPassword, user.password);
     if (!isCurrentPasswordValid) {
       return res.status(400).json({ message: "Senha atual incorreta" });
     }
 
     // Update password
-    const hashedNewPassword = await userService.hashPassword(newPassword);
+    const hashedNewPassword = await hashPassword(newPassword);
     await userService.updateUserPassword(userId, hashedNewPassword);
     
     res.json({ message: "Senha alterada com sucesso" });
@@ -173,7 +174,7 @@ export const resetUserPassword = async (req: Request, res: Response) => {
 
     const { newPassword } = passwordSchema.parse(req.body);
     
-    const hashedPassword = await userService.hashPassword(newPassword);
+    const hashedPassword = await hashPassword(newPassword);
     await userService.updateUserPassword(userId, hashedPassword);
     
     res.json({ message: "Senha resetada com sucesso" });
