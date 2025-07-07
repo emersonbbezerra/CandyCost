@@ -43,6 +43,9 @@ INITIAL_ADMIN_PASSWORD=SuaSenhaSegura123!
 ```typescript
 POST /api/admin/promote-user    // Promover usuário
 GET  /api/admin/users          // Listar usuários
+PUT  /api/admin/users/:userId  // Atualizar usuário
+PUT  /api/admin/users/:userId/reset-password  // Resetar senha do usuário
+DELETE /api/admin/users/:userId  // Excluir usuário
 ```
 
 ### Segurança
@@ -106,6 +109,63 @@ tsx server/admin-cli.ts create-first admin@empresa.com "SenhaSegura123!" "Nome A
 # 3. Admin criado e pronto para uso
 ```
 
+---
+
+## 📋 Recomendação para Implantação Segura do Admin Inicial
+
+Para garantir segurança e facilidade na implantação em produção, recomendamos a seguinte abordagem:
+
+- Utilize a **Estratégia A: Admin via Variáveis de Ambiente** como método padrão para provisionar o primeiro administrador.
+- Configure as variáveis `INITIAL_ADMIN_EMAIL` e `INITIAL_ADMIN_PASSWORD` no ambiente do servidor antes de iniciar a aplicação.
+- Isso evita exposição de credenciais no código e permite automação em ambientes de produção.
+- O comando CLI para criação do primeiro admin (`create-first`) deve ser usado apenas para casos excepcionais, como recuperação ou administração direta.
+- Documente e proteja as variáveis de ambiente para evitar vazamento de credenciais.
+- Realize auditoria e monitore logs para acompanhar a criação e promoção de administradores.
+
+---
+
+## 🛠 Script para Facilitar Configuração em Produção
+
+Criamos um script bash para facilitar a configuração das variáveis de ambiente e iniciar a aplicação:
+
+```bash
+#!/bin/bash
+# Script para configurar variáveis de ambiente para o admin inicial e iniciar a aplicação CandyCost
+
+# Verifica se as variáveis estão definidas
+if [ -z "$INITIAL_ADMIN_EMAIL" ]; then
+  echo "Por favor, defina a variável INITIAL_ADMIN_EMAIL"
+  exit 1
+fi
+
+if [ -z "$INITIAL_ADMIN_PASSWORD" ]; then
+  echo "Por favor, defina a variável INITIAL_ADMIN_PASSWORD"
+  exit 1
+fi
+
+echo "Variáveis de ambiente definidas:"
+echo "INITIAL_ADMIN_EMAIL=$INITIAL_ADMIN_EMAIL"
+echo "INITIAL_ADMIN_PASSWORD=********"
+
+# Exporta as variáveis para o ambiente atual
+export INITIAL_ADMIN_EMAIL
+export INITIAL_ADMIN_PASSWORD
+
+# Inicia a aplicação
+echo "Iniciando a aplicação CandyCost..."
+npm run build && npm start
+```
+
+Para usar o script:
+
+1. Defina as variáveis no ambiente ou no arquivo `.env`.
+2. Execute o script: `bash scripts/setup-admin.sh`
+3. A aplicação será iniciada com o admin inicial configurado automaticamente.
+
+Essa abordagem garante segurança, automação e alinhamento com as melhores práticas para produção.
+
+npm run build && npm start
+
 ## 6. Melhores Práticas de Segurança
 
 ### Senhas Administrativas
@@ -118,7 +178,7 @@ tsx server/admin-cli.ts create-first admin@empresa.com "SenhaSegura123!" "Nome A
 1. **Princípio do menor privilégio**: Apenas pessoas necessárias devem ser admin
 2. **Auditoria regular**: Revisar lista de administradores mensalmente
 3. **Rotação de senhas**: Alterar senhas administrativas periodicamente
-4. **Monitoramento**: Acompanhar ações administrativas via logs
+4. **Monitoramento**: Acompanhar ações administrativas via logs de auditoria detalhados
 
 ### Configuração do Servidor
 ```bash
@@ -138,10 +198,10 @@ INITIAL_ADMIN_PASSWORD=senha_complexa_e_segura
 ### Checklist Pré-Produção
 - [ ] Variáveis de ambiente configuradas
 - [ ] Senhas administrativas complexas
-- [ ] Credenciais padrão removidas do código
+- [ ] Credenciais padrão removidas do código (usadas apenas como fallback em desenvolvimento)
 - [ ] Acesso à interface administrativa testado
 - [ ] CLI administrativo testado
-- [ ] Logs de auditoria funcionando
+- [ ] Logs de auditoria funcionando e registrando eventos críticos
 
 ### Testes de Segurança
 ```bash
@@ -154,9 +214,9 @@ curl -X POST /api/auth/login -d '{"email":"admin@confeitaria.com","password":"ad
 ## 8. Monitoramento e Auditoria
 
 ### Logs Administrativos
-- Todas as ações de promoção são logadas
-- Login/logout de administradores registrados
-- Tentativas de acesso negadas são monitoradas
+- Todas as ações de promoção são logadas em arquivo de auditoria
+- Login/logout de administradores registrados com detalhes de IP e usuário
+- Tentativas de acesso negadas são monitoradas e registradas
 
 ### Alertas Recomendados
 - Criação de novos administradores
@@ -213,3 +273,4 @@ Se você encontrar problemas durante a implantação:
 4. **Interface administrativa**: Acesse `/user-management` como admin
 
 O sistema foi projetado com múltiplas camadas de segurança para garantir operação segura em produção.
+INITIAL_ADMIN_PASSWORD=SuaSenhaSegura123!

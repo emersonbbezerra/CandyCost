@@ -1,45 +1,40 @@
-import { useState, useEffect } from "react";
-import { Link, useLocation } from "wouter";
-import { 
-  BarChart3, 
-  Cookie, 
-  History, 
-  FileText, 
-  Sprout, 
-  ChefHat,
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/useAuth";
+import { cn } from "@/lib/utils";
+import {
+  BarChart3,
   Calculator,
-  TrendingUp,
-  Settings,
-  LogOut,
-  User,
-  UserCircle,
-  Shield,
-  Users,
+  ChefHat,
   ChevronDown,
   ChevronRight,
   Database,
-  Cog,
+  FileText,
+  History,
+  LogOut,
   Menu,
+  Package,
+  Settings,
+  TrendingUp,
+  UserCircle,
+  Users,
   X
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useEffect, useState } from "react";
+import { Link, useLocation } from "wouter";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: BarChart3 },
-  { name: "Ingredientes", href: "/ingredients", icon: Sprout },
+  { name: "Ingredientes", href: "/ingredients", icon: Package },
   { name: "Receitas", href: "/products", icon: ChefHat },
   { name: "Histórico de Preços", href: "/history", icon: History },
   { name: "Histórico de Custos", href: "/costs-history", icon: TrendingUp },
   { name: "Relatórios", href: "/reports", icon: FileText },
-  { 
-    name: "Sistema", 
+  {
+    name: "Sistema",
     icon: Settings,
     subMenu: [
       { name: "Backup & Restauração", href: "/system/backup", icon: Database },
-      { name: "Configurações", href: "/settings", icon: Cog },
+      { name: "Configurações", href: "/settings", icon: Settings },
       { name: "Gerenciar Usuários", href: "/user-management", icon: Users, adminOnly: true },
     ]
   },
@@ -57,7 +52,7 @@ export function Sidebar() {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 1024);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -69,8 +64,8 @@ export function Sidebar() {
   }, [location]);
 
   const toggleMenu = (menuName: string) => {
-    setExpandedMenus(prev => 
-      prev.includes(menuName) 
+    setExpandedMenus(prev =>
+      prev.includes(menuName)
         ? prev.filter(name => name !== menuName)
         : [...prev, menuName]
     );
@@ -141,7 +136,7 @@ export function Sidebar() {
                   // Menu with submenu
                   const isExpanded = expandedMenus.includes(item.name);
                   const isSubMenuActive = item.subMenu.some(subItem => location === subItem.href);
-                  
+
                   return (
                     <li key={item.name}>
                       <div
@@ -157,8 +152,8 @@ export function Sidebar() {
                           <item.icon className="w-5 h-5" />
                           <span>{item.name}</span>
                         </div>
-                        {isExpanded ? 
-                          <ChevronDown className="w-4 h-4" /> : 
+                        {isExpanded ?
+                          <ChevronDown className="w-4 h-4" /> :
                           <ChevronRight className="w-4 h-4" />
                         }
                       </div>
@@ -229,8 +224,8 @@ export function Sidebar() {
               <div className="flex items-center space-x-2">
                 <div className={cn(
                   "text-xs px-2 py-0.5 rounded-full",
-                  user?.role === 'admin' 
-                    ? "bg-red-100 text-red-800" 
+                  user?.role === 'admin'
+                    ? "bg-red-100 text-red-800"
                     : "bg-blue-100 text-blue-800"
                 )}>
                   {user?.role === 'admin' ? 'Administrador' : 'Usuário'}
@@ -238,7 +233,7 @@ export function Sidebar() {
               </div>
             </div>
           </div>
-          
+
           <div className="space-y-1">
             <Link href="/profile">
               <div className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer">
@@ -246,7 +241,7 @@ export function Sidebar() {
                 <span className="text-sm">Meu Perfil</span>
               </div>
             </Link>
-            
+
             <button
               onClick={() => window.location.href = '/api/logout'}
               className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"

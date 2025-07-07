@@ -1,14 +1,11 @@
 import { users, type UpsertUser, type User } from "@shared/schema";
 import bcrypt from "bcryptjs";
-import connectPg from "connect-pg-simple";
 import { eq, sql } from "drizzle-orm";
-import type { Express, RequestHandler } from "express";
-import session from "express-session";
+import type { RequestHandler } from "express";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { db } from "./db";
-
-const PgSession = connectPg(session);
+import { db } from "../db";
+import { auditLog } from "../utils/auditLogger";
 
 // Configure Passport Local Strategy
 passport.use(new LocalStrategy(
@@ -53,41 +50,16 @@ passport.deserializeUser(async (id: string, done) => {
   }
 });
 
-// Session configuration
-export function getSession() {
-  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
-  const sessionStore = new PgSession({
-    conString: process.env.DATABASE_URL,
-    createTableIfMissing: true,
-    ttl: sessionTtl,
-    tableName: "sessions",
-  });
-
-  return session({
-    secret: process.env.SESSION_SECRET || 'confei-calc-secret-key-change-in-production',
-    store: sessionStore,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      secure: false, // Set to true in production with HTTPS
-      maxAge: sessionTtl,
-    },
-  });
-}
-
-// Setup authentication middleware
-export async function setupAuth(app: Express) {
-  app.use(getSession());
-  app.use(passport.initialize());
-  app.use(passport.session());
-}
-
 // Authentication middleware
 export const isAuthenticated: RequestHandler = (req, res, next) => {
   if (req.isAuthenticated()) {
     return next();
   }
+  auditLog('ACCESS_DENIED', 'Acesso negado: usuário não autenticado', {
+    ip: req.ip,
+    path: req.originalUrl,
+    method: req.method,
+  });
   res.status(401).json({ message: "Você precisa estar logado para acessar esta funcionalidade." });
 };
 
@@ -96,6 +68,13 @@ export const isAdmin: RequestHandler = (req, res, next) => {
   if (req.isAuthenticated() && (req.user as User)?.role === 'admin') {
     return next();
   }
+  auditLog('ACCESS_DENIED', 'Acesso negado: usuário sem permissão de administrador', {
+    userId: (req.user as User)?.id,
+    email: (req.user as User)?.email,
+    ip: req.ip,
+    path: req.originalUrl,
+    method: req.method,
+  });
   res.status(403).json({ message: "Esta funcionalidade é exclusiva para administradores. Entre em contato com o responsável pelo sistema." });
 };
 
@@ -121,14 +100,14 @@ export const userService = {
     return user;
   },
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
+  async getUserByEmail(email: string): Promise<User | null> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user;
+    return user || null;
   },
 
-  async getUserById(id: string): Promise<User | undefined> {
+  async getUserById(id: string): Promise<User | null> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    return user || null;
   },
 
   async createAdminUser(): Promise<User> {
@@ -142,13 +121,20 @@ export const userService = {
       return existingAdmin;
     }
 
-    return this.createUser({
+    const adminUser = await this.createUser({
       email: adminEmail,
       password: adminPassword,
       firstName: "Administrador",
       lastName: "Sistema",
       role: "admin"
     });
+
+    auditLog('ADMIN_CREATION', `Administrador inicial criado: ${adminEmail}`, {
+      userId: adminUser.id,
+      email: adminUser.email,
+    });
+
+    return adminUser;
   },
 
   // Promote existing user to admin (for production use)
@@ -167,6 +153,11 @@ export const userService = {
       .set({ role: 'admin', updatedAt: new Date() })
       .where(eq(users.id, user.id))
       .returning();
+
+    auditLog('ADMIN_PROMOTION', `Usuário promovido a administrador: ${userEmail}`, {
+      userId: updatedUser.id,
+      email: updatedUser.email,
+    });
 
     console.log(`✓ User ${userEmail} promoted to admin`);
     return updatedUser;
@@ -190,8 +181,13 @@ export const userService = {
       email,
       password,
       firstName,
-      lastName: lastName || undefined,
+      lastName: lastName,
       role: "admin"
+    });
+
+    auditLog('ADMIN_CREATION', `Primeiro administrador criado via CLI: ${email}`, {
+      userId: adminUser.id,
+      email: adminUser.email,
     });
 
     console.log(`✓ First admin created: ${email}`);
@@ -231,7 +227,7 @@ export const userService = {
     await db.delete(users).where(eq(users.id, userId));
   },
 
-  async getAllUsers(): Promise<User[]> {
+  async getAllUsers(): Promise<Omit<User, 'password'>[]> {
     return await db.select({
       id: users.id,
       email: users.email,
@@ -240,13 +236,20 @@ export const userService = {
       profileImageUrl: users.profileImageUrl,
       role: users.role,
       createdAt: users.createdAt,
-      updatedAt: users.updatedAt,
-      password: users.password
+      updatedAt: users.updatedAt
     }).from(users);
   },
 
-  async getUserWithPassword(userId: string): Promise<any> {
+  async getUserWithPassword(userId: string): Promise<User | null> {
     const [user] = await db.select().from(users).where(eq(users.id, userId));
-    return user;
+    return user || null;
+  },
+
+  async hashPassword(password: string): Promise<string> {
+    return await bcrypt.hash(password, 12);
+  },
+
+  async verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
+    return await bcrypt.compare(password, hashedPassword);
   }
 };

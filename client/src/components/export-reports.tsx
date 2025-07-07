@@ -1,11 +1,11 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, FileText, Table, Calendar } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import type { Product, Ingredient, PriceHistory } from "@shared/schema";
+import type { Ingredient, PriceHistory, Product } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
+import { Calendar, FileText, Table, Upload } from "lucide-react";
+import { useState } from "react";
 
 interface ExportData {
   ingredients: Ingredient[];
@@ -38,7 +38,7 @@ export function ExportReports() {
 
   const generateCSV = (data: any[], headers: string[]) => {
     const csvHeaders = headers.join(",");
-    const csvRows = data.map(row => 
+    const csvRows = data.map(row =>
       headers.map(header => {
         const value = row[header];
         if (typeof value === "string" && value.includes(",")) {
@@ -90,8 +90,8 @@ export function ExportReports() {
       products,
       priceHistory: priceHistory.map(hist => ({
         ...hist,
-        percentageChange: hist.oldPrice && hist.newPrice ? 
-          ((parseFloat(hist.newPrice) - parseFloat(hist.oldPrice)) / parseFloat(hist.oldPrice) * 100).toFixed(2) + "%" 
+        percentageChange: hist.oldPrice && hist.newPrice ?
+          ((parseFloat(hist.newPrice) - parseFloat(hist.oldPrice)) / parseFloat(hist.oldPrice) * 100).toFixed(2) + "%"
           : null
       }))
     };
@@ -122,7 +122,7 @@ export function ExportReports() {
 
   const handleExport = async () => {
     setIsExporting(true);
-    
+
     try {
       let content: string;
       let filename: string;
@@ -168,6 +168,12 @@ export function ExportReports() {
         }
       }
 
+      // Adicionar BOM UTF-8 para corrigir problemas de codificação no Excel
+      if (selectedFormat === "csv") {
+        const BOM = "\uFEFF";
+        content = BOM + content;
+      }
+
       // Criar e baixar o arquivo
       const blob = new Blob([content], { type: mimeType });
       const url = URL.createObjectURL(blob);
@@ -191,7 +197,7 @@ export function ExportReports() {
       case "ingredients": return <Table className="w-4 h-4" />;
       case "products": return <FileText className="w-4 h-4" />;
       case "history": return <Calendar className="w-4 h-4" />;
-      default: return <Download className="w-4 h-4" />;
+      default: return <Upload className="w-4 h-4" />;
     }
   };
 
@@ -208,7 +214,7 @@ export function ExportReports() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center">
-          <Download className="w-5 h-5 mr-2" />
+          <Upload className="w-5 h-5 mr-2" />
           Exportar Relatórios
         </CardTitle>
       </CardHeader>
@@ -253,14 +259,14 @@ export function ExportReports() {
               {getReportIcon()}
               <div>
                 <p className="font-medium text-gray-900">
-                  {selectedReport === "complete" ? "Relatório Completo" : 
-                   selectedReport === "ingredients" ? "Ingredientes" :
-                   selectedReport === "products" ? "Produtos" : "Histórico"}
+                  {selectedReport === "complete" ? "Relatório Completo" :
+                    selectedReport === "ingredients" ? "Ingredientes" :
+                      selectedReport === "products" ? "Produtos" : "Histórico"}
                 </p>
                 <p className="text-sm text-gray-600">{getReportDescription()}</p>
               </div>
             </div>
-            <Button 
+            <Button
               onClick={handleExport}
               disabled={isExporting}
               className="min-w-[120px]"

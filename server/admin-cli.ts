@@ -10,10 +10,9 @@
  * - npm run admin:list-users
  */
 
+import { users } from '@shared/schema';
 import { userService } from './auth';
 import { db } from './db';
-import { users } from '@shared/schema';
-import { eq } from 'drizzle-orm';
 
 const command = process.argv[2];
 const args = process.argv.slice(3);
@@ -93,10 +92,11 @@ async function listUsers() {
     
     allUsers.forEach((user, index) => {
       const roleIcon = user.role === 'admin' ? '👑' : '👤';
+      const createdAtStr = user.createdAt ? new Date(user.createdAt).toLocaleDateString('pt-BR') : 'Data não disponível';
       console.log(`${index + 1}. ${roleIcon} ${user.firstName} ${user.lastName || ''}`);
       console.log(`   Email: ${user.email}`);
       console.log(`   Role: ${user.role}`);
-      console.log(`   Criado: ${user.createdAt.toLocaleDateString('pt-BR')}`);
+      console.log(`   Criado: ${createdAtStr}`);
       console.log('');
     });
     

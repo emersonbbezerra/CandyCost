@@ -1,20 +1,20 @@
-import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Crown, Mail, Users, CalendarDays, UserPlus, Trash2, Edit, KeyRound, Shield } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { CalendarDays, Crown, Edit, KeyRound, Mail, Shield, Trash2, Users } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 interface User {
   id: string;
@@ -35,7 +35,7 @@ const userEditSchema = z.object({
 const passwordResetSchema = z.object({
   newPassword: z.string()
     .min(8, 'Nova senha deve ter pelo menos 8 caracteres')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#+\-_=.])[A-Za-z\d@$!%*?&#+\-_=.]+$/, 
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#+\-_=.])[A-Za-z\d@$!%*?&#+\-_=.]+$/,
       "Nova senha deve conter pelo menos: 1 letra minúscula, 1 maiúscula, 1 número e 1 caractere especial (@$!%*?&#+-_.=)"),
   confirmPassword: z.string()
 });
@@ -56,7 +56,7 @@ export default function UserManagementAdmin() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   // Fetch all users
-  const { data: users = [], isLoading, error } = useQuery({
+  const { data: users = [], isLoading, error } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
   });
 
@@ -177,9 +177,9 @@ export default function UserManagementAdmin() {
 
   const onPasswordSubmit = (data: PasswordResetForm) => {
     if (!selectedUser) return;
-    resetPasswordMutation.mutate({ 
-      userId: selectedUser.id, 
-      password: data.newPassword 
+    resetPasswordMutation.mutate({
+      userId: selectedUser.id,
+      password: data.newPassword
     });
   };
 
@@ -245,7 +245,7 @@ export default function UserManagementAdmin() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center space-x-3">
@@ -257,7 +257,7 @@ export default function UserManagementAdmin() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center space-x-3">
@@ -292,8 +292,8 @@ export default function UserManagementAdmin() {
           ) : (
             <div className="space-y-4">
               {adminUsers.map((user) => (
-                <div 
-                  key={user.id} 
+                <div
+                  key={user.id}
                   className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-3 md:p-4 border rounded-lg bg-yellow-50 space-y-2 lg:space-y-0"
                 >
                   <div className="flex items-center space-x-2 md:space-x-4">
@@ -369,8 +369,8 @@ export default function UserManagementAdmin() {
           ) : (
             <div className="space-y-4">
               {regularUsers.map((user) => (
-                <div 
-                  key={user.id} 
+                <div
+                  key={user.id}
                   className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-3 md:p-4 border rounded-lg space-y-2 lg:space-y-0"
                 >
                   <div className="flex items-center space-x-2 md:space-x-4">
@@ -460,7 +460,7 @@ export default function UserManagementAdmin() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={editForm.control}
                   name="lastName"

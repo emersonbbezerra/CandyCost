@@ -1,19 +1,19 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
+import { IngredientForm } from "@/components/ingredient-form";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2, History, Filter, Package } from "lucide-react";
-import { IngredientForm } from "@/components/ingredient-form";
-import { ConfirmationDialog } from "@/components/confirmation-dialog";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
-import type { Ingredient } from "@shared/schema";
 import { INGREDIENT_CATEGORIES } from "@shared/constants";
+import type { Ingredient } from "@shared/schema";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ChevronDown, ChevronUp, Edit, Filter, Package, Plus, Search, Trash2 } from "lucide-react";
+import { useState } from "react";
 
 const categoryColors = {
   "Laticínios": "bg-green-100 text-green-800",
@@ -29,11 +29,18 @@ export default function Ingredients() {
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | undefined>();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [priceMinFilter, setPriceMinFilter] = useState("");
+  const [priceMaxFilter, setPriceMaxFilter] = useState("");
+  const [unitCostMinFilter, setUnitCostMinFilter] = useState("");
+  const [unitCostMaxFilter, setUnitCostMaxFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("all"); // options: all, 7, 30, 90
+  const [sortColumn, setSortColumn] = useState<keyof Ingredient | "unitCost" | "updatedAt" | "name" | "category" | "price" | "quantity" | "brand">("name");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [ingredientToDelete, setIngredientToDelete] = useState<Ingredient | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  
+
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -64,16 +71,92 @@ export default function Ingredients() {
     },
   });
 
+  const calculateUnitCost = (ingredient: Ingredient) => {
+    const price = parseFloat(ingredient.price);
+    const quantity = parseFloat(ingredient.quantity);
+    return price / quantity;
+  };
+
+  const formatUnit = (unit: string) => {
+    if (unit === "unidade") {
+      return "und";
+    }
+    return unit;
+  };
+
   const filteredIngredients = ingredients.filter((ingredient) => {
-    const matchesSearch = ingredient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         ingredient.brand?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch =
+      ingredient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ingredient.brand?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === "all" || ingredient.category === categoryFilter;
-    return matchesSearch && matchesCategory;
+
+    const price = parseFloat(ingredient.price);
+    const unitCost = calculateUnitCost(ingredient);
+
+    const matchesPriceMin = priceMinFilter === "" || price >= parseFloat(priceMinFilter);
+    const matchesPriceMax = priceMaxFilter === "" || price <= parseFloat(priceMaxFilter);
+    const matchesUnitCostMin = unitCostMinFilter === "" || unitCost >= parseFloat(unitCostMinFilter);
+    const matchesUnitCostMax = unitCostMaxFilter === "" || unitCost <= parseFloat(unitCostMaxFilter);
+
+    let matchesDate = true;
+    if (dateFilter !== "all") {
+      const days = parseInt(dateFilter);
+      const updatedAt = new Date(ingredient.updatedAt);
+      const now = new Date();
+      const diffTime = now.getTime() - updatedAt.getTime();
+      const diffDays = diffTime / (1000 * 3600 * 24);
+      matchesDate = diffDays <= days;
+    }
+
+    return (
+      matchesSearch &&
+      matchesCategory &&
+      matchesPriceMin &&
+      matchesPriceMax &&
+      matchesUnitCostMin &&
+      matchesUnitCostMax &&
+      matchesDate
+    );
+  });
+
+  const sortedIngredients = filteredIngredients.sort((a, b) => {
+    let aValue: any;
+    let bValue: any;
+
+    switch (sortColumn) {
+      case "name":
+        aValue = a.name.toLowerCase();
+        bValue = b.name.toLowerCase();
+        break;
+      case "category":
+        aValue = a.category.toLowerCase();
+        bValue = b.category.toLowerCase();
+        break;
+      case "price":
+        aValue = parseFloat(a.price);
+        bValue = parseFloat(b.price);
+        break;
+      case "unitCost":
+        aValue = calculateUnitCost(a);
+        bValue = calculateUnitCost(b);
+        break;
+      case "updatedAt":
+        aValue = new Date(a.updatedAt).getTime();
+        bValue = new Date(b.updatedAt).getTime();
+        break;
+      default:
+        aValue = a[sortColumn];
+        bValue = b[sortColumn];
+    }
+
+    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+    return 0;
   });
 
   // Paginação
-  const totalPages = Math.ceil(filteredIngredients.length / itemsPerPage);
-  const paginatedIngredients = filteredIngredients.slice(
+  const totalPages = Math.ceil(sortedIngredients.length / itemsPerPage);
+  const paginatedIngredients = sortedIngredients.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -101,10 +184,14 @@ export default function Ingredients() {
     setEditingIngredient(undefined);
   };
 
-  const calculateUnitCost = (ingredient: Ingredient) => {
-    const price = parseFloat(ingredient.price);
-    const quantity = parseFloat(ingredient.quantity);
-    return price / quantity;
+  const toggleSort = (column: keyof Ingredient | "unitCost" | "updatedAt" | "name" | "category" | "price" | "quantity" | "brand") => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+    setCurrentPage(1);
   };
 
   if (isLoading) {
@@ -138,7 +225,7 @@ export default function Ingredients() {
 
       {/* Search and Filters */}
       <Card className="mb-6">
-        <CardContent className="p-6">
+        <CardContent className="p-6 space-y-4">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-4">
             <div className="flex-1 max-w-md">
               <div className="relative">
@@ -174,6 +261,74 @@ export default function Ingredients() {
               </Select>
             </div>
           </div>
+
+          {/* Novos filtros adicionais */}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-4">
+            <div className="flex space-x-2 max-w-md">
+              <Input
+                type="number"
+                placeholder="Preço mínimo"
+                value={priceMinFilter}
+                onChange={(e) => {
+                  setPriceMinFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-32"
+                min={0}
+              />
+              <Input
+                type="number"
+                placeholder="Preço máximo"
+                value={priceMaxFilter}
+                onChange={(e) => {
+                  setPriceMaxFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-32"
+                min={0}
+              />
+            </div>
+            <div className="flex space-x-2 max-w-md">
+              <Input
+                type="number"
+                placeholder="Custo/unidade mínimo"
+                value={unitCostMinFilter}
+                onChange={(e) => {
+                  setUnitCostMinFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-40"
+                min={0}
+              />
+              <Input
+                type="number"
+                placeholder="Custo/unidade máximo"
+                value={unitCostMaxFilter}
+                onChange={(e) => {
+                  setUnitCostMaxFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-40"
+                min={0}
+              />
+            </div>
+            <div className="max-w-xs">
+              <Select value={dateFilter} onValueChange={(value) => {
+                setDateFilter(value);
+                setCurrentPage(1);
+              }}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Última atualização" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="7">Últimos 7 dias</SelectItem>
+                  <SelectItem value="30">Últimos 30 dias</SelectItem>
+                  <SelectItem value="90">Últimos 90 dias</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -188,12 +343,72 @@ export default function Ingredients() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Ingrediente</TableHead>
-                  <TableHead>Categoria</TableHead>
+                  <TableHead
+                    className="cursor-pointer select-none"
+                    onClick={() => toggleSort("name")}
+                  >
+                    Ingrediente
+                    {sortColumn === "name" ? (
+                      sortDirection === "asc" ? (
+                        <ChevronUp className="inline-block w-4 h-4 ml-1" />
+                      ) : (
+                        <ChevronDown className="inline-block w-4 h-4 ml-1" />
+                      )
+                    ) : null}
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer select-none"
+                    onClick={() => toggleSort("category")}
+                  >
+                    Categoria
+                    {sortColumn === "category" && (
+                      sortDirection === "asc" ? (
+                        <ChevronUp className="inline-block w-4 h-4 ml-1" />
+                      ) : (
+                        <ChevronDown className="inline-block w-4 h-4 ml-1" />
+                      )
+                    )}
+                  </TableHead>
                   <TableHead>Embalagem</TableHead>
-                  <TableHead>Preço</TableHead>
-                  <TableHead>Custo/Unidade</TableHead>
-                  <TableHead>Última Atualização</TableHead>
+                  <TableHead
+                    className="cursor-pointer select-none"
+                    onClick={() => toggleSort("price")}
+                  >
+                    Preço
+                    {sortColumn === "price" && (
+                      sortDirection === "asc" ? (
+                        <ChevronUp className="inline-block w-4 h-4 ml-1" />
+                      ) : (
+                        <ChevronDown className="inline-block w-4 h-4 ml-1" />
+                      )
+                    )}
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer select-none"
+                    onClick={() => toggleSort("unitCost")}
+                  >
+                    Custo/Unidade
+                    {sortColumn === "unitCost" && (
+                      sortDirection === "asc" ? (
+                        <ChevronUp className="inline-block w-4 h-4 ml-1" />
+                      ) : (
+                        <ChevronDown className="inline-block w-4 h-4 ml-1" />
+                      )
+                    )}
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer select-none"
+                    onClick={() => toggleSort("updatedAt")}
+                  >
+                    Última Atualização
+                    {sortColumn === "updatedAt" && (
+                      sortDirection === "asc" ? (
+                        <ChevronUp className="inline-block w-4 h-4 ml-1" />
+                      ) : (
+                        <ChevronDown className="inline-block w-4 h-4 ml-1" />
+                      )
+                    )}
+                  </TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -216,7 +431,7 @@ export default function Ingredients() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge 
+                      <Badge
                         className={categoryColors[ingredient.category as keyof typeof categoryColors] || categoryColors.Outros}
                       >
                         {ingredient.category}
@@ -227,7 +442,7 @@ export default function Ingredients() {
                       {formatCurrency(parseFloat(ingredient.price))}
                     </TableCell>
                     <TableCell className="text-gray-500">
-                      {formatCurrency(calculateUnitCost(ingredient))} / {ingredient.unit}
+                      {formatCurrency(calculateUnitCost(ingredient))} / {formatUnit(ingredient.unit)}
                     </TableCell>
                     <TableCell className="text-gray-500">
                       {formatRelativeTime(new Date(ingredient.updatedAt))}
@@ -294,36 +509,32 @@ export default function Ingredients() {
                       </Button>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Categoria:</span>
-                      <Badge 
+                      <Badge
                         className={categoryColors[ingredient.category as keyof typeof categoryColors] || categoryColors.Outros}
                       >
                         {ingredient.category}
                       </Badge>
                     </div>
-                    
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Embalagem:</span>
                       <span className="text-sm font-medium">{ingredient.quantity} {ingredient.unit}</span>
                     </div>
-                    
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Preço:</span>
                       <span className="text-sm font-bold text-green-600">
                         {formatCurrency(parseFloat(ingredient.price))}
                       </span>
                     </div>
-                    
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Custo/Unidade:</span>
                       <span className="text-sm text-gray-600">
-                        {formatCurrency(calculateUnitCost(ingredient))} / {ingredient.unit}
+                        {formatCurrency(calculateUnitCost(ingredient))} / {formatUnit(ingredient.unit)}
                       </span>
                     </div>
-                    
                     <div className="flex items-center justify-between border-t pt-2 mt-2">
                       <span className="text-xs text-gray-400">Atualizado:</span>
                       <span className="text-xs text-gray-500">
@@ -337,7 +548,7 @@ export default function Ingredients() {
           </div>
 
           {/* Paginação */}
-          {filteredIngredients.length > 0 && totalPages > 1 && (
+          {sortedIngredients.length > 0 && totalPages > 1 && (
             <div className="flex justify-center items-center mt-6 space-x-2">
               {/* Desktop Pagination */}
               <div className="hidden lg:flex items-center space-x-2">
@@ -349,14 +560,11 @@ export default function Ingredients() {
                 >
                   Anterior
                 </Button>
-                
                 <div className="flex items-center space-x-1">
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     const startPage = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
                     const page = startPage + i;
-                    
                     if (page > totalPages) return null;
-                    
                     return (
                       <Button
                         key={page}
@@ -370,7 +578,6 @@ export default function Ingredients() {
                     );
                   })}
                 </div>
-                
                 <Button
                   variant="outline"
                   size="sm"
@@ -380,7 +587,6 @@ export default function Ingredients() {
                   Próximo
                 </Button>
               </div>
-
               {/* Mobile Pagination */}
               <div className="lg:hidden flex items-center justify-center space-x-4">
                 <Button
@@ -392,11 +598,9 @@ export default function Ingredients() {
                 >
                   ‹
                 </Button>
-                
                 <span className="text-sm text-gray-600 min-w-[100px] text-center">
                   Página {currentPage} de {totalPages}
                 </span>
-                
                 <Button
                   variant="outline"
                   size="sm"
@@ -409,15 +613,14 @@ export default function Ingredients() {
               </div>
             </div>
           )}
-
-          {filteredIngredients.length === 0 && (
+          {sortedIngredients.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               <p>Nenhum ingrediente encontrado.</p>
               {searchTerm || categoryFilter ? (
                 <p className="text-sm mt-2">Tente ajustar os filtros de busca.</p>
               ) : (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="mt-4"
                   onClick={() => setIsFormOpen(true)}
                 >
@@ -429,13 +632,11 @@ export default function Ingredients() {
           )}
         </CardContent>
       </Card>
-
       <IngredientForm
         open={isFormOpen}
         onOpenChange={handleFormClose}
         ingredient={editingIngredient}
       />
-
       <ConfirmationDialog
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}

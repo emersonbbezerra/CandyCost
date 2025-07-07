@@ -1,18 +1,18 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
+import { ProductForm } from "@/components/product-form";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, History, ChefHat, Layers, Search, Filter } from "lucide-react";
-import { ProductForm } from "@/components/product-form";
-import { ConfirmationDialog } from "@/components/confirmation-dialog";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
-import type { Product, ProductCost } from "@shared/schema";
 import { PRODUCT_CATEGORIES } from "@shared/constants";
+import type { Product, ProductCost } from "@shared/schema";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ChefHat, Edit, Filter, Layers, Plus, Search, Trash2 } from "lucide-react";
+import { useState } from "react";
 
 type ProductWithCost = Product & { cost?: ProductCost };
 
@@ -21,11 +21,13 @@ export default function Products() {
   const [editingProduct, setEditingProduct] = useState<ProductWithCost | undefined>();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [sortColumn, setSortColumn] = useState<"name" | "totalCost" | "marginPercentage">("name");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<ProductWithCost | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  
+
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -109,14 +111,42 @@ export default function Products() {
   // Filtrar produtos baseado na pesquisa e categoria
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.category.toLowerCase().includes(searchTerm.toLowerCase());
+      product.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === "all" || product.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
 
+  // Ordenar produtos
+  const sortedProducts = filteredProducts.sort((a, b) => {
+    let aValue: any;
+    let bValue: any;
+
+    switch (sortColumn) {
+      case "name":
+        aValue = a.name.toLowerCase();
+        bValue = b.name.toLowerCase();
+        break;
+      case "totalCost":
+        aValue = a.cost?.totalCost ?? 0;
+        bValue = b.cost?.totalCost ?? 0;
+        break;
+      case "marginPercentage":
+        aValue = a.cost?.margin ?? 0;
+        bValue = b.cost?.margin ?? 0;
+        break;
+      default:
+        aValue = a.name.toLowerCase();
+        bValue = b.name.toLowerCase();
+    }
+
+    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+    return 0;
+  });
+
   // Paginação
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-  const paginatedProducts = filteredProducts.slice(
+  const totalPages = Math.ceil(sortedProducts.length / itemsPerPage);
+  const paginatedProducts = sortedProducts.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -190,6 +220,24 @@ export default function Products() {
                   ))}
                 </SelectContent>
               </Select>
+              <Select value={`${sortColumn}-${sortDirection}`} onValueChange={(value) => {
+                const [newSortColumn, newSortDirection] = value.split('-') as [typeof sortColumn, typeof sortDirection];
+                setSortColumn(newSortColumn);
+                setSortDirection(newSortDirection);
+                setCurrentPage(1);
+              }}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Ordenar por" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name-asc">Nome A-Z</SelectItem>
+                  <SelectItem value="name-desc">Nome Z-A</SelectItem>
+                  <SelectItem value="totalCost-asc">Menor Custo</SelectItem>
+                  <SelectItem value="totalCost-desc">Maior Custo</SelectItem>
+                  <SelectItem value="marginPercentage-asc">Menor Margem</SelectItem>
+                  <SelectItem value="marginPercentage-desc">Maior Margem</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>
@@ -202,7 +250,7 @@ export default function Products() {
             <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
               <ChefHat className="w-16 h-16 text-gray-400" />
             </div>
-            
+
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
@@ -220,7 +268,7 @@ export default function Products() {
                   )}
                 </div>
               </div>
-              
+
               {product.cost ? (
                 <div className="space-y-3 mb-4">
                   <div className="flex justify-between text-sm">
@@ -249,7 +297,7 @@ export default function Products() {
                   </p>
                 </div>
               )}
-              
+
               {product.description && (
                 <div className="mb-4">
                   <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
@@ -267,9 +315,9 @@ export default function Products() {
                         {productDetail.recipes.map((recipe: any, index: number) => (
                           <div key={index} className="text-xs text-gray-600 flex justify-between">
                             <span>
-                              {recipe.ingredient ? recipe.ingredient.name : 
-                               recipe.productIngredient ? recipe.productIngredient.name : 
-                               'Ingrediente não encontrado'}
+                              {recipe.ingredient ? recipe.ingredient.name :
+                                recipe.productIngredient ? recipe.productIngredient.name :
+                                  'Ingrediente não encontrado'}
                             </span>
                             <span>{recipe.quantity} {recipe.unit}</span>
                           </div>
@@ -280,7 +328,7 @@ export default function Products() {
                 }
                 return null;
               })()}
-              
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Button
@@ -321,14 +369,14 @@ export default function Products() {
             >
               Anterior
             </Button>
-            
+
             <div className="flex items-center space-x-1">
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 const startPage = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
                 const page = startPage + i;
-                
+
                 if (page > totalPages) return null;
-                
+
                 return (
                   <Button
                     key={page}
@@ -342,7 +390,7 @@ export default function Products() {
                 );
               })}
             </div>
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -364,11 +412,11 @@ export default function Products() {
             >
               ‹
             </Button>
-            
+
             <span className="text-sm text-gray-600 min-w-[100px] text-center">
               Página {currentPage} de {totalPages}
             </span>
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -389,8 +437,8 @@ export default function Products() {
               <CardContent className="p-12 text-center">
                 <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-500 mb-4">Nenhuma receita encontrada com os filtros aplicados.</p>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => { setSearchTerm(""); setCategoryFilter("all"); }}
                 >
                   Limpar filtros
@@ -399,7 +447,7 @@ export default function Products() {
             </Card>
           </div>
         )}
-        
+
         {products.length === 0 && (
           <div className="col-span-full">
             <Card>

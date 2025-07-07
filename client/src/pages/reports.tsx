@@ -1,29 +1,27 @@
-import { useQuery } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ExportReports } from "@/components/export-reports";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  AlertTriangle, 
-  FileText, 
-  Download,
-  DollarSign,
-  Package,
+import { formatCurrency } from "@/lib/utils";
+import type { Ingredient, Product, ProductCost } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
+import {
+  AlertTriangle,
   Calculator,
+  DollarSign,
+  FileText,
+  Filter,
+  Package,
   Search,
   SortAsc,
   SortDesc,
-  Filter,
-  BarChart
+  TrendingDown,
+  TrendingUp
 } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
-import { ExportReports } from "@/components/export-reports";
-import type { Ingredient, Product, ProductCost } from "@shared/schema";
+import { useMemo, useState } from "react";
 
 interface ReportsData {
   profitabilityAnalysis: {
@@ -93,10 +91,10 @@ export default function Reports() {
     let filtered = reportsData.profitabilityAnalysis.filter(item => {
       // Filtro por nome
       const matchesSearch = item.product.name.toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       // Filtro por categoria
       const matchesCategory = categoryFilter === "all" || item.product.category === categoryFilter;
-      
+
       // Filtro por lucratividade
       let matchesProfitability = true;
       if (profitabilityFilter === "high") {
@@ -113,7 +111,7 @@ export default function Reports() {
     // Ordenação
     filtered.sort((a, b) => {
       let comparison = 0;
-      
+
       switch (sortBy) {
         case "name":
           comparison = a.product.name.localeCompare(b.product.name);
@@ -156,7 +154,7 @@ export default function Reports() {
     let filtered = reportsData.criticalIngredients.filter(item => {
       // Filtro por nome
       const matchesSearch = item.ingredient.name.toLowerCase().includes(criticalSearchTerm.toLowerCase());
-      
+
       // Filtro por categoria
       const matchesCategory = criticalCategoryFilter === "all" || item.ingredient.category === criticalCategoryFilter;
 
@@ -166,7 +164,7 @@ export default function Reports() {
     // Ordenação
     filtered.sort((a, b) => {
       let comparison = 0;
-      
+
       switch (criticalSortBy) {
         case "name":
           comparison = a.ingredient.name.localeCompare(b.ingredient.name);
@@ -221,7 +219,7 @@ export default function Reports() {
     <div className="p-4 lg:p-8">
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 flex items-center">
-          <BarChart className="w-8 h-8 mr-3 text-blue-600" />
+          <FileText className="w-8 h-8 mr-3 text-blue-600" />
           Relatórios
         </h2>
         <p className="text-gray-600 mt-2">Análises detalhadas e insights do seu negócio</p>
@@ -238,7 +236,7 @@ export default function Reports() {
               <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
               Análise de Lucratividade
             </CardTitle>
-            
+
             {/* Filtros */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mt-4">
               <div className="relative">
@@ -253,7 +251,7 @@ export default function Reports() {
                   className="pl-10"
                 />
               </div>
-              
+
               <Select value={categoryFilter} onValueChange={(value) => {
                 setCategoryFilter(value);
                 setCurrentPage(1);
@@ -315,13 +313,13 @@ export default function Reports() {
                     <p className="text-sm text-gray-600">{formatCurrency(cost.totalCost)} → {formatCurrency(cost.suggestedPrice)}</p>
                   </div>
                   <div className="flex items-center justify-end sm:justify-start space-x-2 flex-shrink-0">
-                    <Badge 
+                    <Badge
                       variant={profitMargin > 50 ? "default" : profitMargin > 30 ? "secondary" : "destructive"}
                       className={
-                        profitMargin > 50 
-                          ? "bg-green-100 text-green-800 border-green-200" 
-                          : profitMargin > 30 
-                            ? "bg-yellow-100 text-yellow-800 border-yellow-200" 
+                        profitMargin > 50
+                          ? "bg-green-100 text-green-800 border-green-200"
+                          : profitMargin > 30
+                            ? "bg-yellow-100 text-yellow-800 border-yellow-200"
                             : "bg-red-100 text-red-800 border-red-200"
                       }
                     >
@@ -341,7 +339,7 @@ export default function Reports() {
                 <p className="text-gray-500 text-center py-4">Nenhum produto encontrado com os filtros aplicados.</p>
               )}
             </div>
-            
+
             {/* Paginação */}
             {totalPages > 1 && (
               <div className="mt-6 pt-4 border-t">
@@ -359,7 +357,7 @@ export default function Reports() {
                     <span className="hidden sm:inline">Anterior</span>
                     <span className="sm:hidden">‹</span>
                   </Button>
-                  
+
                   <div className="hidden sm:flex items-center space-x-1">
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       let pageNumber;
@@ -372,7 +370,7 @@ export default function Reports() {
                       } else {
                         pageNumber = currentPage - 2 + i;
                       }
-                      
+
                       return (
                         <Button
                           key={pageNumber}
@@ -386,11 +384,11 @@ export default function Reports() {
                       );
                     })}
                   </div>
-                  
+
                   <div className="sm:hidden flex items-center space-x-2">
                     <span className="text-sm text-gray-600">{currentPage}/{totalPages}</span>
                   </div>
-                  
+
                   <Button
                     variant="outline"
                     size="sm"
@@ -414,7 +412,7 @@ export default function Reports() {
               <AlertTriangle className="w-5 h-5 mr-2 text-orange-600" />
               Ingredientes Críticos
             </CardTitle>
-            
+
             {/* Filtros para Ingredientes Críticos */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 mt-4">
               <Input
@@ -426,7 +424,7 @@ export default function Reports() {
                 }}
                 className="w-full"
               />
-              
+
               <Select value={criticalCategoryFilter} onValueChange={(value) => {
                 setCriticalCategoryFilter(value);
                 setCriticalCurrentPage(1);
@@ -483,7 +481,7 @@ export default function Reports() {
                 <p className="text-gray-500 text-center py-4">Nenhum ingrediente encontrado com os filtros aplicados.</p>
               )}
             </div>
-            
+
             {/* Paginação para Ingredientes Críticos */}
             {criticalTotalPages > 1 && (
               <div className="mt-6 pt-4 border-t">
@@ -501,7 +499,7 @@ export default function Reports() {
                     <span className="hidden sm:inline">Anterior</span>
                     <span className="sm:hidden">‹</span>
                   </Button>
-                  
+
                   <div className="hidden sm:flex items-center space-x-1">
                     {Array.from({ length: Math.min(5, criticalTotalPages) }, (_, i) => {
                       let pageNumber;
@@ -514,7 +512,7 @@ export default function Reports() {
                       } else {
                         pageNumber = criticalCurrentPage - 2 + i;
                       }
-                      
+
                       return (
                         <Button
                           key={pageNumber}
@@ -528,11 +526,11 @@ export default function Reports() {
                       );
                     })}
                   </div>
-                  
+
                   <div className="sm:hidden flex items-center space-x-2">
                     <span className="text-sm text-gray-600">{criticalCurrentPage}/{criticalTotalPages}</span>
                   </div>
-                  
+
                   <Button
                     variant="outline"
                     size="sm"

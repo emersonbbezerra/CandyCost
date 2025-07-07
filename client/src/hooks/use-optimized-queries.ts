@@ -1,5 +1,18 @@
-import { useQuery, useQueries } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
+import { useQueries, useQuery } from "@tanstack/react-query";
+
+interface Product {
+  id: string;
+  name: string;
+  // Adicione outras propriedades relevantes do produto aqui
+}
+
+interface Ingredient {
+  id: string;
+  name: string;
+  category?: string;
+  // Adicione outras propriedades relevantes do ingrediente aqui
+}
 
 // Cache otimizado para dados frequentemente acessados
 export function useOptimizedDashboardData() {
@@ -45,12 +58,12 @@ export function useOptimizedDashboardData() {
       error: statsQuery.error,
     },
     ingredients: {
-      data: ingredientsQuery.data || [],
+      data: ingredientsQuery.data as Ingredient[] || [],
       isLoading: ingredientsQuery.isLoading,
       error: ingredientsQuery.error,
     },
     products: {
-      data: productsQuery.data || [],
+      data: productsQuery.data as Product[] || [],
       isLoading: productsQuery.isLoading,
       error: productsQuery.error,
     },
@@ -66,7 +79,7 @@ export function useOptimizedDashboardData() {
 
 // Hook otimizado para dados de produtos com receitas
 export function useOptimizedProductsWithCosts() {
-  const { data: products, isLoading: productsLoading } = useQuery({
+  const { data: products, isLoading: productsLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
     queryFn: getQueryFn({ on401: "throw" }),
     staleTime: 3 * 60 * 1000, // 3 minutos
@@ -75,7 +88,7 @@ export function useOptimizedProductsWithCosts() {
 
   // Buscar custos apenas dos produtos que existem
   const costQueries = useQueries({
-    queries: (products || []).map((product: any) => ({
+    queries: (products || []).map((product: Product) => ({
       queryKey: ["/api/products", product.id, "cost"],
       queryFn: async () => {
         const response = await fetch(`/api/products/${product.id}/cost`);
@@ -88,7 +101,7 @@ export function useOptimizedProductsWithCosts() {
     }))
   });
 
-  const productsWithCosts = (products || []).map((product: any, index: number) => ({
+  const productsWithCosts = (products || []).map((product: Product, index: number) => ({
     ...product,
     cost: costQueries[index]?.data,
     costLoading: costQueries[index]?.isLoading,
@@ -115,7 +128,7 @@ export function useOptimizedReports() {
 
 // Hook para ingredientes com pré-filtragem local
 export function useOptimizedIngredients(searchTerm?: string, categoryFilter?: string) {
-  const { data: allIngredients, isLoading, error } = useQuery({
+  const { data: allIngredients, isLoading, error } = useQuery<Ingredient[]>({
     queryKey: ["/api/ingredients"],
     queryFn: getQueryFn({ on401: "throw" }),
     staleTime: 2 * 60 * 1000, // 2 minutos
@@ -123,7 +136,7 @@ export function useOptimizedIngredients(searchTerm?: string, categoryFilter?: st
   });
 
   // Filtrar localmente para evitar requests desnecessários
-  const filteredIngredients = (allIngredients || []).filter((ingredient: any) => {
+  const filteredIngredients = (allIngredients || []).filter((ingredient: Ingredient) => {
     const matchesSearch = !searchTerm || 
       ingredient.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = !categoryFilter || 
