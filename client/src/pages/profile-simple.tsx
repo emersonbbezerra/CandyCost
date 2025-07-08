@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { User, Settings, Lock, Shield } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Lock, Settings, Shield, User } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { passwordErrorMessage, passwordRegex } from "../../../shared/passwordValidation";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "Nome é obrigatório"),
@@ -22,13 +22,13 @@ const passwordSchema = z.object({
   currentPassword: z.string().min(1, "Senha atual é obrigatória"),
   newPassword: z.string()
     .min(8, "Nova senha deve ter pelo menos 8 caracteres")
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#+\-_=.])[A-Za-z\d@$!%*?&#+\-_=.]+$/, 
-      "Nova senha deve conter pelo menos: 1 letra minúscula, 1 maiúscula, 1 número e 1 caractere especial (@$!%*?&#+-_.=)"),
+    .regex(passwordRegex, passwordErrorMessage),
   confirmPassword: z.string(),
 }).refine((data) => data.newPassword === data.confirmPassword, {
   message: "Senhas não coincidem",
   path: ["confirmPassword"],
 });
+
 
 type ProfileForm = z.infer<typeof profileSchema>;
 type PasswordForm = z.infer<typeof passwordSchema>;
@@ -253,14 +253,14 @@ export default function ProfileSimple() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <div className="flex items-center space-x-2 p-3 bg-muted rounded-lg">
                       <Shield className="h-4 w-4 text-amber-600" />
                       <span className="text-sm font-medium">Função: {user.role === 'admin' ? 'Administrador' : 'Usuário'}</span>
                     </div>
 
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       disabled={updateProfileMutation.isPending}
                       className="w-full md:w-auto"
                     >
@@ -325,8 +325,8 @@ export default function ProfileSimple() {
                         </FormItem>
                       )}
                     />
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       disabled={changePasswordMutation.isPending}
                       className="w-full md:w-auto"
                     >

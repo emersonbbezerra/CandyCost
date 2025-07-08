@@ -15,6 +15,7 @@ import { CalendarDays, Crown, Edit, KeyRound, Mail, Shield, Trash2, Users } from
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { passwordErrorMessage, passwordRegex } from "../../../shared/passwordValidation";
 
 interface User {
   id: string;
@@ -35,8 +36,7 @@ const userEditSchema = z.object({
 const passwordResetSchema = z.object({
   newPassword: z.string()
     .min(8, 'Nova senha deve ter pelo menos 8 caracteres')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#+\-_=.])[A-Za-z\d@$!%*?&#+\-_=.]+$/,
-      "Nova senha deve conter pelo menos: 1 letra minúscula, 1 maiúscula, 1 número e 1 caractere especial (@$!%*?&#+-_.=)"),
+    .regex(passwordRegex, passwordErrorMessage),
   confirmPassword: z.string()
 });
 
@@ -44,6 +44,7 @@ const passwordResetSchemaWithConfirm = passwordResetSchema.refine((data) => data
   message: "Senhas não coincidem",
   path: ["confirmPassword"],
 });
+
 
 type UserEditForm = z.infer<typeof userEditSchema>;
 type PasswordResetForm = z.infer<typeof passwordResetSchemaWithConfirm>;

@@ -1,5 +1,6 @@
 import passport from "passport";
 import { z } from "zod";
+import { passwordErrorMessage, passwordRegex } from "../../shared/passwordValidation";
 import { userService } from "../services/userService";
 import { auditLog } from "../utils/auditLogger";
 
@@ -52,8 +53,7 @@ export const register = async (req: any, res: any) => {
       email: z.string().email('Email inválido'),
       password: z.string()
         .min(8, 'Senha deve ter pelo menos 8 caracteres')
-        .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#+\-_=.])[A-Za-z\d@$!%*?&#+\-_=.]+$/, 
-          'Senha deve conter pelo menos: 1 letra minúscula, 1 maiúscula, 1 número e 1 caractere especial (@$!%*?&#+-_.=)'),
+        .regex(passwordRegex, passwordErrorMessage),
       firstName: z.string().min(1, 'Nome é obrigatório'),
       lastName: z.string().optional(),
     });
