@@ -64,14 +64,14 @@ export function getSession() {
     tableName: "sessions",
   });
 
-  return session({
+    return session({
     secret: process.env.SESSION_SECRET || 'confei-calc-secret-key-change-in-production',
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: false, // Set to true in production with HTTPS
+      secure: process.env.NODE_ENV === 'production', // true em produção com HTTPS
       maxAge: sessionTtl,
     },
   });
