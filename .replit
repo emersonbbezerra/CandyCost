@@ -12,7 +12,7 @@ runButton = "Start"
 
 [[workflows.workflow]]
 name = "Start"
-mode = "sequential"
+mode = "parallel"
 author = 43871407
 
 [[workflows.workflow.tasks]]
@@ -22,6 +22,14 @@ args = "npm run dev"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npm run dev-frontend"
+
+[[ports]]
+localPort = 3000
+externalPort = 3000
+
+[[ports]]
+localPort = 3001
+externalPort = 3001
 
 [[ports]]
 localPort = 5000
