@@ -1,45 +1,123 @@
-#!/usr/bin/env node
-
-/**
- * CandyCost Admin CLI
- * Ferramenta de linha de comando para gerenciamento administrativo seguro
- * 
- * Uso em produção:
- * - npm run admin:create-first admin@empresa.com senhaSegura123! "João Silva"
- * - npm run admin:promote usuario@empresa.com
- * - npm run admin:list-users
- */
-
+// Função para promover usuário via CLI interativo
+async function promoteUserCli(email: string) {
+  if (!email) {
+    console.error('❌ Email não informado.');
+    process.exit(1);
+  }
+  try {
+    const user = await userService.promoteToAdmin(email);
+    console.log(`✅ Usuário promovido a administrador!`);
+    console.log(`   Email: ${user!.email}`);
+    console.log(`   Nome: ${user!.firstName} ${user!.lastName || ''}`);
+    console.log(`   Role: ${user!.role}`);
+    process.exit(0);
+  } catch (error: any) {
+    console.error(`❌ Erro: ${error.message}`);
+    process.exit(1);
+  }
+}
 import { users } from '@shared/schema';
+import dotenv from 'dotenv';
+import readline from 'readline';
 import { userService } from './auth';
 import { db } from './db';
+
+dotenv.config();
 
 const command = process.argv[2];
 const args = process.argv.slice(3);
 
 async function createFirstAdmin() {
-  const [email, password, firstName, lastName] = args;
-  
+  let email, password, firstName, lastName;
+  if (process.env.NODE_ENV === 'development') {
+    email = process.env.INITIAL_ADMIN_EMAIL;
+    password = process.env.INITIAL_ADMIN_PASSWORD;
+    firstName = process.env.INITIAL_ADMIN_FIRST_NAME || 'Admin';
+    lastName = process.env.INITIAL_ADMIN_LAST_NAME || '';
+    if (!email || !password || !firstName) {
+      console.error(
+        '❌ Variáveis de ambiente para admin não encontradas (.env).'
+      );
+      process.exit(1);
+    }
+    console.log('ℹ️ Criando admin usando variáveis do .env...');
+    await executeCreateAdmin(email, password, firstName, lastName);
+  } else {
+    // Validação antes das perguntas interativas
+    const hasAdmin = await userService.hasAdmin();
+    if (hasAdmin) {
+      console.log('❌ Erro: Sistema já possui um administrador.');
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+      });
+      rl.question(
+        'Deseja promover um usuário existente a administrador? (s/n): ',
+        (answer) => {
+          if (
+            answer.trim().toLowerCase() === 's' ||
+            answer.trim().toLowerCase() === 'sim'
+          ) {
+            rl.question(
+              'Informe o email do usuário a ser promovido: ',
+              async (emailPromote) => {
+                rl.close();
+                promoteUserCli(emailPromote);
+              }
+            );
+          } else {
+            console.log('Operação cancelada.');
+            rl.close();
+            process.exit(0);
+          }
+        }
+      );
+      return;
+    }
+    // Produção: perguntar interativamente
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+    interface AskFunction {
+      (q: string): Promise<string>;
+    }
+    const ask: AskFunction = (q) =>
+      new Promise<string>((res) => rl.question(q, res));
+    email = await ask('Email do administrador: ');
+    password = await ask('Senha do administrador: ');
+    firstName = await ask('Nome: ');
+    lastName = await ask('Sobrenome (opcional): ');
+    rl.close();
+    await executeCreateAdmin(email, password, firstName, lastName);
+  }
+}
+
+async function executeCreateAdmin(
+  email: string,
+  password: string,
+  firstName: string,
+  lastName?: string
+) {
   if (!email || !password || !firstName) {
-    console.error('❌ Uso: npm run admin:create-first <email> <senha> <nome> [sobrenome]');
-    console.error('   Exemplo: npm run admin:create-first admin@confeitaria.com MinhaSenh@123! "João Silva"');
+    console.error('❌ Dados obrigatórios ausentes.');
     process.exit(1);
   }
-
-  // Validação básica de email
   if (!email.includes('@') || !email.includes('.')) {
     console.error('❌ Email inválido');
     process.exit(1);
   }
-
-  // Validação de senha forte
   if (password.length < 8) {
     console.error('❌ Senha deve ter pelo menos 8 caracteres');
     process.exit(1);
   }
-
   try {
-    const admin = await userService.initializeFirstAdmin(email, password, firstName, lastName);
+    const admin = await userService.initializeFirstAdmin(
+      email,
+      password,
+      firstName,
+      lastName
+    );
     console.log(`✅ Primeiro administrador criado com sucesso!`);
     console.log(`   Email: ${admin.email}`);
     console.log(`   Nome: ${admin.firstName} ${admin.lastName || ''}`);
@@ -52,11 +130,12 @@ async function createFirstAdmin() {
     console.error(`❌ Erro: ${error.message}`);
     process.exit(1);
   }
+  // ...existing code...
 }
 
 async function promoteUser() {
   const [email] = args;
-  
+
   if (!email) {
     console.error('❌ Uso: npm run admin:promote <email>');
     console.error('   Exemplo: npm run admin:promote usuario@confeitaria.com');
@@ -78,32 +157,40 @@ async function promoteUser() {
 
 async function listUsers() {
   try {
-    const allUsers = await db.select({
-      id: users.id,
-      email: users.email,
-      firstName: users.firstName,
-      lastName: users.lastName,
-      role: users.role,
-      createdAt: users.createdAt
-    }).from(users);
+    const allUsers = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        role: users.role,
+        createdAt: users.createdAt,
+      })
+      .from(users);
 
     console.log('📋 Usuários do sistema:');
     console.log('');
-    
+
     allUsers.forEach((user, index) => {
       const roleIcon = user.role === 'admin' ? '👑' : '👤';
-      const createdAtStr = user.createdAt ? new Date(user.createdAt).toLocaleDateString('pt-BR') : 'Data não disponível';
-      console.log(`${index + 1}. ${roleIcon} ${user.firstName} ${user.lastName || ''}`);
+      const createdAtStr = user.createdAt
+        ? new Date(user.createdAt).toLocaleDateString('pt-BR')
+        : 'Data não disponível';
+      console.log(
+        `${index + 1}. ${roleIcon} ${user.firstName} ${user.lastName || ''}`
+      );
       console.log(`   Email: ${user.email}`);
       console.log(`   Role: ${user.role}`);
       console.log(`   Criado: ${createdAtStr}`);
       console.log('');
     });
-    
-    const adminCount = allUsers.filter(u => u.role === 'admin').length;
-    const userCount = allUsers.filter(u => u.role === 'user').length;
-    
-    console.log(`📊 Resumo: ${adminCount} admin(s), ${userCount} usuário(s) comum(ns)`);
+
+    const adminCount = allUsers.filter((u) => u.role === 'admin').length;
+    const userCount = allUsers.filter((u) => u.role === 'user').length;
+
+    console.log(
+      `📊 Resumo: ${adminCount} admin(s), ${userCount} usuário(s) comum(ns)`
+    );
     process.exit(0);
   } catch (error: any) {
     console.error(`❌ Erro: ${error.message}`);
@@ -114,13 +201,17 @@ async function listUsers() {
 async function showHelp() {
   console.log('🍭 CandyCost Admin CLI - Comandos disponíveis:');
   console.log('');
-  console.log('  create-first  - Criar primeiro administrador (apenas se não existir nenhum)');
+  console.log(
+    '  create-first  - Criar primeiro administrador (apenas se não existir nenhum)'
+  );
   console.log('  promote      - Promover usuário existente a administrador');
   console.log('  list-users   - Listar todos os usuários do sistema');
   console.log('  help         - Mostrar esta ajuda');
   console.log('');
   console.log('Exemplos:');
-  console.log('  npm run admin:create-first admin@confeitaria.com MinhaSenh@123! "João Silva"');
+  console.log(
+    '  npm run admin:create-first admin@confeitaria.com MinhaSenh@123! "João Silva"'
+  );
   console.log('  npm run admin:promote usuario@confeitaria.com');
   console.log('  npm run admin:list-users');
   process.exit(0);
@@ -143,6 +234,8 @@ switch (command) {
     showHelp();
     break;
   default:
-    console.error('❌ Comando não reconhecido. Use "help" para ver os comandos disponíveis.');
+    console.error(
+      '❌ Comando não reconhecido. Use "help" para ver os comandos disponíveis.'
+    );
     process.exit(1);
 }

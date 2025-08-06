@@ -1,43 +1,45 @@
-import { users, type UpsertUser, type User } from "@shared/schema";
-import bcrypt from "bcryptjs";
-import connectPg from "connect-pg-simple";
-import { eq, sql } from "drizzle-orm";
-import type { Express, RequestHandler } from "express";
-import session from "express-session";
-import passport from "passport";
-import { Strategy as LocalStrategy } from "passport-local";
-import { db } from "./db";
-import { findUserByEmail, verifyPassword } from "./utils/authUtils";
+import { users, type UpsertUser, type User } from '@shared/schema';
+import bcrypt from 'bcryptjs';
+import connectPg from 'connect-pg-simple';
+import { eq, sql } from 'drizzle-orm';
+import type { Express, RequestHandler } from 'express';
+import session from 'express-session';
+import passport from 'passport';
+import { Strategy as LocalStrategy } from 'passport-local';
+import { db } from './db';
+import { findUserByEmail, verifyPassword } from './utils/authUtils';
 
 const PgSession = connectPg(session);
 
 // Configure Passport Local Strategy
-passport.use(new LocalStrategy(
-  {
-    usernameField: 'email',
-    passwordField: 'password'
-  },
-  async (email, password, done) => {
-    try {
-      const user = await findUserByEmail(email);
-      
-      if (!user) {
-        return done(null, false, { message: 'Email ou senha inválidos.' });
-      }
+passport.use(
+  new LocalStrategy(
+    {
+      usernameField: 'email',
+      passwordField: 'password',
+    },
+    async (email, password, done) => {
+      try {
+        const user = await findUserByEmail(email);
 
-      // Check password
-      const isValidPassword = await verifyPassword(password, user.password);
-      
-      if (!isValidPassword) {
-        return done(null, false, { message: 'Email ou senha inválidos.' });
-      }
+        if (!user) {
+          return done(null, false, { message: 'Email ou senha inválidos.' });
+        }
 
-      return done(null, user);
-    } catch (error) {
-      return done(error);
+        // Check password
+        const isValidPassword = await verifyPassword(password, user.password);
+
+        if (!isValidPassword) {
+          return done(null, false, { message: 'Email ou senha inválidos.' });
+        }
+
+        return done(null, user);
+      } catch (error) {
+        return done(error);
+      }
     }
-  }
-));
+  )
+);
 
 // Serialize user for session
 passport.serializeUser((user: any, done) => {
@@ -61,11 +63,13 @@ export function getSession() {
     conString: process.env.DATABASE_URL,
     createTableIfMissing: true,
     ttl: sessionTtl,
-    tableName: "sessions",
+    tableName: 'sessions',
   });
 
-    return session({
-    secret: process.env.SESSION_SECRET || 'confei-calc-secret-key-change-in-production',
+  return session({
+    secret:
+      process.env.SESSION_SECRET ||
+      'confei-calc-secret-key-change-in-production',
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
@@ -89,7 +93,11 @@ export const isAuthenticated: RequestHandler = (req, res, next) => {
   if (req.isAuthenticated()) {
     return next();
   }
-  res.status(401).json({ message: "Você precisa estar logado para acessar esta funcionalidade." });
+  res
+    .status(401)
+    .json({
+      message: 'Você precisa estar logado para acessar esta funcionalidade.',
+    });
 };
 
 // Admin authorization middleware
@@ -97,18 +105,38 @@ export const isAdmin: RequestHandler = (req, res, next) => {
   if (req.isAuthenticated() && (req.user as User)?.role === 'admin') {
     return next();
   }
-  res.status(403).json({ message: "Esta funcionalidade é exclusiva para administradores. Entre em contato com o responsável pelo sistema." });
+  res
+    .status(403)
+    .json({
+      message:
+        'Esta funcionalidade é exclusiva para administradores. Entre em contato com o responsável pelo sistema.',
+    });
 };
 
 // User service functions
 export const userService = {
-  async createUser(userData: { email: string; password: string; firstName?: string; lastName?: string; role?: string }): Promise<User> {
+  async hasAdmin(): Promise<boolean> {
+    const [admin] = await db
+      .select()
+      .from(users)
+      .where(eq(users.role, 'admin'))
+      .limit(1);
+    return !!admin;
+  },
+  async createUser(userData: {
+    email: string;
+    password: string;
+    firstName?: string;
+    lastName?: string;
+    role?: string;
+  }): Promise<User> {
     // Hash password
     const hashedPassword = await bcrypt.hash(userData.password, 12);
-    
+
     // Generate unique ID
-    const userId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
-    
+    const userId =
+      Date.now().toString() + Math.random().toString(36).substr(2, 9);
+
     const newUser: UpsertUser = {
       id: userId,
       email: userData.email,
@@ -134,9 +162,10 @@ export const userService = {
 
   async createAdminUser(): Promise<User> {
     // In production, use environment variables for initial admin
-    const adminEmail = process.env.INITIAL_ADMIN_EMAIL || "admin@confeitaria.com";
-    const adminPassword = process.env.INITIAL_ADMIN_PASSWORD || "admin123!";
-    
+    const adminEmail =
+      process.env.INITIAL_ADMIN_EMAIL || 'admin@confeitaria.com';
+    const adminPassword = process.env.INITIAL_ADMIN_PASSWORD || 'admin123!';
+
     // Check if admin already exists
     const existingAdmin = await this.getUserByEmail(adminEmail);
     if (existingAdmin) {
@@ -146,9 +175,9 @@ export const userService = {
     return this.createUser({
       email: adminEmail,
       password: adminPassword,
-      firstName: "Administrador",
-      lastName: "Sistema",
-      role: "admin"
+      firstName: 'Administrador',
+      lastName: 'Sistema',
+      role: 'admin',
     });
   },
 
@@ -174,7 +203,12 @@ export const userService = {
   },
 
   // Create first admin via command line (production strategy)
-  async initializeFirstAdmin(email: string, password: string, firstName: string, lastName?: string): Promise<User> {
+  async initializeFirstAdmin(
+    email: string,
+    password: string,
+    firstName: string,
+    lastName?: string
+  ): Promise<User> {
     // Check if any admin exists
     const [existingAdmin] = await db
       .select()
@@ -183,7 +217,9 @@ export const userService = {
       .limit(1);
 
     if (existingAdmin) {
-      throw new Error('Sistema já possui um administrador. Use a função de promoção.');
+      throw new Error(
+        'Sistema já possui um administrador. Use a função de promoção.'
+      );
     }
 
     // Create the first admin
@@ -192,14 +228,22 @@ export const userService = {
       password,
       firstName,
       lastName: lastName || undefined,
-      role: "admin"
+      role: 'admin',
     });
 
     console.log(`✓ First admin created: ${email}`);
     return adminUser;
   },
 
-  async updateUser(userId: string, userData: { firstName?: string; lastName?: string; email?: string; role?: string }): Promise<User> {
+  async updateUser(
+    userId: string,
+    userData: {
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+      role?: string;
+    }
+  ): Promise<User> {
     const [updatedUser] = await db
       .update(users)
       .set({
@@ -216,16 +260,21 @@ export const userService = {
     return updatedUser;
   },
 
-  async updateUserPassword(userId: string, hashedPassword: string): Promise<void> {
+  async updateUserPassword(
+    userId: string,
+    hashedPassword: string
+  ): Promise<void> {
     await db
       .update(users)
       .set({
         updatedAt: new Date(),
       })
       .where(eq(users.id, userId));
-    
+
     // Update password separately using SQL
-    await db.execute(sql`UPDATE users SET password = ${hashedPassword} WHERE id = ${userId}`);
+    await db.execute(
+      sql`UPDATE users SET password = ${hashedPassword} WHERE id = ${userId}`
+    );
   },
 
   async deleteUser(userId: string): Promise<void> {
@@ -233,21 +282,23 @@ export const userService = {
   },
 
   async getAllUsers(): Promise<User[]> {
-    return await db.select({
-      id: users.id,
-      email: users.email,
-      firstName: users.firstName,
-      lastName: users.lastName,
-      profileImageUrl: users.profileImageUrl,
-      role: users.role,
-      createdAt: users.createdAt,
-      updatedAt: users.updatedAt,
-      password: users.password
-    }).from(users);
+    return await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+        role: users.role,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+        password: users.password,
+      })
+      .from(users);
   },
 
   async getUserWithPassword(userId: string): Promise<any> {
     const [user] = await db.select().from(users).where(eq(users.id, userId));
     return user;
-  }
+  },
 };

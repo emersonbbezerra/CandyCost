@@ -12,7 +12,10 @@
     "start-frontend": "npx serve public",
     "check": "tsc",
     "db:push": "drizzle-kit push",
-    "seed": "tsx server/seed.ts"
+    "seed": "tsx server/seed.ts",
+    "admin:create-first": "tsx server/admin-cli.ts create-first",
+    "admin:promote": "tsx server/admin-cli.ts promote",
+    "admin:list-users": "tsx server/admin-cli.ts list-users"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
