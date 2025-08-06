@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "web"]
+modules = ["nodejs-20", "web", "postgresql-16"]
 run = "npm install"
 
 [nix]
@@ -22,3 +22,7 @@ args = "npm run dev"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npm run dev-frontend"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
