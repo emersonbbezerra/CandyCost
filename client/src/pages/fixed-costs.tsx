@@ -52,8 +52,8 @@ export default function FixedCosts() {
     queryKey: ["/api/fixed-costs/cost-per-hour"],
   });
 
-  const { data: workConfig } = useQuery<{ workConfig: { workDaysPerWeek: number; hoursPerDay: string; weeksPerMonth: string } }>({
-    queryKey: ["/api/work-config"],
+  const { data: workConfig } = useQuery<{ workDaysPerWeek: number; hoursPerDay: string; weeksPerMonth: string }>({
+    queryKey: ["/api/fixed-costs/work-configuration"],
   });
 
 
@@ -62,6 +62,11 @@ export default function FixedCosts() {
       apiRequest("POST", "/api/fixed-costs", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/monthly-total"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/by-category"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/cost-per-hour"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/active"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       toast({ title: "Custo fixo criado com sucesso!" });
       setShowForm(false);
     },
@@ -75,6 +80,11 @@ export default function FixedCosts() {
       apiRequest("PUT", `/api/fixed-costs/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/monthly-total"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/by-category"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/cost-per-hour"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/active"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       toast({ title: "Custo fixo atualizado com sucesso!" });
       setShowForm(false);
       setSelectedFixedCost(null);
