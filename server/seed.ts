@@ -1,7 +1,14 @@
+
 import dotenv from "dotenv";
 dotenv.config();
 
-import { ingredients as ingredientsTable, products as productsTable, recipes as recipesTable } from "@shared/schema";
+import { 
+  ingredients as ingredientsTable, 
+  products as productsTable, 
+  recipes as recipesTable,
+  workConfiguration as workConfigurationTable,
+  fixedCosts as fixedCostsTable
+} from "@shared/schema";
 import { db } from "./db";
 
 dotenv.config();
@@ -46,18 +53,18 @@ async function seed() {
       insertedIngredients.push(inserted);
     }
 
-    // Sample products
+    // Sample products with preparationTimeMinutes
     const sampleProducts = [
-      { name: "Brigadeiro Gourmet", category: "Doces", description: "Brigadeiro cremoso de chocolate", isAlsoIngredient: true, marginPercentage: "70" },
-      { name: "Cupcake de Baunilha", category: "Cupcakes", description: "Cupcake com cobertura de baunilha", isAlsoIngredient: false, marginPercentage: "60" },
-      { name: "Trufa de Chocolate Branco", category: "Doces", description: "Trufa artesanal de chocolate branco", isAlsoIngredient: false, marginPercentage: "65" },
-      { name: "Torta de Chocolate", category: "Tortas", description: "Torta de chocolate com cobertura", isAlsoIngredient: false, marginPercentage: "35" },
-      { name: "Bolo de Morango", category: "Bolos", description: "Bolo com recheio de morango e chantilly", isAlsoIngredient: false, marginPercentage: "40" },
-      { name: "Cheesecake de Frutas Vermelhas", category: "Tortas", description: "Cheesecake cremoso com frutas", isAlsoIngredient: false, marginPercentage: "45" },
-      { name: "Açaí na Tigela Premium", category: "Gelados", description: "Açaí com granola, frutas e mel", isAlsoIngredient: false, marginPercentage: "25" },
-      { name: "Brownie com Nozes", category: "Doces", description: "Brownie denso com nozes caramelizadas", isAlsoIngredient: false, marginPercentage: "20" },
-      { name: "Torta Holandesa", category: "Tortas", description: "Torta com creme e chocolate premium", isAlsoIngredient: false, marginPercentage: "15" },
-      { name: "Beijinho Gourmet", category: "Doces", description: "Beijinho artesanal com coco premium", isAlsoIngredient: false, marginPercentage: "200" },
+      { name: "Brigadeiro Gourmet", category: "Doces", description: "Brigadeiro cremoso de chocolate", isAlsoIngredient: true, marginPercentage: "70", preparationTimeMinutes: 30 },
+      { name: "Cupcake de Baunilha", category: "Cupcakes", description: "Cupcake com cobertura de baunilha", isAlsoIngredient: false, marginPercentage: "60", preparationTimeMinutes: 45 },
+      { name: "Trufa de Chocolate Branco", category: "Doces", description: "Trufa artesanal de chocolate branco", isAlsoIngredient: false, marginPercentage: "65", preparationTimeMinutes: 60 },
+      { name: "Torta de Chocolate", category: "Tortas", description: "Torta de chocolate com cobertura", isAlsoIngredient: false, marginPercentage: "35", preparationTimeMinutes: 120 },
+      { name: "Bolo de Morango", category: "Bolos", description: "Bolo com recheio de morango e chantilly", isAlsoIngredient: false, marginPercentage: "40", preparationTimeMinutes: 90 },
+      { name: "Cheesecake de Frutas Vermelhas", category: "Tortas", description: "Cheesecake cremoso com frutas", isAlsoIngredient: false, marginPercentage: "45", preparationTimeMinutes: 180 },
+      { name: "Açaí na Tigela Premium", category: "Gelados", description: "Açaí com granola, frutas e mel", isAlsoIngredient: false, marginPercentage: "25", preparationTimeMinutes: 10 },
+      { name: "Brownie com Nozes", category: "Doces", description: "Brownie denso com nozes caramelizadas", isAlsoIngredient: false, marginPercentage: "20", preparationTimeMinutes: 50 },
+      { name: "Torta Holandesa", category: "Tortas", description: "Torta com creme e chocolate premium", isAlsoIngredient: false, marginPercentage: "15", preparationTimeMinutes: 150 },
+      { name: "Beijinho Gourmet", category: "Doces", description: "Beijinho artesanal com coco premium", isAlsoIngredient: false, marginPercentage: "200", preparationTimeMinutes: 25 },
     ];
 
     // Inserir produtos e capturar ids
@@ -69,6 +76,7 @@ async function seed() {
         description: product.description,
         isAlsoIngredient: product.isAlsoIngredient,
         marginPercentage: product.marginPercentage,
+        preparationTimeMinutes: product.preparationTimeMinutes,
         createdAt: new Date(),
         updatedAt: new Date(),
       }).returning();
@@ -126,6 +134,40 @@ async function seed() {
         productIngredientId: recipe.productIngredientIndex !== null ? insertedProducts[recipe.productIngredientIndex].id : null,
         quantity: recipe.quantity,
         unit: recipe.unit,
+      });
+    }
+
+    // Criar configuração de trabalho padrão se não existir
+    const existingWorkConfig = await db.select().from(workConfigurationTable).limit(1);
+    if (existingWorkConfig.length === 0) {
+      await db.insert(workConfigurationTable).values({
+        workDaysPerWeek: 5,
+        hoursPerDay: "8.00",
+        weeksPerMonth: "4.0",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+
+    // Inserir alguns custos fixos de exemplo
+    const sampleFixedCosts = [
+      { name: "Aluguel da Cozinha", category: "Imóvel", value: "1500.00", recurrence: "monthly", description: "Aluguel mensal do espaço de produção", isActive: true },
+      { name: "Energia Elétrica", category: "Utilidades", value: "300.00", recurrence: "monthly", description: "Conta de luz mensal", isActive: true },
+      { name: "Gás de Cozinha", category: "Utilidades", value: "150.00", recurrence: "monthly", description: "Gás para fogão e forno", isActive: true },
+      { name: "Seguro Empresarial", category: "Seguros", value: "800.00", recurrence: "yearly", description: "Seguro anual da empresa", isActive: true },
+      { name: "Contador", category: "Serviços", value: "400.00", recurrence: "monthly", description: "Serviços contábeis mensais", isActive: true },
+    ];
+
+    for (const fixedCost of sampleFixedCosts) {
+      await db.insert(fixedCostsTable).values({
+        name: fixedCost.name,
+        category: fixedCost.category,
+        value: fixedCost.value,
+        recurrence: fixedCost.recurrence,
+        description: fixedCost.description,
+        isActive: fixedCost.isActive,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
     }
 
