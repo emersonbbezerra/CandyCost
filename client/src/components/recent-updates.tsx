@@ -1,8 +1,10 @@
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
 import type { PriceHistory } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
-import { Cookie, Sprout } from "lucide-react";
+import { Cookie, Sprout, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Button } from "./ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface PriceHistoryWithName extends PriceHistory {
     name: string;
@@ -14,6 +16,7 @@ interface RecentUpdates {
 }
 
 export function RecentUpdatesCard() {
+    const navigate = useNavigate();
     const { data, isLoading } = useQuery<RecentUpdates>({
         queryKey: ["/api/dashboard/recent-updates"],
         refetchOnMount: "always",
@@ -41,7 +44,7 @@ export function RecentUpdatesCard() {
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-gray-900">
-                                        Preço atualizado de {formatCurrency(parseFloat(update.oldPrice))} para {formatCurrency(parseFloat(update.newPrice))} - <strong>{update.name}</strong>
+                                        Custo atualizado de {formatCurrency(parseFloat(update.oldPrice))} para {formatCurrency(parseFloat(update.newPrice))} - <strong>{update.name}</strong>
                                     </p>
                                     <p className="text-sm text-gray-500 mt-1">
                                         {update.changeReason || "Atualização manual"}
@@ -50,13 +53,23 @@ export function RecentUpdatesCard() {
                                         {formatRelativeTime(new Date(update.createdAt))}
                                     </p>
                                 </div>
-                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${parseFloat(update.newPrice) > parseFloat(update.oldPrice)
-                                    ? "bg-red-100 text-red-700"
-                                    : "bg-green-100 text-green-700"
-                                    }`}>
-                                    {parseFloat(update.newPrice) > parseFloat(update.oldPrice) ? "+" : ""}
-                                    {(((parseFloat(update.newPrice) - parseFloat(update.oldPrice)) / parseFloat(update.oldPrice)) * 100).toFixed(1)}%
-                                </span>
+                                <div className="flex items-center space-x-2">
+                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${parseFloat(update.newPrice) > parseFloat(update.oldPrice)
+                                        ? "bg-red-100 text-red-700"
+                                        : "bg-green-100 text-green-700"
+                                        }`}>
+                                        {parseFloat(update.newPrice) > parseFloat(update.oldPrice) ? "+" : ""}
+                                        {(((parseFloat(update.newPrice) - parseFloat(update.oldPrice)) / parseFloat(update.oldPrice)) * 100).toFixed(1)}%
+                                    </span>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => navigate("/ingredients")}
+                                        className="px-2 py-1 h-8"
+                                    >
+                                        <ExternalLink className="w-3 h-3" />
+                                    </Button>
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -75,7 +88,7 @@ export function RecentUpdatesCard() {
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-gray-900">
-                                        Preço atualizado de {formatCurrency(parseFloat(update.oldPrice))} para {formatCurrency(parseFloat(update.newPrice))} - <strong>{update.name}</strong>
+                                        Custo atualizado de {formatCurrency(parseFloat(update.oldPrice))} para {formatCurrency(parseFloat(update.newPrice))} - <strong>{update.name}</strong>
                                     </p>
                                     <p className="text-sm text-gray-500 mt-1">
                                         {update.changeReason || "Atualização manual"}
@@ -84,13 +97,23 @@ export function RecentUpdatesCard() {
                                         {formatRelativeTime(new Date(update.createdAt))}
                                     </p>
                                 </div>
-                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${parseFloat(update.newPrice) > parseFloat(update.oldPrice)
-                                    ? "bg-red-100 text-red-700"
-                                    : "bg-green-100 text-green-700"
-                                    }`}>
-                                    {parseFloat(update.newPrice) > parseFloat(update.oldPrice) ? "+" : ""}
-                                    {(((parseFloat(update.newPrice) - parseFloat(update.oldPrice)) / parseFloat(update.oldPrice)) * 100).toFixed(1)}%
-                                </span>
+                                <div className="flex items-center space-x-2">
+                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${parseFloat(update.newPrice) > parseFloat(update.oldPrice)
+                                        ? "bg-red-100 text-red-700"
+                                        : "bg-green-100 text-green-700"
+                                        }`}>
+                                        {parseFloat(update.newPrice) > parseFloat(update.oldPrice) ? "+" : ""}
+                                        {(((parseFloat(update.newPrice) - parseFloat(update.oldPrice)) / parseFloat(update.oldPrice)) * 100).toFixed(1)}%
+                                    </span>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => navigate("/products")}
+                                        className="px-2 py-1 h-8"
+                                    >
+                                        <ExternalLink className="w-3 h-3" />
+                                    </Button>
+                                </div>
                             </div>
                         ))}
                     </div>
