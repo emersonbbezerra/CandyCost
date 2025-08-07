@@ -27,6 +27,15 @@ const formatDate = (date: Date) => {
     return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
+// Helper function to get product name, assuming it's available or can be defined
+// This is a placeholder and should be implemented based on how product names are managed.
+const getProductName = (productId?: number): string => {
+    if (!productId) return "Produto Desconhecido";
+    // In a real application, you would fetch or look up the product name here.
+    // For this example, we'll return a placeholder.
+    return `Produto ID: ${productId}`;
+};
+
 export function RecentUpdatesCard() {
     const [, setLocation] = useLocation();
     const [isProductFormOpen, setIsProductFormOpen] = useState(false);
@@ -82,7 +91,7 @@ export function RecentUpdatesCard() {
         queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
         queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
         queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-        
+
         // Marcar que há atualizações para refresh futuro
         sessionStorage.setItem('hasRecentUpdates', 'true');
     };
@@ -126,23 +135,23 @@ export function RecentUpdatesCard() {
                                     <p className="text-sm text-gray-500 mt-1">
                                         {update.changeReason || "Atualização manual"}
                                     </p>
-                                    <p className="text-xs text-gray-400 mt-2">
+                                    <p className="text-xs text-gray-400 mt-1">
                                         {formatRelativeTime(new Date(update.createdAt))}
                                     </p>
                                 </div>
                                 <div className="flex items-center space-x-2">
-                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${parseFloat(update.newPrice) > parseFloat(update.oldPrice)
+                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${parseFloat(update.newPrice || "0") > parseFloat(update.oldPrice || "0")
                                         ? "bg-red-100 text-red-700"
                                         : "bg-green-100 text-green-700"
                                         }`}>
                                         {(() => {
                                             const oldPrice = parseFloat(update.oldPrice || "0");
                                             const newPrice = parseFloat(update.newPrice || "0");
-                                            
+
                                             if (oldPrice === 0) {
                                                 return newPrice > 0 ? "Novo" : "0%";
                                             }
-                                            
+
                                             const percentChange = ((newPrice - oldPrice) / oldPrice) * 100;
                                             return `${percentChange > 0 ? "+" : ""}${percentChange.toFixed(1)}%`;
                                         })()}
@@ -169,49 +178,64 @@ export function RecentUpdatesCard() {
                         ) : data?.productUpdates && data.productUpdates.length === 0 ? (
                             <p className="text-gray-500">Nenhuma atualização de produto registrada ainda.</p>
                         ) : (
-                            data?.productUpdates.slice(0, 3).map((update) => ( // Limit to 3 products
-                            <div key={`product-${update.id}`} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg mb-2">
-                                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <Package className="text-blue-600 w-5 h-5" />
+                            data?.productUpdates.slice(0, 3).map((update) => {
+                            const oldPrice = parseFloat(update.oldPrice || "0");
+                            const newPrice = parseFloat(update.newPrice || "0");
+
+                            // Validar se os preços são válidos
+                            const hasValidPrices = oldPrice > 0 && newPrice > 0;
+                            const percentChange = hasValidPrices ? ((newPrice - oldPrice) / oldPrice) * 100 : 0;
+
+                            return (
+                                <div key={`product-${update.id}`} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg mb-2">
+                                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <Package className="text-blue-600 w-5 h-5" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-gray-900 font-medium truncate">
+                                            {update.name}
+                                        </p>
+                                        <p className="text-gray-600 text-sm">
+                                            {hasValidPrices ? (
+                                                `Custo atualizado de ${formatCurrency(oldPrice)} para ${formatCurrency(newPrice)}`
+                                            ) : (
+                                                `Custo atual: ${formatCurrency(newPrice)}`
+                                            )}
+                                        </p>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Motivo: {update.changeReason || "Alteração automática"}
+                                        </p>
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            {formatDate(new Date(update.createdAt))}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                            hasValidPrices && newPrice > oldPrice
+                                                ? "bg-red-100 text-red-700"
+                                                : hasValidPrices && newPrice < oldPrice
+                                                ? "bg-green-100 text-green-700"
+                                                : "bg-blue-100 text-blue-700"
+                                        }`}>
+                                            {hasValidPrices ? (
+                                                `${percentChange > 0 ? "+" : ""}${percentChange.toFixed(1)}%`
+                                            ) : (
+                                                "Novo"
+                                            )}
+                                        </span>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => update.productId && handleEditProduct(update.productId)}
+                                            className="px-2 py-1 h-8"
+                                            title="Editar produto"
+                                        >
+                                            <Edit className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </div>
-                                <div className="flex-1">
-                                    <p className="text-gray-900">
-                                        <strong>{update.name}</strong> - Custo atualizado de {formatCurrency(parseFloat(update.oldPrice || "0"))} para {formatCurrency(parseFloat(update.newPrice || "0"))}
-                                    </p>
-                                    <p className="text-xs text-gray-400 mt-1">
-                                        {formatDate(new Date(update.createdAt))} - {update.changeReason}
-                                    </p>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                        parseFloat(update.newPrice || "0") > parseFloat(update.oldPrice || "0")
-                                            ? "bg-red-100 text-red-700"
-                                            : "bg-green-100 text-green-700"
-                                    }`}>
-                                        {(() => {
-                                            const oldPrice = parseFloat(update.oldPrice || "0");
-                                            const newPrice = parseFloat(update.newPrice || "0");
-                                            
-                                            if (oldPrice === 0) {
-                                                return newPrice > 0 ? "Novo" : "0%";
-                                            }
-                                            
-                                            const percentChange = ((newPrice - oldPrice) / oldPrice) * 100;
-                                            return `${percentChange > 0 ? "+" : ""}${percentChange.toFixed(1)}%`;
-                                        })()}
-                                    </span>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => update.productId && handleEditProduct(update.productId)}
-                                        className="px-2 py-1 h-8"
-                                        title="Editar produto"
-                                    >
-                                        <Edit className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </div>
-                        ))
+                            );
+                        })
                         )}
                     </div>
                 </div>
