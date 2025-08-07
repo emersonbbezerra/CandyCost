@@ -2,6 +2,16 @@ import { ingredients, recipes } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { db } from "../db";
 
+// Define a interface Recipe for type safety
+interface Recipe {
+  id: number;
+  productId: number;
+  ingredientId: number | null;
+  productIngredientId: number | null;
+  quantity: string;
+  unit: string;
+}
+
 export const recipeRepository = {
   async getRecipesByProduct(productId: number) {
     return await db.select().from(recipes).where(eq(recipes.productId, productId)).execute();
@@ -62,7 +72,11 @@ export const recipeRepository = {
     await db.delete(recipes).where(eq(recipes.productId, productId));
   },
 
-  async deleteRecipesByIngredient(ingredientId: number) {
+  async deleteRecipesByIngredient(ingredientId: number): Promise<void> {
     await db.delete(recipes).where(eq(recipes.ingredientId, ingredientId));
-  }
+  },
+
+  async getRecipesByProductId(productId: number): Promise<Recipe[]> {
+    return await db.select().from(recipes).where(eq(recipes.productId, productId));
+  },
 };

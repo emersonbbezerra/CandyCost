@@ -273,7 +273,7 @@ export const productService = {
       const affectedProducts: number[] = [];
 
       for (const product of allProducts) {
-        const recipes = await recipeRepository.getRecipesByProductId(product.id);
+        const recipes = await recipeRepository.getRecipesByProduct(product.id);
         const usesIngredient = recipes.some(recipe => recipe.ingredientId === ingredientId);
 
         if (usesIngredient) {
