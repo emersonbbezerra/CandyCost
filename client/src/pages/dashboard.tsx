@@ -25,25 +25,33 @@ export default function Dashboard() {
     queryKey: ["/api/products"],
   });
 
-  // Invalidate recent updates when dashboard is focused (user returns from other pages)
+  // Invalidate recent updates when dashboard is focused or visibility changes
   useEffect(() => {
     const handleFocus = () => {
       // Only invalidate if there might be changes from other pages
       const lastNavigation = sessionStorage.getItem('lastPageNavigation');
       const wasOnProductsOrIngredients = lastNavigation === 'products' || lastNavigation === 'ingredients';
-      
+
       if (wasOnProductsOrIngredients) {
         queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
         sessionStorage.removeItem('lastPageNavigation');
       }
     };
 
-    window.addEventListener('focus', handleFocus);
-    
-    // Also check when component mounts
-    handleFocus();
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // When the tab becomes visible, check for updates
+        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
+      }
+    };
 
-    return () => window.removeEventListener('focus', handleFocus);
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [queryClient]);
 
   if (statsLoading) {

@@ -1,7 +1,7 @@
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
 import type { PriceHistory } from "@shared/schema";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Sprout, ExternalLink, Edit, Package } from "lucide-react"; // Import Package icon
+import { Sprout, ExternalLink, Edit, Package, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { useLocation } from "wouter";
@@ -37,11 +37,11 @@ export function RecentUpdatesCard() {
     const { data, isLoading, refetch } = useQuery<RecentUpdates>({
         queryKey: ["/api/dashboard/recent-updates"],
         refetchOnMount: "always",
-        staleTime: 0,
-        cacheTime: 0,
-        refetchInterval: 5000, // Refetch a cada 5 segundos
+        staleTime: 30 * 60 * 1000, // 30 minutos - dados ficam válidos por mais tempo
+        gcTime: 60 * 60 * 1000, // 1 hora de cache
+        refetchOnWindowFocus: false, // Não recarregar no foco
+        refetchInterval: false, // Remover polling automático
         refetchIntervalInBackground: false,
-        refetchOnWindowFocus: true,
     });
 
     const handleEditProduct = async (productId: number) => {
@@ -78,33 +78,31 @@ export function RecentUpdatesCard() {
         setIsProductFormOpen(false);
         setEditingProduct(undefined);
 
-        // Remover dados do cache completamente
-        queryClient.removeQueries({ queryKey: ["/api/dashboard/recent-updates"] });
-        queryClient.removeQueries({ queryKey: ["/api/dashboard/stats"] });
-        queryClient.removeQueries({ queryKey: ["/api/price-history"] });
-        queryClient.removeQueries({ queryKey: ["/api/products"] });
-
-        // Forçar múltiplos refetch para garantir que os dados sejam atualizados
-        setTimeout(async () => {
-            await queryClient.invalidateQueries({
-                queryKey: ["/api/dashboard/recent-updates"]
-            });
-            await refetch();
-        }, 200);
-
-        setTimeout(async () => {
-            await refetch();
-        }, 1000);
-
-        setTimeout(async () => {
-            await refetch();
-        }, 2000);
+        // Invalidar cache relacionado
+        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+        
+        // Marcar que há atualizações para refresh futuro
+        sessionStorage.setItem('hasRecentUpdates', 'true');
     };
 
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Atualizações Recentes</CardTitle>
+                <div className="flex items-center justify-between">
+                    <CardTitle>Atualizações Recentes</CardTitle>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => refetch()}
+                        disabled={isLoading}
+                        className="flex items-center gap-2"
+                    >
+                        <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                        Atualizar
+                    </Button>
+                </div>
             </CardHeader>
             <CardContent>
                 <div className="space-y-6">

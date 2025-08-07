@@ -103,6 +103,9 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
         description: `Ingrediente atualizado! ${affectedCount > 0 ? `${affectedCount} produtos foram afetados.` : ''}`,
       });
       onOpenChange(false);
+      // Marcar que houve navegação da página de ingredientes E que há atualizações
+      sessionStorage.setItem('lastPageNavigation', 'ingredients');
+      sessionStorage.setItem('hasRecentUpdates', 'true');
     },
     onError: () => {
       toast({

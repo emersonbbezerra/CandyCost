@@ -27,9 +27,14 @@ const categoryColors = {
 export default function Ingredients() {
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  // Mark that user was on ingredients page for dashboard cache invalidation
+  // Mark navigation and updates for dashboard refresh control
   useEffect(() => {
-    sessionStorage.setItem('lastPageNavigation', 'ingredients');
+    // Clear update markers upon entering the page
+    sessionStorage.removeItem('hasRecentUpdates');
+
+    return () => {
+      sessionStorage.setItem('lastPageNavigation', 'ingredients');
+    };
   }, []);
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | undefined>();
   const [searchTerm, setSearchTerm] = useState("");

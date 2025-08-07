@@ -19,9 +19,14 @@ type ProductWithCost = Product & { cost?: ProductCost };
 export default function Products() {
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  // Mark that user was on products page for dashboard cache invalidation
+  // Marcar navegação quando entrar na página
   useEffect(() => {
-    sessionStorage.setItem('lastPageNavigation', 'products');
+    // Limpar marcação de atualizações ao entrar na página
+    sessionStorage.removeItem('hasRecentUpdates');
+
+    return () => {
+      sessionStorage.setItem('lastPageNavigation', 'products');
+    };
   }, []);
   const [editingProduct, setEditingProduct] = useState<ProductWithCost | undefined>();
   const [searchTerm, setSearchTerm] = useState("");
@@ -81,14 +86,14 @@ export default function Products() {
     try {
       console.log("Editando produto:", product);
       const response = await apiRequest("GET", `/api/products/${product.id}`);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const productWithRecipes = await response.json();
       console.log("Produto carregado do servidor:", productWithRecipes);
-      
+
       // Ensure the product has the required structure
       const sanitizedProduct = {
         ...productWithRecipes,
@@ -96,7 +101,7 @@ export default function Products() {
         preparationTimeMinutes: productWithRecipes.preparationTimeMinutes || 60,
         recipes: productWithRecipes.recipes || []
       };
-      
+
       setEditingProduct(sanitizedProduct);
       setIsFormOpen(true);
     } catch (error) {
