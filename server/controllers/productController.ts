@@ -48,6 +48,7 @@ export const createProduct = async (req: Request, res: Response) => {
       description: z.string().optional(),
       isAlsoIngredient: z.boolean().optional(),
       marginPercentage: z.string().optional(),
+      preparationTimeMinutes: z.number().optional(),
     }).parse(req.body);
 
     const product = await productService.createProduct(data);
@@ -69,6 +70,7 @@ export const updateProduct = async (req: Request, res: Response) => {
       description: z.string().optional(),
       isAlsoIngredient: z.boolean().optional(),
       marginPercentage: z.string().optional(),
+      preparationTimeMinutes: z.number().optional(),
     }).partial().parse(req.body);
 
     const product = await productService.updateProduct(id, data);

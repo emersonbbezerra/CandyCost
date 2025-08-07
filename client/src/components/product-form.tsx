@@ -210,8 +210,8 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Categoria</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
+                    <Select
+                      onValueChange={field.onChange}
                       value={field.value || ""}
                     >
                       <FormControl>
@@ -240,11 +240,11 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                 <FormItem>
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Descrição do produto..." 
-                      {...field} 
+                    <Textarea
+                      placeholder="Descrição do produto..."
+                      {...field}
                       onChange={field.onChange}
-                      value={field.value || ""} 
+                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -343,7 +343,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Ingrediente</FormLabel>
-                            <Select 
+                            <Select
                               onValueChange={(value) => {
                                 if (value === "null") {
                                   field.onChange(null);
@@ -359,7 +359,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                                   field.onChange(parseInt(value));
                                   form.setValue(`recipes.${index}.productIngredientId`, null);
                                 }
-                              }} 
+                              }}
                               value={(() => {
                                 const recipe = form.watch(`recipes.${index}`);
                                 if (recipe?.productIngredientId) {
@@ -372,7 +372,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue 
+                                  <SelectValue
                                     placeholder="Selecione um ingrediente"
                                   >
                                     {(() => {
@@ -432,8 +432,8 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Unidade</FormLabel>
-                            <Select 
-                              onValueChange={field.onChange} 
+                            <Select
+                              onValueChange={field.onChange}
                               value={field.value || ""}
                             >
                               <FormControl>

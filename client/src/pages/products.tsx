@@ -271,11 +271,26 @@ export default function Products() {
 
               {product.cost ? (
                 <div className="space-y-3 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Custo de Produção:</span>
-                    <span className="font-semibold text-gray-900">
-                      {formatCurrency(product.cost.totalCost)}
-                    </span>
+                  <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+                    <h4 className="text-sm font-medium text-gray-700">Composição do Custo:</h4>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">• Ingredientes:</span>
+                      <span className="font-semibold text-gray-900">
+                        {formatCurrency(product.cost.ingredientsCost)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">• Custo fixo ({product.cost.preparationTimeMinutes}min):</span>
+                      <span className="font-semibold text-gray-900">
+                        {formatCurrency(product.cost.fixedCostPerProduct)}
+                      </span>
+                    </div>
+                    <div className="border-t pt-2 flex justify-between text-sm font-medium">
+                      <span className="text-gray-900">Custo Total:</span>
+                      <span className="font-semibold text-gray-900">
+                        {formatCurrency(product.cost.totalCost)}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Preço Sugerido ({product.marginPercentage}%):</span>
