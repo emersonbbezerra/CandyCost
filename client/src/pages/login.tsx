@@ -219,7 +219,7 @@ export default function Login() {
                             <p>✓ Pelo menos 1 maiúscula (A-Z)</p>
                             <p>✓ Pelo menos 1 minúscula (a-z)</p>
                             <p>✓ Pelo menos 1 número (0-9)</p>
-                            <p>✓ Pelo menos 1 símbolo (@$!%*?&)</p>
+                            <p>✓ Pelo menos 1 símbolo (@$!%*?&#+\-_.=)</p>
                           </div>
                           <FormMessage />
                         </FormItem>

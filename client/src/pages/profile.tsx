@@ -313,7 +313,16 @@ export default function Profile() {
                           <p>✓ Pelo menos 1 maiúscula (A-Z)</p>
                           <p>✓ Pelo menos 1 minúscula (a-z)</p>
                           <p>✓ Pelo menos 1 número (0-9)</p>
-                          <p>✓ Pelo menos 1 símbolo (@$!%*?&)</p>
+                          <p>✓ Pelo menos 1 símbolo (@$!%*?&#+\-_.=)</p>
+                        </div>
+</old_str>
+<new_str>
+                        <div className="text-xs text-gray-600 mt-1 space-y-1">
+                          <p>✓ Mínimo 8 caracteres</p>
+                          <p>✓ Pelo menos 1 maiúscula (A-Z)</p>
+                          <p>✓ Pelo menos 1 minúscula (a-z)</p>
+                          <p>✓ Pelo menos 1 número (0-9)</p>
+                          <p>✓ Pelo menos 1 símbolo (@$!%*?&#+\-_.=)</p>
                         </div>
                         <FormMessage />
                       </FormItem>
