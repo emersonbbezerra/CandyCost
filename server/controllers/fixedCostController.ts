@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import { FixedCostRepository } from "../repositories/fixedCostRepository";
 import { FixedCostService } from "../services/fixedCostService";
-import type { InsertFixedCost, InsertWorkConfiguration, insertFixedCostSchema } from "../../shared/schema";
+import type { InsertFixedCost, InsertWorkConfiguration } from "../../shared/schema";
+import { insertFixedCostSchema } from "../../shared/schema";
 
 export class FixedCostController {
   private fixedCostRepository = new FixedCostRepository();
