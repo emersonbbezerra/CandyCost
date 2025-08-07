@@ -145,7 +145,9 @@ export default function Settings() {
 
   const saveWorkConfigMutation = useMutation({
     mutationFn: async (newWorkConfig: WorkConfiguration) => {
-      const response = await apiRequest("PUT", "/api/work-config/work-configuration", newWorkConfig);
+      // Send only the necessary fields, exclude timestamps and ID
+      const { id, createdAt, updatedAt, ...configData } = newWorkConfig as any;
+      const response = await apiRequest("PUT", "/api/work-config/work-configuration", configData);
       return response.json();
     },
     onSuccess: (savedConfig) => {

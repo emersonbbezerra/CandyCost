@@ -132,7 +132,7 @@ export class FixedCostController {
 
   async updateWorkConfiguration(req: Request, res: Response) {
     try {
-      const data: Partial<InsertWorkConfiguration> = req.body;
+      const { id, createdAt, updatedAt, ...data } = req.body;
       const config = await this.fixedCostService.updateWorkConfiguration(data);
       res.json(config);
     } catch (error) {

@@ -66,13 +66,12 @@ export class FixedCostService {
   async updateWorkConfiguration(data: Partial<WorkConfiguration>): Promise<WorkConfiguration> {
     const config = await this.getWorkConfiguration();
     
-    const updateData: any = { ...data };
-    // Remove updatedAt from data if it exists and set it as a new Date
-    delete updateData.updatedAt;
+    // Remove all timestamp and ID fields to avoid conflicts
+    const { id, createdAt, updatedAt, ...cleanData } = data as any;
     
     const [updated] = await db.update(workConfiguration)
       .set({
-        ...updateData,
+        ...cleanData,
         updatedAt: new Date(),
       })
       .where(eq(workConfiguration.id, config.id))
