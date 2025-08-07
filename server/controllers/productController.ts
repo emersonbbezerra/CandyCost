@@ -24,18 +24,33 @@ export const getProducts = async (_req: Request, res: Response) => {
 export const getProductById = async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "ID do produto inválido" });
+    }
+    
     const product = await productService.getProductWithRecipes(id);
     if (!product) {
       return res.status(404).json({ message: "Produto não encontrado" });
     }
     
+    // Ensure required fields are present
+    const sanitizedProduct = {
+      ...product,
+      marginPercentage: product.marginPercentage || "60",
+      preparationTimeMinutes: product.preparationTimeMinutes || 60,
+      recipes: product.recipes || []
+    };
+    
     try {
       const cost = await productService.calculateProductCost(id);
-      res.json({ ...product, cost });
-    } catch {
-      res.json({ ...product, cost: null });
+      res.json({ ...sanitizedProduct, cost });
+    } catch (costError) {
+      console.error("Erro ao calcular custo do produto:", costError);
+      res.json({ ...sanitizedProduct, cost: null });
     }
   } catch (error) {
+    console.error("Erro ao buscar produto:", error);
     res.status(500).json({ message: "Erro ao buscar produto" });
   }
 };

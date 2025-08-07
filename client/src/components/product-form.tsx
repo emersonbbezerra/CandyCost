@@ -25,7 +25,7 @@ const productSchema = insertProductSchema.extend({
       productIngredientId: z.number().nullable(),
     })
   ).optional(),
-  preparationTimeMinutes: z.number().min(1).default(60),
+  preparationTimeMinutes: z.number().min(1, "Tempo de preparo deve ser maior que 0").default(60),
 });
 
 interface ProductFormProps {
@@ -78,16 +78,17 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
         name: product.name || "",
         category: product.category || "",
         description: product.description || "",
-        isAlsoIngredient: product.isAlsoIngredient || false,
-        marginPercentage: product.marginPercentage || "60",
-        preparationTimeMinutes: product.preparationTimeMinutes || 60,
-        recipes: product.recipes?.map((r) => ({
-          ingredientId: r.ingredientId,
-          productIngredientId: r.productIngredientId,
-          quantity: r.quantity || "",
-          unit: r.unit || "",
-        })) || [],
+        isAlsoIngredient: Boolean(product.isAlsoIngredient),
+        marginPercentage: String(product.marginPercentage || "60"),
+        preparationTimeMinutes: Number(product.preparationTimeMinutes) || 60,
+        recipes: Array.isArray(product.recipes) ? product.recipes.map((r) => ({
+          ingredientId: r.ingredientId || null,
+          productIngredientId: r.productIngredientId || null,
+          quantity: String(r.quantity || ""),
+          unit: String(r.unit || "kg"),
+        })) : [],
       };
+      console.log("Resetando formulário com dados:", formData);
       form.reset(formData);
     } else {
       form.reset({
