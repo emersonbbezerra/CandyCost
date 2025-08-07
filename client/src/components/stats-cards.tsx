@@ -8,11 +8,24 @@ interface StatsCardsProps {
     totalProducts: number;
     avgProfitMargin: string;
     profitType: string;
+    selectedCategory: string;
+    availableCategories: string[];
     todayChanges: number;
     onProfitTypeChange: (type: string) => void;
+    onCategoryChange: (category: string) => void;
 }
 
-export function StatsCards({ totalIngredients, totalProducts, avgProfitMargin, profitType, todayChanges, onProfitTypeChange }: StatsCardsProps) {
+export function StatsCards({ 
+    totalIngredients, 
+    totalProducts, 
+    avgProfitMargin, 
+    profitType, 
+    selectedCategory,
+    availableCategories,
+    todayChanges, 
+    onProfitTypeChange,
+    onCategoryChange 
+}: StatsCardsProps) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card>
@@ -55,15 +68,32 @@ export function StatsCards({ totalIngredients, totalProducts, avgProfitMargin, p
                         <div className="flex-1">
                             <div className="flex items-center justify-between mb-2">
                                 <p className="text-sm font-medium text-gray-600">Lucro Médio</p>
-                                <Select value={profitType} onValueChange={onProfitTypeChange}>
-                                    <SelectTrigger className="w-28 h-6 text-xs">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="product">Produto</SelectItem>
-                                        <SelectItem value="category">Categoria</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                <div className="flex gap-1">
+                                    <Select value={profitType} onValueChange={onProfitTypeChange}>
+                                        <SelectTrigger className="w-24 h-6 text-xs">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="product">Produto</SelectItem>
+                                            <SelectItem value="category">Categoria</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    {profitType === 'category' && (
+                                        <Select value={selectedCategory} onValueChange={onCategoryChange}>
+                                            <SelectTrigger className="w-32 h-6 text-xs">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">Todas</SelectItem>
+                                                {availableCategories.map(category => (
+                                                    <SelectItem key={category} value={category}>
+                                                        {category}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                </div>
                             </div>
                             <p className="text-3xl font-bold text-gray-900">{avgProfitMargin}%</p>
                         </div>
@@ -73,7 +103,9 @@ export function StatsCards({ totalIngredients, totalProducts, avgProfitMargin, p
                     </div>
                     <div className="mt-4 flex items-center text-sm">
                         <span className="text-gray-500">
-                            {profitType === 'product' ? 'média por produto' : 'média por categoria'}
+                            {profitType === 'product' ? 'média por produto' : 
+                             selectedCategory === 'all' ? 'média geral por categoria' : 
+                             `média da categoria ${selectedCategory}`}
                         </span>
                     </div>
                 </CardContent>

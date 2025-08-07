@@ -53,14 +53,17 @@ export const getCostEvolution = async (req: Request, res: Response) => {
 
 export const getDashboardStats = async (req: Request, res: Response) => {
   try {
-    const { type = 'product' } = req.query; // 'product' or 'category'
+    const { type = 'product', category = 'all' } = req.query;
     
     const ingredients = await productService.getIngredients();
     const products = await productService.getProducts();
     const history = await priceHistoryService.getPriceHistory();
 
+    // Filter products by category if specified
+    const filteredProducts = category === 'all' ? products : products.filter(p => p.category === category);
+
     // Calculate profit margins
-    const profitMarginsPromises = products.map(async (product) => {
+    const profitMarginsPromises = filteredProducts.map(async (product) => {
       try {
         const cost = await productService.calculateProductCost(product.id);
         const marginPercentage = product.marginPercentage ? parseFloat(product.marginPercentage) : 60;
@@ -80,6 +83,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     const profitData = await Promise.all(profitMarginsPromises);
     
     let avgProfitMargin = 0;
+    let categoryBreakdown: any[] = [];
 
     if (type === 'category') {
       // Calculate average profit by category
@@ -91,13 +95,28 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         return acc;
       }, {} as Record<string, number[]>);
 
-      const categoryAverages = Object.values(categoryGroups).map(margins => 
-        margins.reduce((a, b) => a + b, 0) / margins.length
-      );
+      // Create category breakdown for frontend
+      categoryBreakdown = Object.entries(categoryGroups).map(([cat, margins]) => ({
+        category: cat,
+        avgMargin: margins.reduce((a, b) => a + b, 0) / margins.length,
+        productCount: margins.length
+      }));
 
-      avgProfitMargin = categoryAverages.length > 0 
-        ? categoryAverages.reduce((a, b) => a + b, 0) / categoryAverages.length 
-        : 0;
+      if (category === 'all') {
+        // General average across all categories
+        const categoryAverages = Object.values(categoryGroups).map(margins => 
+          margins.reduce((a, b) => a + b, 0) / margins.length
+        );
+        avgProfitMargin = categoryAverages.length > 0 
+          ? categoryAverages.reduce((a, b) => a + b, 0) / categoryAverages.length 
+          : 0;
+      } else {
+        // Average for specific category
+        const categoryMargins = categoryGroups[category] || [];
+        avgProfitMargin = categoryMargins.length > 0
+          ? categoryMargins.reduce((a, b) => a + b, 0) / categoryMargins.length
+          : 0;
+      }
     } else {
       // Calculate average profit by product
       const margins = profitData.map(item => item.profitMargin);
@@ -111,11 +130,17 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     today.setHours(0, 0, 0, 0);
     const todayChanges = history.filter(h => h.createdAt >= today).length;
 
+    // Get unique categories for frontend
+    const uniqueCategories = [...new Set(products.map(p => p.category))].sort();
+
     res.json({
       totalIngredients: ingredients.length,
-      totalProducts: products.length,
+      totalProducts: filteredProducts.length,
       avgProfitMargin: avgProfitMargin.toFixed(1),
       profitType: type,
+      selectedCategory: category,
+      categoryBreakdown,
+      availableCategories: uniqueCategories,
       todayChanges,
     });
   } catch (error) {

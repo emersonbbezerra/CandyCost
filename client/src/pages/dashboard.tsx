@@ -11,10 +11,11 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const [selectedProduct, setSelectedProduct] = useState<string>("general");
   const [profitType, setProfitType] = useState<string>("product");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
-    queryKey: ["/api/dashboard/stats", profitType],
-    queryFn: () => fetch(`/api/dashboard/stats?type=${profitType}`).then(res => res.json()),
+    queryKey: ["/api/dashboard/stats", profitType, selectedCategory],
+    queryFn: () => fetch(`/api/dashboard/stats?type=${profitType}&category=${selectedCategory}`).then(res => res.json()),
     refetchOnMount: "always",
     staleTime: 0,
   });
@@ -86,9 +87,18 @@ export default function Dashboard() {
         totalProducts={stats?.totalProducts || 0}
         avgProfitMargin={stats?.avgProfitMargin || "0"}
         profitType={profitType}
+        selectedCategory={selectedCategory}
+        availableCategories={stats?.availableCategories || []}
         todayChanges={stats?.todayChanges || 0}
         onProfitTypeChange={(type) => {
           setProfitType(type);
+          if (type === 'product') {
+            setSelectedCategory('all');
+          }
+          refetchStats();
+        }}
+        onCategoryChange={(category) => {
+          setSelectedCategory(category);
           refetchStats();
         }}
       />
