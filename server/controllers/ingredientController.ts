@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { z } from "zod";
 import { productService } from "../services/productService";
+import { ingredientService } from "../services/ingredientService"; // Assumindo que ingredientService existe e tem as funções necessárias
 
 export const getIngredients = async (_req: Request, res: Response) => {
   try {
@@ -47,26 +48,30 @@ export const createIngredient = async (req: Request, res: Response) => {
 
 export const updateIngredient = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
-    const data = z.object({
-      name: z.string().optional(),
-      category: z.string().optional(),
-      quantity: z.string().optional(),
-      unit: z.string().optional(),
-      price: z.string().optional(),
-      brand: z.string().optional(),
-    }).partial().parse(req.body);
+    const { id } = req.params;
+    const ingredientData = req.body;
 
-    const ingredient = await productService.updateIngredient(id, data);
-    
-    // Get products affected by this ingredient change
-    const affectedProducts = await productService.getProductsUsingIngredient(id);
-    
-    res.json({ ingredient, affectedProducts });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: "Dados inválidos", errors: error.errors });
+    console.log("Updating ingredient:", id, ingredientData);
+
+    // Buscar ingrediente anterior para comparar preços
+    const oldIngredient = await ingredientService.getIngredientById(parseInt(id));
+
+    const result = await ingredientService.updateIngredient(parseInt(id), ingredientData);
+
+    // Se o preço mudou, rastrear mudanças nos produtos afetados
+    if (oldIngredient && ingredientData.price && oldIngredient.price !== ingredientData.price) {
+      console.log("Price changed, tracking affected products...");
+      const { productService } = require("../services/productService");
+      await productService.trackCostChangesForAffectedProducts(
+        parseInt(id),
+        oldIngredient.price,
+        ingredientData.price
+      );
     }
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error updating ingredient:", error);
     res.status(500).json({ message: "Erro ao atualizar ingrediente" });
   }
 };

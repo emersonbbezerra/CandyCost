@@ -1,5 +1,6 @@
+
 import { formatCurrency } from "@/lib/utils";
-import type { Product } from "@shared/schema";
+import type { Product, PriceHistory } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -10,51 +11,47 @@ interface CostEvolutionChartProps {
     products: Product[];
 }
 
+interface CostEvolutionData {
+    month: string;
+    cost: number;
+    suggestedPrice?: number;
+}
+
 export function CostEvolutionChart({ products }: CostEvolutionChartProps) {
     const [selectedProduct, setSelectedProduct] = useState<string>("general");
 
-    const { data: productCostEvolution = [] } = useQuery({
-        queryKey: ["/api/products", "cost-evolution", selectedProduct],
+    // Buscar dados de evolução de custos usando o novo endpoint
+    const { data: chartData = [] } = useQuery<CostEvolutionData[]>({
+        queryKey: ["/api/dashboard/cost-evolution", selectedProduct],
         queryFn: async () => {
-            if (!selectedProduct || selectedProduct === "general") return [];
-
-            const productId = parseInt(selectedProduct);
-            const response = await fetch(`/api/products/${productId}`);
-            const productData = await response.json();
-
-            const costHistory = [];
-            const today = new Date();
-
-            for (let i = 5; i >= 0; i--) {
-                const date = new Date(today);
-                date.setMonth(date.getMonth() - i);
-
-                const baseVariation = Math.random() * 0.4 - 0.2;
-                const baseCost = productData.cost?.totalCost || 10;
-                const cost = baseCost * (1 + baseVariation);
-
-                costHistory.push({
-                    month: date.toLocaleDateString('pt-BR', { month: 'short' }),
-                    cost: cost,
-                    suggestedPrice: cost * (1 + parseFloat(productData.marginPercentage || "60") / 100)
-                });
+            const params = new URLSearchParams({
+                months: "6"
+            });
+            
+            if (selectedProduct !== "general") {
+                params.set("productId", selectedProduct);
             }
-
-            return costHistory;
-        },
-        enabled: !!selectedProduct && selectedProduct !== "general"
+            
+            const response = await fetch(`/api/dashboard/cost-evolution?${params}`);
+            const data = await response.json();
+            
+            // Para produtos específicos, adicionar preços sugeridos
+            if (selectedProduct !== "general") {
+                const selectedProductData = products.find(p => p.id.toString() === selectedProduct);
+                return data.map((item: any) => ({
+                    ...item,
+                    suggestedPrice: selectedProductData ? 
+                        item.cost * (1 + parseFloat(selectedProductData.marginPercentage || "60") / 100) 
+                        : item.cost * 1.6
+                }));
+            }
+            
+            return data;
+        }
     });
 
-    const generalChartData = [
-        { month: "Jan", cost: 11.2, suggestedPrice: 17.9 },
-        { month: "Fev", cost: 11.8, suggestedPrice: 18.9 },
-        { month: "Mar", cost: 12.1, suggestedPrice: 19.4 },
-        { month: "Abr", cost: 11.9, suggestedPrice: 19.0 },
-        { month: "Mai", cost: 12.4, suggestedPrice: 19.8 },
-        { month: "Jun", cost: 12.45, suggestedPrice: 19.92 },
-    ];
-
-    const chartData = selectedProduct && selectedProduct !== "general" ? productCostEvolution : generalChartData;
+    // Fallback para quando não há dados
+    const hasData = chartData.length > 0;
 
     return (
         <Card>
@@ -77,59 +74,79 @@ export function CostEvolutionChart({ products }: CostEvolutionChartProps) {
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                            <XAxis
-                                dataKey="month"
-                                fontSize={12}
-                                tick={{ fill: '#6b7280' }}
-                            />
-                            <YAxis
-                                tickFormatter={(value) => formatCurrency(value)}
-                                fontSize={12}
-                                tick={{ fill: '#6b7280' }}
-                                label={{ value: 'Valor (R$)', angle: -90, position: 'insideLeft' }}
-                            />
-                            <Tooltip
-                                formatter={(value, name) => [
-                                    formatCurrency(Number(value)),
-                                    name === 'cost' ? 'Custo de Produção' : 'Preço Sugerido'
-                                ]}
-                                labelFormatter={(label) => `Mês: ${label}`}
-                                contentStyle={{
-                                    backgroundColor: '#f8fafc',
-                                    border: '1px solid #e2e8f0',
-                                    borderRadius: '8px',
-                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                                }}
-                            />
-                            <Line
-                                type="monotone"
-                                dataKey="cost"
-                                stroke="#3b82f6"
-                                strokeWidth={3}
-                                dot={{ fill: "#3b82f6", strokeWidth: 2, r: 5 }}
-                                activeDot={{ r: 8, stroke: "#3b82f6", strokeWidth: 2 }}
-                                name="cost"
-                            />
-                            {selectedProduct && selectedProduct !== "general" && (
+                {hasData ? (
+                    <div className="h-80">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                                <XAxis
+                                    dataKey="month"
+                                    fontSize={12}
+                                    tick={{ fill: '#6b7280' }}
+                                />
+                                <YAxis
+                                    tickFormatter={(value) => formatCurrency(value)}
+                                    fontSize={12}
+                                    tick={{ fill: '#6b7280' }}
+                                    label={{ value: 'Valor (R$)', angle: -90, position: 'insideLeft' }}
+                                />
+                                <Tooltip
+                                    formatter={(value, name) => [
+                                        formatCurrency(Number(value)),
+                                        name === 'cost' ? 'Custo de Produção' : 'Preço Sugerido'
+                                    ]}
+                                    labelFormatter={(label) => `Mês: ${label}`}
+                                    contentStyle={{
+                                        backgroundColor: '#f8fafc',
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: '8px',
+                                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                                    }}
+                                />
                                 <Line
                                     type="monotone"
-                                    dataKey="suggestedPrice"
-                                    stroke="#10b981"
+                                    dataKey="cost"
+                                    stroke="#3b82f6"
                                     strokeWidth={3}
-                                    dot={{ fill: "#10b981", strokeWidth: 2, r: 5 }}
-                                    activeDot={{ r: 8, stroke: "#10b981", strokeWidth: 2 }}
-                                    name="suggestedPrice"
-                                    strokeDasharray="5 5"
+                                    dot={{ fill: "#3b82f6", strokeWidth: 2, r: 5 }}
+                                    activeDot={{ r: 8, stroke: "#3b82f6", strokeWidth: 2 }}
+                                    name="cost"
                                 />
-                            )}
-                        </LineChart>
-                    </ResponsiveContainer>
-                </div>
-                {selectedProduct && selectedProduct !== "general" && (
+                                {selectedProduct && selectedProduct !== "general" && (
+                                    <Line
+                                        type="monotone"
+                                        dataKey="suggestedPrice"
+                                        stroke="#10b981"
+                                        strokeWidth={3}
+                                        dot={{ fill: "#10b981", strokeWidth: 2, r: 5 }}
+                                        activeDot={{ r: 8, stroke: "#10b981", strokeWidth: 2 }}
+                                        name="suggestedPrice"
+                                        strokeDasharray="5 5"
+                                    />
+                                )}
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                ) : (
+                    <div className="h-80 flex items-center justify-center">
+                        <div className="text-center text-gray-500">
+                            <div className="mb-4">
+                                <svg className="w-12 h-12 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </div>
+                            <p className="text-lg font-medium mb-2">Sem dados de evolução</p>
+                            <p className="text-sm">
+                                {selectedProduct === "general" 
+                                    ? "Faça algumas alterações nos custos dos produtos para ver a evolução aqui."
+                                    : "Este produto ainda não possui histórico de mudanças de custo."
+                                }
+                            </p>
+                        </div>
+                    </div>
+                )}
+                
+                {selectedProduct && selectedProduct !== "general" && hasData && (
                     <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
                         <div className="flex items-center text-sm text-green-700">
                             <div className="flex items-center mr-6">

@@ -5,6 +5,8 @@ import { ingredientRepository } from "../repositories/ingredientRepository";
 import { productRepository } from "../repositories/productRepository";
 import { recipeRepository } from "../repositories/recipeRepository";
 import { FixedCostService } from "./fixedCostService";
+import { priceHistoryService } from "./priceHistoryService";
+import type { InsertProduct } from "@shared/schema";
 
 export const productService = {
   async getProducts() {
@@ -30,68 +32,38 @@ export const productService = {
     return await productRepository.createProduct(data);
   },
 
-  async updateProduct(productId: number, data: Partial<{
-    name: string;
-    category: string;
-    description?: string;
-    isAlsoIngredient?: boolean;
-    marginPercentage?: string;
-    preparationTimeMinutes?: number;
-  }>) {
-    // Get current product data before update
-    const currentProduct = await productRepository.getProduct(productId);
-    if (!currentProduct) {
-      throw new Error("Produto não encontrado");
+  async updateProduct(id: number, productData: Partial<InsertProduct>) {
+    console.log("Updating product:", id, productData);
+
+    // Calcular custo antes da atualização para comparação
+    const oldProduct = await productRepository.getProductById(id);
+    const oldCost = oldProduct ? await this.calculateProductCost(id) : null;
+
+    const result = await productRepository.updateProduct(id, productData);
+    console.log("Product updated:", result);
+
+    // Calcular novo custo e registrar mudança se houver
+    if (oldCost && result) {
+      const newCost = await this.calculateProductCost(id);
+
+      if (newCost && Math.abs(newCost.totalCost - oldCost.totalCost) > 0.01) {
+        console.log("Product cost changed, recording history:", {
+          productId: id,
+          oldCost: oldCost.totalCost,
+          newCost: newCost.totalCost
+        });
+
+        await priceHistoryService.createPriceHistory({
+          productId: id,
+          oldPrice: oldCost.totalCost.toFixed(2),
+          newPrice: newCost.totalCost.toFixed(2),
+          changeReason: "Atualização do produto",
+          createdAt: new Date()
+        });
+      }
     }
 
-    // Calculate old cost
-    let oldCost = 0;
-    try {
-      const oldCostData = await this.calculateProductCost(productId);
-      oldCost = oldCostData.totalCost;
-    } catch {
-      oldCost = 0;
-    }
-
-    // Update the product
-    const updatedProduct = await productRepository.updateProduct(productId, data);
-
-    // Always calculate new cost after update
-    let newCost = 0;
-    try {
-      const newCostData = await this.calculateProductCost(productId);
-      newCost = newCostData.totalCost;
-    } catch {
-      newCost = 0;
-    }
-
-    // Create price history entry for any product update
-    const { priceHistoryService } = await import("./priceHistoryService");
-
-    let changeReason = "Atualização do produto";
-    const changedFields = [];
-
-    if (data.name !== undefined) changedFields.push("nome");
-    if (data.category !== undefined) changedFields.push("categoria");
-    if (data.description !== undefined) changedFields.push("descrição");
-    if (data.marginPercentage !== undefined) changedFields.push("margem de lucro");
-    if (data.preparationTimeMinutes !== undefined) changedFields.push("tempo de preparo");
-    if (data.isAlsoIngredient !== undefined) changedFields.push("configuração de ingrediente");
-
-    if (changedFields.length > 0) {
-      changeReason = `Atualização: ${changedFields.join(", ")}`;
-    }
-
-    // Always create history entry, even if cost didn't change
-    await priceHistoryService.createPriceHistory({
-      productId,
-      oldPrice: oldCost.toFixed(2),
-      newPrice: newCost.toFixed(2),
-      changeReason,
-      createdAt: new Date(),
-    });
-
-    return updatedProduct;
+    return result;
   },
 
   async deleteProduct(productId: number) {
@@ -207,7 +179,7 @@ export const productService = {
           // Calculate new cost properly including fixed costs
           const productRecipes = await recipeRepository.getRecipesByProduct(productId);
           let newIngredientsCost = 0;
-          
+
           for (const recipe of productRecipes) {
             if (recipe.ingredientId === null) continue;
             const ingredient = await ingredientRepository.getIngredient(recipe.ingredientId);
@@ -262,5 +234,75 @@ export const productService = {
     const productIngredients = await db.select().from(recipes).where(eq(recipes.ingredientId, ingredientId)).execute();
     const productIds = productIngredients.map((pi: any) => pi.productId);
     return productIds;
-  }
+  },
+
+  async calculateProductCosts(productIds?: number[]) {
+    try {
+      console.log("🧮 Starting product costs calculation...");
+      const products = productIds 
+        ? await Promise.all(productIds.map(id => productRepository.getProductById(id)))
+        : await productRepository.getProducts();
+
+      const validProducts = products.filter(Boolean);
+      console.log(`📊 Processing ${validProducts.length} products`);
+
+      const costs = await Promise.all(
+        validProducts.map(async (product) => {
+          if (!product) return null;
+
+          const cost = await this.calculateProductCost(product.id);
+          console.log(`💰 Product ${product.name}: ${cost ? `R$ ${cost.totalCost.toFixed(2)}` : 'No cost data'}`);
+
+          return cost;
+        })
+      );
+
+      return costs.filter(Boolean);
+    } catch (error) {
+      console.error("❌ Error calculating product costs:", error);
+      return [];
+    }
+  },
+
+  async trackCostChangesForAffectedProducts(ingredientId: number, oldPrice: string, newPrice: string) {
+    try {
+      console.log("🔍 Finding products affected by ingredient change:", ingredientId);
+
+      // Buscar todos os produtos que usam este ingrediente
+      const allProducts = await productRepository.getProducts();
+      const affectedProducts: number[] = [];
+
+      for (const product of allProducts) {
+        const recipes = await recipeRepository.getRecipesByProductId(product.id);
+        const usesIngredient = recipes.some(recipe => recipe.ingredientId === ingredientId);
+
+        if (usesIngredient) {
+          affectedProducts.push(product.id);
+        }
+      }
+
+      console.log("📊 Affected products:", affectedProducts);
+
+      // Para cada produto afetado, calcular o novo custo e registrar mudança
+      for (const productId of affectedProducts) {
+        const newCost = await this.calculateProductCost(productId);
+
+        if (newCost) {
+          console.log("💰 Recording cost change for product:", productId);
+          await priceHistoryService.createPriceHistory({
+            productId: productId,
+            oldPrice: "0.00", // Custo anterior seria complexo de calcular
+            newPrice: newCost.totalCost.toFixed(2),
+            changeReason: `Alteração no ingrediente (preço mudou de ${oldPrice} para ${newPrice})`,
+            createdAt: new Date()
+          });
+        }
+      }
+
+      return affectedProducts;
+    } catch (error) {
+      console.error("❌ Error tracking cost changes:", error);
+      return [];
+    }
+  },
 };
