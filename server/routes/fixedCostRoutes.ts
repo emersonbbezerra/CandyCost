@@ -15,10 +15,6 @@ router.get("/by-category", fixedCostController.getByCategory.bind(fixedCostContr
 router.get("/cost-per-hour", fixedCostController.getFixedCostPerHour.bind(fixedCostController));
 router.get("/work-configuration", fixedCostController.getWorkConfiguration.bind(fixedCostController));
 router.put("/work-configuration", fixedCostController.updateWorkConfiguration.bind(fixedCostController));
-
-// Routes for /api/work-config (legacy compatibility)
-router.get("/", fixedCostController.getWorkConfiguration.bind(fixedCostController));
-router.put("/", fixedCostController.updateWorkConfiguration.bind(fixedCostController));
 router.get("/:id", fixedCostController.getById.bind(fixedCostController));
 router.post("/", fixedCostController.create.bind(fixedCostController));
 router.put("/:id", fixedCostController.update.bind(fixedCostController));
