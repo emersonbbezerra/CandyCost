@@ -152,14 +152,29 @@ export const productService = {
       throw new Error("Ingrediente não encontrado");
     }
 
-    // Sempre criar histórico de preço para ingredientes, mesmo se o preço não mudou
     const oldPrice = currentIngredient.price || "0";
     const newPrice = data.price !== undefined ? data.price : oldPrice;
 
     console.log("💰 Price change for ingredient", id, ":", { oldPrice, newPrice });
 
     if (data.price !== undefined) {
-      // Registrar histórico de preço do ingrediente
+      // PRIMEIRO: Buscar produtos afetados e calcular seus custos ANTES da alteração
+      const productIds = await this.getProductsUsingIngredient(id);
+      const productOldCosts = new Map<number, number>();
+
+      // Calcular custos atuais de todos os produtos afetados ANTES da alteração
+      for (const productId of productIds) {
+        try {
+          const oldCost = await this.calculateProductCost(productId);
+          productOldCosts.set(productId, oldCost.totalCost);
+          console.log(`📊 Produto ${productId} custo atual: R$ ${oldCost.totalCost.toFixed(2)}`);
+        } catch (error) {
+          console.error(`❌ Erro ao calcular custo do produto ${productId}:`, error);
+          productOldCosts.set(productId, 0);
+        }
+      }
+
+      // SEGUNDO: Registrar histórico de preço do ingrediente
       await import("./priceHistoryService").then(async ({ priceHistoryService }) => {
         await priceHistoryService.createPriceHistory({
           ingredientId: id,
@@ -169,61 +184,45 @@ export const productService = {
           createdAt: new Date(),
         });
 
-        // Buscar produtos que usam o ingrediente
-        const productIds = await this.getProductsUsingIngredient(id);
+        // TERCEIRO: Atualizar o ingrediente no banco
+        await ingredientRepository.updateIngredient(id, data);
 
-        // Para cada produto, calcular custo antigo e novo e registrar histórico
+        // QUARTO: Calcular novos custos dos produtos e registrar histórico
         for (const productId of productIds) {
-          const oldCost = await this.calculateProductCost(productId);
+          try {
+            const oldCostValue = productOldCosts.get(productId) || 0;
+            const newCost = await this.calculateProductCost(productId);
 
-          // Calculate new cost properly including fixed costs
-          const productRecipes = await recipeRepository.getRecipesByProduct(productId);
-          let newIngredientsCost = 0;
-
-          for (const recipe of productRecipes) {
-            if (recipe.ingredientId === null) continue;
-            const ingredient = await ingredientRepository.getIngredient(recipe.ingredientId);
-            if (ingredient) {
-              let price = ingredient.price;
-              if (ingredient.id === id) {
-                price = data.price ?? ingredient.price;
-              }
-              newIngredientsCost += parseFloat(price || "0") * Number(recipe.quantity);
-            }
-          }
-
-          // Add fixed costs to get total cost
-          const product = await productRepository.getProduct(productId);
-          const preparationTimeMinutes = product?.preparationTimeMinutes || 60;
-          const fixedCostService = new FixedCostService();
-          const fixedCostPerProduct = await fixedCostService.calculateProductFixedCost(preparationTimeMinutes);
-          const newTotalCost = newIngredientsCost + fixedCostPerProduct;
-
-          console.log("📊 Product cost impact for product", productId, ":", {
-            oldCost: oldCost.totalCost.toFixed(2),
-            newCost: newTotalCost.toFixed(2),
-            oldIngredientsCost: oldCost.ingredientsCost.toFixed(2),
-            newIngredientsCost: newIngredientsCost.toFixed(2),
-            fixedCost: fixedCostPerProduct.toFixed(2)
-          });
-
-          // Registrar histórico do produto apenas se houve mudança significativa
-          if (Math.abs(newTotalCost - oldCost.totalCost) > 0.01) {
-            console.log(`💾 Registrando histórico - Produto ${productId}: R$ ${oldCost.totalCost.toFixed(2)} → R$ ${newTotalCost.toFixed(2)}`);
-            await priceHistoryService.createPriceHistory({
-              productId: productId,
-              oldPrice: oldCost.totalCost.toFixed(2),
-              newPrice: newTotalCost.toFixed(2),
-              changeReason: `Alteração no preço do ingrediente: ${currentIngredient.name}`,
-              createdAt: new Date(),
+            console.log(`📊 Produto ${productId} comparação:`, {
+              oldCost: oldCostValue.toFixed(2),
+              newCost: newCost.totalCost.toFixed(2),
+              difference: (newCost.totalCost - oldCostValue).toFixed(2)
             });
-          } else {
-            console.log(`⏭️ Produto ${productId}: Sem mudança significativa de custo`);
+
+            // Registrar histórico apenas se houve mudança significativa
+            if (Math.abs(newCost.totalCost - oldCostValue) > 0.01) {
+              console.log(`💾 Registrando histórico - Produto ${productId}: R$ ${oldCostValue.toFixed(2)} → R$ ${newCost.totalCost.toFixed(2)}`);
+              await priceHistoryService.createPriceHistory({
+                productId: productId,
+                oldPrice: oldCostValue.toFixed(2),
+                newPrice: newCost.totalCost.toFixed(2),
+                changeReason: `Alteração no preço do ingrediente: ${currentIngredient.name}`,
+                createdAt: new Date(),
+              });
+            } else {
+              console.log(`⏭️ Produto ${productId}: Sem mudança significativa de custo`);
+            }
+          } catch (error) {
+            console.error(`❌ Erro ao processar produto ${productId}:`, error);
           }
         }
       });
+
+      // Retornar o ingrediente já atualizado
+      return await ingredientRepository.getIngredient(id);
     }
 
+    // Se não houve alteração de preço, fazer update normal
     return await ingredientRepository.updateIngredient(id, data);
   },
 
