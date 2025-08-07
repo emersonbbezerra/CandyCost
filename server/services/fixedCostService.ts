@@ -1,11 +1,11 @@
 
 import { FixedCostRepository } from "../repositories/fixedCostRepository";
-import { ProductRepository } from "../repositories/productRepository";
+import { productRepository } from "../repositories/productRepository";
 import type { FixedCost } from "../../shared/schema";
 
 export class FixedCostService {
   private fixedCostRepository = new FixedCostRepository();
-  private productRepository = new ProductRepository();
+  private productRepository = productRepository;
 
   async getAllFixedCosts(): Promise<FixedCost[]> {
     return await this.fixedCostRepository.findAll();
