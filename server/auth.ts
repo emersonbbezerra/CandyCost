@@ -7,7 +7,6 @@ import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import { prisma } from './db';
 import { findUserByEmail, verifyPassword } from './utils/authUtils';
-import type { User } from '@shared/schema';
 
 const PgSession = connectPg(session);
 
@@ -104,7 +103,7 @@ export const isAuthenticated: RequestHandler = (req, res, next) => {
 
 // Admin authorization middleware
 export const isAdmin: RequestHandler = (req, res, next) => {
-  if (req.isAuthenticated() && (req.user as User)?.role === 'admin') {
+  if (req.isAuthenticated() && (req.user as any)?.role === 'admin') {
     return next();
   }
   res
@@ -130,7 +129,7 @@ export const userService = {
     firstName?: string;
     lastName?: string;
     role?: string;
-  }): Promise<User> {
+  }): Promise<any> {
     // Hash password
     const hashedPassword = await bcrypt.hash(userData.password, 12);
 
@@ -147,19 +146,19 @@ export const userService = {
     return newUser;
   },
 
-  async getUserByEmail(email: string): Promise<User | null> {
+  async getUserByEmail(email: string): Promise<any> {
     return await prisma.user.findUnique({
       where: { email }
     });
   },
 
-  async getUserById(id: string): Promise<User | null> {
+  async getUserById(id: string): Promise<any> {
     return await prisma.user.findUnique({
       where: { id }
     });
   },
 
-  async createAdminUser(): Promise<User> {
+  async createAdminUser(): Promise<any> {
     // In production, use environment variables for initial admin
     const adminEmail =
       process.env.INITIAL_ADMIN_EMAIL || 'admin@confeitaria.com';
@@ -181,7 +180,7 @@ export const userService = {
   },
 
   // Promote existing user to admin (for production use)
-  async promoteToAdmin(userEmail: string): Promise<User | null> {
+  async promoteToAdmin(userEmail: string): Promise<any> {
     const user = await this.getUserByEmail(userEmail);
     if (!user) {
       throw new Error('Usuário não encontrado');
@@ -206,7 +205,7 @@ export const userService = {
     password: string,
     firstName: string,
     lastName?: string
-  ): Promise<User> {
+  ): Promise<any> {
     // Check if any admin exists
     const existingAdmin = await prisma.user.findFirst({
       where: { role: 'admin' }
@@ -239,7 +238,7 @@ export const userService = {
       email?: string;
       role?: string;
     }
-  ): Promise<User> {
+  ): Promise<any> {
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: userData
@@ -268,7 +267,7 @@ export const userService = {
     });
   },
 
-  async getAllUsers(): Promise<User[]> {
+  async getAllUsers(): Promise<any[]> {
     return await prisma.user.findMany({
       select: {
         id: true,
@@ -284,7 +283,7 @@ export const userService = {
     });
   },
 
-  async getUserWithPassword(userId: string): Promise<User | null> {
+  async getUserWithPassword(userId: string): Promise<any> {
     return await prisma.user.findUnique({
       where: { id: userId }
     });
