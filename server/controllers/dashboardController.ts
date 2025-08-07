@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { prisma } from "../db";
 import { priceHistoryService } from "../services/priceHistoryService";
 import { productService } from "../services/productService";
 
@@ -68,14 +69,14 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         const cost = await productService.calculateProductCost(product.id);
         const marginPercentage = product.marginPercentage ? parseFloat(product.marginPercentage) : 60;
         const profitMargin = marginPercentage;
-        return { 
-          profitMargin, 
-          category: product.category 
+        return {
+          profitMargin,
+          category: product.category
         };
       } catch {
-        return { 
-          profitMargin: 0, 
-          category: product.category 
+        return {
+          profitMargin: 0,
+          category: product.category
         };
       }
     });
@@ -104,11 +105,11 @@ export const getDashboardStats = async (req: Request, res: Response) => {
 
       if (category === 'all') {
         // General average across all categories
-        const categoryAverages = Object.values(categoryGroups).map(margins => 
+        const categoryAverages = Object.values(categoryGroups).map(margins =>
           margins.reduce((a, b) => a + b, 0) / margins.length
         );
-        avgProfitMargin = categoryAverages.length > 0 
-          ? categoryAverages.reduce((a, b) => a + b, 0) / categoryAverages.length 
+        avgProfitMargin = categoryAverages.length > 0
+          ? categoryAverages.reduce((a, b) => a + b, 0) / categoryAverages.length
           : 0;
       } else {
         // Average for specific category
@@ -120,8 +121,8 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     } else {
       // Calculate average profit by product
       const margins = profitData.map(item => item.profitMargin);
-      avgProfitMargin = margins.length > 0 
-        ? margins.reduce((a, b) => a + b, 0) / margins.length 
+      avgProfitMargin = margins.length > 0
+        ? margins.reduce((a, b) => a + b, 0) / margins.length
         : 0;
     }
 
@@ -133,15 +134,69 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     // Get unique categories for frontend
     const uniqueCategories = [...new Set(products.map(p => p.category))].sort();
 
-    res.json({
-      totalIngredients: ingredients.length,
-      totalProducts: filteredProducts.length,
+    // Get ingredient count
+    const ingredientCount = await prisma.ingredient.count();
+
+    // Get product count
+    const productCount = await prisma.product.count();
+
+    // Get recent updates (ingredients and products)
+    const recentIngredientUpdates = await prisma.priceHistory.findMany({
+      where: { ingredientId: { not: null } },
+      include: { ingredient: true },
+      orderBy: { createdAt: 'desc' },
+      take: 10
+    });
+
+    const recentProductUpdates = await prisma.priceHistory.findMany({
+      where: { productId: { not: null } },
+      include: { product: true },
+      orderBy: { createdAt: 'desc' },
+      take: 10
+    });
+
+    // Combine and sort recent updates
+    const combinedIngredientUpdates = recentIngredientUpdates.map(update => ({
+      type: 'ingredient' as const,
+      name: update.ingredient!.name,
+      id: update.ingredient!.id,
+      oldPrice: update.oldPrice.toString(),
+      newPrice: update.newPrice.toString(),
+      changeReason: update.changeReason,
+      createdAt: update.createdAt,
+    }));
+
+    const combinedProductUpdates = recentProductUpdates.map(update => ({
+      type: 'product' as const,
+      name: update.product!.name,
+      id: update.product!.id,
+      oldPrice: update.oldPrice.toString(),
+      newPrice: update.newPrice.toString(),
+      changeReason: update.changeReason,
+      createdAt: update.createdAt,
+    }));
+
+    const recentUpdates = [
+      ...combinedIngredientUpdates,
+      ...combinedProductUpdates,
+    ]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 10);
+
+    let profitMarginStats = {
       avgProfitMargin: avgProfitMargin.toFixed(1),
       profitType: type,
       selectedCategory: category,
       categoryBreakdown,
       availableCategories: uniqueCategories,
       todayChanges,
+    };
+
+    res.json({
+      totalIngredients: ingredientCount,
+      totalProducts: productCount,
+      recentUpdates,
+      profitMarginStats,
     });
   } catch (error) {
     res.status(500).json({ message: "Erro ao buscar estatísticas" });
@@ -187,7 +242,7 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 3); // Limitar a 3 ingredientes
 
-    // Filtrar e ordenar atualizações de produtos  
+    // Filtrar e ordenar atualizações de produtos
     const productUpdatesFiltered = allHistory
       .filter(update => update.productId !== null && update.productId !== undefined)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())

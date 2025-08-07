@@ -1,11 +1,15 @@
-import { ingredients, recipes } from "@shared/schema";
-import { eq } from "drizzle-orm";
-import { db } from "../db";
+
+import { prisma } from "../db";
 import { productService } from "./productService";
 
 export const reportService = {
   async getIngredients() {
-    return await db.select().from(ingredients).execute();
+    const ingredients = await prisma.ingredient.findMany();
+    return ingredients.map(ingredient => ({
+      ...ingredient,
+      quantity: ingredient.quantity.toString(),
+      price: ingredient.price.toString(),
+    }));
   },
 
   async getProducts() {
@@ -13,7 +17,14 @@ export const reportService = {
   },
 
   async getRecipesByProduct(productId: number) {
-    return await db.select().from(recipes).where(eq(recipes.productId, productId)).execute();
+    const recipes = await prisma.recipe.findMany({
+      where: { productId }
+    });
+    
+    return recipes.map(recipe => ({
+      ...recipe,
+      quantity: recipe.quantity.toString(),
+    }));
   },
 
   async calculateProductCost(productId: number) {

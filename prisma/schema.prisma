@@ -1,0 +1,122 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Ingredient {
+  id        Int      @id @default(autoincrement())
+  name      String
+  category  String
+  quantity  Decimal  @db.Decimal(10, 3)
+  unit      String
+  price     Decimal  @db.Decimal(10, 2)
+  brand     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  recipes      Recipe[]
+  priceHistory PriceHistory[]
+
+  @@map("ingredients")
+}
+
+model Product {
+  id                      Int     @id @default(autoincrement())
+  name                    String
+  category                String
+  description             String?
+  isAlsoIngredient        Boolean @default(false) @map("is_also_ingredient")
+  marginPercentage        Decimal @default(60) @db.Decimal(5, 2) @map("margin_percentage")
+  preparationTimeMinutes  Int     @default(60) @map("preparation_time_minutes")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  recipes              Recipe[] @relation("ProductRecipes")
+  productIngredients   Recipe[] @relation("ProductIngredients")
+  priceHistory         PriceHistory[]
+
+  @@map("products")
+}
+
+model Recipe {
+  id                 Int      @id @default(autoincrement())
+  productId          Int      @map("product_id")
+  ingredientId       Int?     @map("ingredient_id")
+  productIngredientId Int?    @map("product_ingredient_id")
+  quantity           Decimal  @db.Decimal(10, 3)
+  unit               String
+
+  product           Product     @relation("ProductRecipes", fields: [productId], references: [id])
+  ingredient        Ingredient? @relation(fields: [ingredientId], references: [id])
+  productIngredient Product?    @relation("ProductIngredients", fields: [productIngredientId], references: [id])
+
+  @@map("recipes")
+}
+
+model PriceHistory {
+  id           Int      @id @default(autoincrement())
+  ingredientId Int?     @map("ingredient_id")
+  productId    Int?     @map("product_id")
+  oldPrice     Decimal  @db.Decimal(10, 2) @map("old_price")
+  newPrice     Decimal  @db.Decimal(10, 2) @map("new_price")
+  changeReason String?  @map("change_reason")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  ingredient Ingredient? @relation(fields: [ingredientId], references: [id])
+  product    Product?    @relation(fields: [productId], references: [id])
+
+  @@map("price_history")
+}
+
+model FixedCost {
+  id          Int      @id @default(autoincrement())
+  name        String
+  category    String
+  value       Decimal  @db.Decimal(10, 2)
+  recurrence  String
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("fixed_costs")
+}
+
+model WorkConfiguration {
+  id              Int     @id @default(autoincrement())
+  workDaysPerWeek Int     @default(5) @map("work_days_per_week")
+  hoursPerDay     Decimal @default(8.00) @db.Decimal(4, 2) @map("hours_per_day")
+  weeksPerMonth   Decimal @default(4.0) @db.Decimal(3, 1) @map("weeks_per_month")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("work_configuration")
+}
+
+model Session {
+  sid    String   @id
+  sess   Json
+  expire DateTime
+
+  @@index([expire], name: "IDX_session_expire")
+  @@map("sessions")
+}
+
+model User {
+  id              String    @id @default(uuid())
+  email           String?   @unique
+  firstName       String?   @map("first_name")
+  lastName        String?   @map("last_name")
+  password        String
+  profileImageUrl String?   @map("profile_image_url")
+  role            String    @default("user")
+  createdAt       DateTime? @default(now()) @map("created_at")
+  updatedAt       DateTime? @updatedAt @map("updated_at")
+
+  @@map("users")
+}

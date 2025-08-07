@@ -1,42 +1,75 @@
-import { ingredients } from "@shared/schema";
-import { eq } from "drizzle-orm";
-import { db } from "../db";
+
+import { prisma } from "../db";
+import type { Ingredient, InsertIngredient } from "@shared/schema";
 
 export const ingredientRepository = {
-  async getIngredients() {
-    return await db.select().from(ingredients).execute();
+  async findAll(): Promise<Ingredient[]> {
+    const ingredients = await prisma.ingredient.findMany({
+      orderBy: { name: 'asc' }
+    });
+    
+    return ingredients.map(ingredient => ({
+      ...ingredient,
+      quantity: ingredient.quantity.toString(),
+      price: ingredient.price.toString(),
+    }));
   },
 
-  async getIngredient(id: number) {
-    const result = await db.select().from(ingredients).where(eq(ingredients.id, id)).limit(1).execute();
-    return result[0] || null;
+  async findById(id: number): Promise<Ingredient | null> {
+    const ingredient = await prisma.ingredient.findUnique({
+      where: { id }
+    });
+    
+    if (!ingredient) return null;
+    
+    return {
+      ...ingredient,
+      quantity: ingredient.quantity.toString(),
+      price: ingredient.price.toString(),
+    };
   },
 
-  async createIngredient(data: {
-    name: string;
-    category: string;
-    quantity: string;
-    unit: string;
-    price: string;
-    brand?: string | null;
-  }) {
-    const [newIngredient] = await db.insert(ingredients).values(data).returning();
-    return newIngredient;
+  async create(data: InsertIngredient): Promise<Ingredient> {
+    const ingredient = await prisma.ingredient.create({
+      data: {
+        ...data,
+        quantity: parseFloat(data.quantity),
+        price: parseFloat(data.price),
+      }
+    });
+    
+    return {
+      ...ingredient,
+      quantity: ingredient.quantity.toString(),
+      price: ingredient.price.toString(),
+    };
   },
 
-  async updateIngredient(id: number, data: Partial<{
-    name: string;
-    category: string;
-    quantity: string;
-    unit: string;
-    price: string;
-    brand?: string | null;
-  }>) {
-    const [updatedIngredient] = await db.update(ingredients).set(data).where(eq(ingredients.id, id)).returning();
-    return updatedIngredient;
+  async update(id: number, data: Partial<InsertIngredient>): Promise<Ingredient> {
+    const updateData: any = { ...data };
+    
+    if (data.quantity) {
+      updateData.quantity = parseFloat(data.quantity);
+    }
+    if (data.price) {
+      updateData.price = parseFloat(data.price);
+    }
+    
+    const ingredient = await prisma.ingredient.update({
+      where: { id },
+      data: updateData
+    });
+    
+    return {
+      ...ingredient,
+      quantity: ingredient.quantity.toString(),
+      price: ingredient.price.toString(),
+    };
   },
 
-  async deleteIngredient(id: number) {
-    await db.delete(ingredients).where(eq(ingredients.id, id));
+  async delete(id: number): Promise<void> {
+    await prisma.ingredient.delete({
+      where: { id }
+    });
   }
 };

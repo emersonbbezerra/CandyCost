@@ -2,17 +2,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { 
-  ingredients as ingredientsTable, 
-  products as productsTable, 
-  recipes as recipesTable,
-  workConfiguration as workConfigurationTable,
-  fixedCosts as fixedCostsTable
-} from "@shared/schema";
-import { db } from "./db";
-
-dotenv.config();
-
+import { prisma } from "./db";
 import { userService } from "./services/userService";
 
 async function seed() {
@@ -37,23 +27,23 @@ async function seed() {
       { name: "Granola", category: "Cereais", quantity: "0.5", unit: "kg", price: "12.00", brand: "Mãe Terra" },
     ];
 
-    // Inserir ingredientes e capturar ids
+    // Inserir ingredientes
     const insertedIngredients = [];
     for (const ingredient of sampleIngredients) {
-      const [inserted] = await db.insert(ingredientsTable).values({
-        name: ingredient.name,
-        category: ingredient.category,
-        quantity: ingredient.quantity,
-        unit: ingredient.unit,
-        price: ingredient.price,
-        brand: ingredient.brand,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }).returning();
+      const inserted = await prisma.ingredient.create({
+        data: {
+          name: ingredient.name,
+          category: ingredient.category,
+          quantity: parseFloat(ingredient.quantity),
+          unit: ingredient.unit,
+          price: parseFloat(ingredient.price),
+          brand: ingredient.brand,
+        }
+      });
       insertedIngredients.push(inserted);
     }
 
-    // Sample products with preparationTimeMinutes
+    // Sample products
     const sampleProducts = [
       { name: "Brigadeiro Gourmet", category: "Doces", description: "Brigadeiro cremoso de chocolate", isAlsoIngredient: true, marginPercentage: "70", preparationTimeMinutes: 30 },
       { name: "Cupcake de Baunilha", category: "Cupcakes", description: "Cupcake com cobertura de baunilha", isAlsoIngredient: false, marginPercentage: "60", preparationTimeMinutes: 45 },
@@ -67,23 +57,23 @@ async function seed() {
       { name: "Beijinho Gourmet", category: "Doces", description: "Beijinho artesanal com coco premium", isAlsoIngredient: false, marginPercentage: "200", preparationTimeMinutes: 25 },
     ];
 
-    // Inserir produtos e capturar ids
+    // Inserir produtos
     const insertedProducts = [];
     for (const product of sampleProducts) {
-      const [inserted] = await db.insert(productsTable).values({
-        name: product.name,
-        category: product.category,
-        description: product.description,
-        isAlsoIngredient: product.isAlsoIngredient,
-        marginPercentage: product.marginPercentage,
-        preparationTimeMinutes: product.preparationTimeMinutes,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }).returning();
+      const inserted = await prisma.product.create({
+        data: {
+          name: product.name,
+          category: product.category,
+          description: product.description,
+          isAlsoIngredient: product.isAlsoIngredient,
+          marginPercentage: parseFloat(product.marginPercentage),
+          preparationTimeMinutes: product.preparationTimeMinutes,
+        }
+      });
       insertedProducts.push(inserted);
     }
 
-    // Mapear sampleRecipes para usar ids reais
+    // Sample recipes
     const sampleRecipes = [
       { productIndex: 0, ingredientIndex: 1, productIngredientIndex: null, quantity: "0.395", unit: "kg" },
       { productIndex: 0, ingredientIndex: 2, productIngredientIndex: null, quantity: "0.2", unit: "kg" },
@@ -126,18 +116,20 @@ async function seed() {
       { productIndex: 9, ingredientIndex: 3, productIngredientIndex: null, quantity: "0.03", unit: "kg" },
     ];
 
-    // Inserir receitas usando ids reais
+    // Inserir receitas
     for (const recipe of sampleRecipes) {
-      await db.insert(recipesTable).values({
-        productId: insertedProducts[recipe.productIndex].id,
-        ingredientId: recipe.ingredientIndex !== null ? insertedIngredients[recipe.ingredientIndex].id : null,
-        productIngredientId: recipe.productIngredientIndex !== null ? insertedProducts[recipe.productIngredientIndex].id : null,
-        quantity: recipe.quantity,
-        unit: recipe.unit,
+      await prisma.recipe.create({
+        data: {
+          productId: insertedProducts[recipe.productIndex].id,
+          ingredientId: recipe.ingredientIndex !== null ? insertedIngredients[recipe.ingredientIndex].id : null,
+          productIngredientId: recipe.productIngredientIndex !== null ? insertedProducts[recipe.productIngredientIndex].id : null,
+          quantity: parseFloat(recipe.quantity),
+          unit: recipe.unit,
+        }
       });
     }
 
-    // Inserir alguns custos fixos de exemplo
+    // Inserir custos fixos
     const sampleFixedCosts = [
       { name: "Aluguel da Cozinha", category: "Imóvel", value: "1500.00", recurrence: "monthly", description: "Aluguel mensal do espaço de produção", isActive: true },
       { name: "Energia Elétrica", category: "Utilidades", value: "300.00", recurrence: "monthly", description: "Conta de luz mensal", isActive: true },
@@ -147,15 +139,15 @@ async function seed() {
     ];
 
     for (const fixedCost of sampleFixedCosts) {
-      await db.insert(fixedCostsTable).values({
-        name: fixedCost.name,
-        category: fixedCost.category,
-        value: fixedCost.value,
-        recurrence: fixedCost.recurrence,
-        description: fixedCost.description,
-        isActive: fixedCost.isActive,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+      await prisma.fixedCost.create({
+        data: {
+          name: fixedCost.name,
+          category: fixedCost.category,
+          value: parseFloat(fixedCost.value),
+          recurrence: fixedCost.recurrence,
+          description: fixedCost.description,
+          isActive: fixedCost.isActive,
+        }
       });
     }
 
@@ -165,6 +157,8 @@ async function seed() {
     console.log("Banco de dados populado com sucesso!");
   } catch (error) {
     console.error("Erro ao popular o banco de dados:", error);
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
