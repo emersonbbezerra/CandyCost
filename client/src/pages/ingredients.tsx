@@ -13,7 +13,7 @@ import { INGREDIENT_CATEGORIES } from "@shared/constants";
 import type { Ingredient } from "@shared/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronUp, Edit, Filter, Package, Plus, Search, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const categoryColors = {
   "Laticínios": "bg-green-100 text-green-800",
@@ -26,6 +26,11 @@ const categoryColors = {
 
 export default function Ingredients() {
   const [isFormOpen, setIsFormOpen] = useState(false);
+
+  // Mark that user was on ingredients page for dashboard cache invalidation
+  useEffect(() => {
+    sessionStorage.setItem('lastPageNavigation', 'ingredients');
+  }, []);
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | undefined>();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");

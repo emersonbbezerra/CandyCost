@@ -12,12 +12,17 @@ import { PRODUCT_CATEGORIES } from "@shared/constants";
 import type { Product, ProductCost } from "@shared/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChefHat, Edit, Filter, Layers, Plus, Search, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type ProductWithCost = Product & { cost?: ProductCost };
 
 export default function Products() {
   const [isFormOpen, setIsFormOpen] = useState(false);
+
+  // Mark that user was on products page for dashboard cache invalidation
+  useEffect(() => {
+    sessionStorage.setItem('lastPageNavigation', 'products');
+  }, []);
   const [editingProduct, setEditingProduct] = useState<ProductWithCost | undefined>();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");

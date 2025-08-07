@@ -3,10 +3,13 @@ import { CostEvolutionChart } from "@/components/cost-evolution-chart";
 import { RecentUpdatesCard } from "@/components/recent-updates";
 import { StatsCards } from "@/components/stats-cards";
 import type { Product } from "@shared/schema";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BarChart3 } from "lucide-react";
+import { useEffect } from "react";
 
 export default function Dashboard() {
+  const queryClient = useQueryClient();
+
   const { data: stats, isLoading: statsLoading } = useQuery<{
     totalIngredients: number;
     totalProducts: number;
@@ -21,6 +24,27 @@ export default function Dashboard() {
   const { data: products = [] } = useQuery<Product[]>({
     queryKey: ["/api/products"],
   });
+
+  // Invalidate recent updates when dashboard is focused (user returns from other pages)
+  useEffect(() => {
+    const handleFocus = () => {
+      // Only invalidate if there might be changes from other pages
+      const lastNavigation = sessionStorage.getItem('lastPageNavigation');
+      const wasOnProductsOrIngredients = lastNavigation === 'products' || lastNavigation === 'ingredients';
+      
+      if (wasOnProductsOrIngredients) {
+        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
+        sessionStorage.removeItem('lastPageNavigation');
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    
+    // Also check when component mounts
+    handleFocus();
+
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [queryClient]);
 
   if (statsLoading) {
     return (

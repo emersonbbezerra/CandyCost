@@ -68,6 +68,7 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ingredients"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
       toast({
         title: "Sucesso",
         description: "Ingrediente criado com sucesso!",
@@ -94,7 +95,8 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
-      
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
+
       const affectedCount = result.affectedProducts?.length || 0;
       toast({
         title: "Sucesso",
@@ -230,7 +232,7 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
                   </FormItem>
                 )}
               />
-              
+
               {/* Calculadora de custo unitário */}
               {form.watch("price") && form.watch("quantity") && (
                 <div className="bg-white p-3 rounded border">

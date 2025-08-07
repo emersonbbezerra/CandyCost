@@ -117,8 +117,10 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/ingredients"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
       toast({
         title: "Sucesso",
         description: "Produto criado com sucesso!",
@@ -149,8 +151,10 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/ingredients"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
       toast({
         title: "Sucesso",
         description: "Produto atualizado com sucesso!",
