@@ -49,18 +49,26 @@ export const getRecentUpdates = async (_req: Request, res: Response) => {
     const ingredients = await productService.getIngredients();
     const products = await productService.getProducts();
 
-    // Buscar atualizações recentes para ingredientes e produtos separadamente
-    const ingredientUpdates = await priceHistoryService.getPriceHistory();
-    const productUpdates = await priceHistoryService.getPriceHistory();
+    // Buscar TODO o histórico de preços
+    const allHistory = await priceHistoryService.getPriceHistory();
 
-    // Filtrar atualizações por ingrediente e produto
-    const ingredientUpdatesFiltered = ingredientUpdates.filter(update => update.ingredientId !== null);
-    const productUpdatesFiltered = productUpdates.filter(update => update.productId !== null);
+    // Filtrar e ordenar atualizações de ingredientes
+    const ingredientUpdatesFiltered = allHistory
+      .filter(update => update.ingredientId !== null && update.ingredientId !== undefined)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 3); // Limitar a 3 ingredientes
 
-    // Enriquecer atualizações com nomes
+    // Filtrar e ordenar atualizações de produtos  
+    const productUpdatesFiltered = allHistory
+      .filter(update => update.productId !== null && update.productId !== undefined)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 3); // Limitar a 3 produtos
+
+    // Criar mapas para busca rápida de nomes
     const ingredientMap = new Map(ingredients.map(i => [i.id, i.name]));
     const productMap = new Map(products.map(p => [p.id, p.name]));
 
+    // Enriquecer atualizações com nomes
     const enrichedIngredientUpdates = ingredientUpdatesFiltered.map(update => ({
       ...update,
       name: ingredientMap.get(update.ingredientId!) || "Ingrediente desconhecido"
@@ -71,15 +79,15 @@ export const getRecentUpdates = async (_req: Request, res: Response) => {
       name: productMap.get(update.productId!) || "Produto desconhecido"
     }));
 
-    // Ordenar por data decrescente e limitar a 5
-    enrichedIngredientUpdates.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    enrichedProductUpdates.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    console.log("Recent product updates found:", enrichedProductUpdates.length);
+    console.log("Recent ingredient updates found:", enrichedIngredientUpdates.length);
 
     res.json({
-      ingredientUpdates: enrichedIngredientUpdates.slice(0, 5),
-      productUpdates: enrichedProductUpdates.slice(0, 5),
+      ingredientUpdates: enrichedIngredientUpdates,
+      productUpdates: enrichedProductUpdates,
     });
   } catch (error) {
+    console.error("Error fetching recent updates:", error);
     res.status(500).json({ message: "Erro ao buscar atualizações recentes" });
   }
 };

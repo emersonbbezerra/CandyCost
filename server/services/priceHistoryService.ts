@@ -13,6 +13,17 @@ export const priceHistoryService = {
     changeReason?: string | null;
     createdAt?: Date;
   }) {
-    return await priceHistoryRepository.createPriceHistory(data);
-  }
+    console.log("Creating price history:", {
+      ingredientId: data.ingredientId,
+      productId: data.productId,
+      oldPrice: data.oldPrice,
+      newPrice: data.newPrice,
+      changeReason: data.changeReason,
+      createdAt: data.createdAt
+    });
+
+    const result = await priceHistoryRepository.createPriceHistory(data);
+    console.log("Price history created with ID:", result?.id);
+    return result;
+  },
 };
