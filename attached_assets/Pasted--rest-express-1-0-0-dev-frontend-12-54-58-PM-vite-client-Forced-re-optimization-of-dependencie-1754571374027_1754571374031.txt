@@ -1,0 +1,58 @@
+> rest-express@1.0.0 dev-frontend
+12:54:58 PM [vite] (client) Forced re-optimization of dependencies
+
+  VITE v7.0.6  ready in 653 ms
+
+  ➜  Local:   http://localhost:3000/
+  ➜  Network: http://172.31.105.2:3000/
+  ➜  press h + enter to show help
+(!) Failed to run dependency scan. Skipping dependency pre-bundling. Error: The following dependencies are imported but could not be resolved:
+
+  react-router-dom (imported by /home/runner/workspace/client/src/components/recent-updates.tsx)
+
+Are they installed?
+    at file:///home/runner/workspace/node_modules/vite/dist/node/chunks/dep-BHkUv4Z8.js:11195:33
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async file:///home/runner/workspace/node_modules/vite/dist/node/chunks/dep-BHkUv4Z8.js:34689:15
+12:55:01 PM [vite] (client) Pre-transform error: Failed to resolve import "react-router-dom" from "client/src/components/recent-updates.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/client/src/components/recent-updates.tsx:7:28
+  21 |  import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+  22 |  import { Button } from "./ui/button";
+  23 |  import { useNavigate } from "react-router-dom";
+     |                               ^
+  24 |  export function RecentUpdatesCard() {
+  25 |    _s();
+12:55:02 PM [vite] (client) ✨ new dependencies optimized: @radix-ui/react-tooltip, lucide-react, recharts, react-hook-form, @hookform/resolvers/zod, zod, clsx, tailwind-merge, @radix-ui/react-toast, class-variance-authority, @radix-ui/react-avatar, @radix-ui/react-slot, @radix-ui/react-switch, @radix-ui/react-select, @radix-ui/react-label, @radix-ui/react-separator, @radix-ui/react-tabs, @radix-ui/react-dialog, @radix-ui/react-alert-dialog, drizzle-orm/pg-core, drizzle-zod, @radix-ui/react-checkbox
+12:55:02 PM [vite] (client) ✨ optimized dependencies changed. reloading
+The file does not exist at "/home/runner/workspace/node_modules/.vite/deps/chunk-QXLG2TGQ.js?v=b566337b" which is in the optimize deps directory. The dependency might be incompatible with the dep optimizer. Try adding it to `optimizeDeps.exclude`.
+The file does not exist at "/home/runner/workspace/node_modules/.vite/deps/chunk-I4MZPW7S.js?v=b566337b" which is in the optimize deps directory. The dependency might be incompatible with the dep optimizer. Try adding it to `optimizeDeps.exclude`.
+The file does not exist at "/home/runner/workspace/node_modules/.vite/deps/chunk-GRWX7YRK.js?v=b566337b" which is in the optimize deps directory. The dependency might be incompatible with the dep optimizer. Try adding it to `optimizeDeps.exclude`.
+12:55:03 PM [vite] (client) Pre-transform error: Failed to resolve import "react-router-dom" from "client/src/components/recent-updates.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/client/src/components/recent-updates.tsx:7:28
+  21 |  import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+  22 |  import { Button } from "./ui/button";
+  23 |  import { useNavigate } from "react-router-dom";
+     |                               ^
+  24 |  export function RecentUpdatesCard() {
+  25 |    _s();
+12:55:07 PM [vite] Internal server error: Failed to resolve import "react-router-dom" from "client/src/components/recent-updates.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/client/src/components/recent-updates.tsx:7:28
+  21 |  import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+  22 |  import { Button } from "./ui/button";
+  23 |  import { useNavigate } from "react-router-dom";
+     |                               ^
+  24 |  export function RecentUpdatesCard() {
+  25 |    _s();
+      at TransformPluginContext._formatLog (file:///home/runner/workspace/node_modules/vite/dist/node/chunks/dep-BHkUv4Z8.js:31460:43)
+      at TransformPluginContext.error (file:///home/runner/workspace/node_modules/vite/dist/node/chunks/dep-BHkUv4Z8.js:31457:14)
+      at normalizeUrl (file:///home/runner/workspace/node_modules/vite/dist/node/chunks/dep-BHkUv4Z8.js:29999:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at async file:///home/runner/workspace/node_modules/vite/dist/node/chunks/dep-BHkUv4Z8.js:30057:32
+      at async Promise.all (index 8)
+      at async TransformPluginContext.transform (file:///home/runner/workspace/node_modules/vite/dist/node/chunks/dep-BHkUv4Z8.js:30025:4)
+      at async EnvironmentPluginContainer.transform (file:///home/runner/workspace/node_modules/vite/dist/node/chunks/dep-BHkUv4Z8.js:31274:14)
+      at async loadAndTransform (file:///home/runner/workspace/node_modules/vite/dist/node/chunks/dep-BHkUv4Z8.js:26451:26)
+      at async viteTransformMiddleware (file:///home/runner/workspace/node_modules/vite/dist/node/chunks/dep-BHkUv4Z8.js:27536:20)
