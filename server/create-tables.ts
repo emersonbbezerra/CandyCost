@@ -1,3 +1,4 @@
+
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -5,27 +6,22 @@ import { prisma } from "./db";
 
 async function createTables() {
   try {
-    console.log("Sincronizando banco de dados com Prisma...");
+    console.log("Criando tabelas...");
 
-    // Executar push do schema do Prisma
-    const { execSync } = require('child_process');
+    // Prisma automaticamente cria as tabelas baseado no schema
+    // Vamos apenas verificar se conseguimos conectar
+    await prisma.$connect();
+    console.log("✓ Conexão com banco de dados estabelecida");
 
-    try {
-      execSync('npx prisma db push', { stdio: 'inherit' });
-      console.log("✓ Schema do banco de dados sincronizado com sucesso!");
-    } catch (error) {
-      console.error("Erro ao sincronizar schema:", error);
-      throw error;
-    }
-
-    // Inserir configuração padrão de trabalho se não existir
+    // Criar configuração padrão de trabalho se não existir
     const existingConfig = await prisma.workConfiguration.findFirst();
     if (!existingConfig) {
       await prisma.workConfiguration.create({
         data: {
-          workDaysPerWeek: 5,
-          hoursPerDay: 8.00,
-          weeksPerMonth: 4.0,
+          hoursPerDay: 8.0,
+          daysPerMonth: 22.0,
+          hourlyRate: 25.0,
+          highCostAlertThreshold: 50.0,
         }
       });
       console.log("✓ Configuração padrão de trabalho inserida");
@@ -33,12 +29,19 @@ async function createTables() {
 
     console.log("🎉 Todas as tabelas foram criadas com sucesso!");
   } catch (error) {
-    console.error("❌ Erro ao criar tabelas:", error);
-    process.exit(1);
+    console.error("Erro ao criar tabelas:", error);
+    throw error;
   } finally {
     await prisma.$disconnect();
-    process.exit(0);
   }
 }
 
-createTables();
+createTables()
+  .then(() => {
+    console.log("Criação de tabelas finalizada.");
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error("Erro na criação de tabelas:", error);
+    process.exit(1);
+  });

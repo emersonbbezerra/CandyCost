@@ -1,160 +1,175 @@
 
 import { z } from "zod";
 
+// User schemas
+export const userSchema = z.object({
+  id: z.string(),
+  email: z.string().email(),
+  password: z.string(),
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  profileImageUrl: z.string().nullable(),
+  role: z.string().default("user"),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+export const insertUserSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  role: z.string().optional(),
+});
+
+export const selectUserSchema = userSchema.omit({ password: true });
+
+export type User = z.infer<typeof userSchema>;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type SelectUser = z.infer<typeof selectUserSchema>;
+export type UpsertUser = Partial<InsertUser> & { id?: string };
+
 // Ingredient schemas
+export const ingredientSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  category: z.string(),
+  quantity: z.number(),
+  unit: z.string(),
+  price: z.number(),
+  brand: z.string().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
 export const insertIngredientSchema = z.object({
-  name: z.string().min(1, "Nome é obrigatório"),
-  category: z.string().min(1, "Categoria é obrigatória"),
-  quantity: z.string().min(1, "Quantidade é obrigatória"),
-  unit: z.string().min(1, "Unidade é obrigatória"),
-  price: z.string().min(1, "Preço é obrigatório"),
+  name: z.string().min(1),
+  category: z.string().min(1),
+  quantity: z.number().positive(),
+  unit: z.string().min(1),
+  price: z.number().positive(),
   brand: z.string().optional(),
 });
 
+export type Ingredient = z.infer<typeof ingredientSchema>;
+export type InsertIngredient = z.infer<typeof insertIngredientSchema>;
+
 // Product schemas
+export const productSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  category: z.string(),
+  description: z.string().nullable(),
+  isAlsoIngredient: z.boolean(),
+  marginPercentage: z.number(),
+  preparationTimeMinutes: z.number().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
 export const insertProductSchema = z.object({
-  name: z.string().min(1, "Nome é obrigatório"),
-  category: z.string().min(1, "Categoria é obrigatória"),
+  name: z.string().min(1),
+  category: z.string().min(1),
   description: z.string().optional(),
   isAlsoIngredient: z.boolean().default(false),
-  marginPercentage: z.string().default("60"),
-  preparationTimeMinutes: z.number().default(60),
+  marginPercentage: z.number().min(0),
+  preparationTimeMinutes: z.number().optional(),
 });
+
+export type Product = z.infer<typeof productSchema>;
+export type InsertProduct = z.infer<typeof insertProductSchema>;
 
 // Recipe schemas
-export const insertRecipeSchema = z.object({
-  productId: z.number(),
-  ingredientId: z.number().nullable().optional(),
-  productIngredientId: z.number().nullable().optional(),
-  quantity: z.string().min(1, "Quantidade é obrigatória"),
-  unit: z.string().min(1, "Unidade é obrigatória"),
+export const recipeSchema = z.object({
+  id: z.string(),
+  productId: z.string(),
+  ingredientId: z.string().nullable(),
+  productIngredientId: z.string().nullable(),
+  quantity: z.number(),
+  unit: z.string(),
 });
 
-// Price History schemas
-export const insertPriceHistorySchema = z.object({
-  ingredientId: z.number().nullable().optional(),
-  productId: z.number().nullable().optional(),
-  oldPrice: z.string(),
-  newPrice: z.string(),
-  changeReason: z.string().optional(),
+export const insertRecipeSchema = z.object({
+  productId: z.string(),
+  ingredientId: z.string().optional(),
+  productIngredientId: z.string().optional(),
+  quantity: z.number().positive(),
+  unit: z.string().min(1),
 });
+
+export type Recipe = z.infer<typeof recipeSchema>;
+export type InsertRecipe = z.infer<typeof insertRecipeSchema>;
 
 // Fixed Cost schemas
+export const fixedCostSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  category: z.string(),
+  value: z.number(),
+  recurrence: z.string(),
+  description: z.string().nullable(),
+  isActive: z.boolean(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
 export const insertFixedCostSchema = z.object({
-  name: z.string().min(1, "Nome é obrigatório"),
-  category: z.string().min(1, "Categoria é obrigatória"),
-  value: z.string().min(1, "Valor é obrigatório"),
-  recurrence: z.string().min(1, "Recorrência é obrigatória"),
+  name: z.string().min(1),
+  category: z.string().min(1),
+  value: z.number().positive(),
+  recurrence: z.string().min(1),
   description: z.string().optional(),
   isActive: z.boolean().default(true),
 });
 
-// Work Configuration schemas
-export const insertWorkConfigurationSchema = z.object({
-  workDaysPerWeek: z.number().default(5),
-  hoursPerDay: z.string().default("8.00"),
-  weeksPerMonth: z.string().default("4.0"),
+export type FixedCost = z.infer<typeof fixedCostSchema>;
+export type InsertFixedCost = z.infer<typeof insertFixedCostSchema>;
+
+// Price History schemas
+export const priceHistorySchema = z.object({
+  id: z.string(),
+  itemType: z.string(),
+  itemName: z.string(),
+  oldPrice: z.number(),
+  newPrice: z.number(),
+  changeType: z.string(),
+  description: z.string().nullable(),
+  ingredientId: z.string().nullable(),
+  productId: z.string().nullable(),
+  createdAt: z.date(),
 });
 
-// Type definitions based on Prisma models
-export type Ingredient = {
-  id: number;
-  name: string;
-  category: string;
-  quantity: string;
-  unit: string;
-  price: string;
-  brand?: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
+export const insertPriceHistorySchema = z.object({
+  itemType: z.string(),
+  itemName: z.string(),
+  oldPrice: z.number(),
+  newPrice: z.number(),
+  changeType: z.string(),
+  description: z.string().optional(),
+  ingredientId: z.string().optional(),
+  productId: z.string().optional(),
+});
 
-export type Product = {
-  id: number;
-  name: string;
-  category: string;
-  description?: string | null;
-  isAlsoIngredient: boolean;
-  marginPercentage: string;
-  preparationTimeMinutes: number;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-export type Recipe = {
-  id: number;
-  productId: number;
-  ingredientId?: number | null;
-  productIngredientId?: number | null;
-  quantity: string;
-  unit: string;
-};
-
-export type PriceHistory = {
-  id: number;
-  ingredientId?: number | null;
-  productId?: number | null;
-  oldPrice: string;
-  newPrice: string;
-  changeReason?: string | null;
-  createdAt: Date;
-};
-
-export type FixedCost = {
-  id: number;
-  name: string;
-  category: string;
-  value: string;
-  recurrence: string;
-  description?: string | null;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-export type WorkConfiguration = {
-  id: number;
-  workDaysPerWeek: number;
-  hoursPerDay: string;
-  weeksPerMonth: string;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-export type User = {
-  id: string;
-  email?: string | null;
-  firstName?: string | null;
-  lastName?: string | null;
-  password: string;
-  profileImageUrl?: string | null;
-  role: string;
-  createdAt?: Date | null;
-  updatedAt?: Date | null;
-};
-
-export type UpsertUser = Omit<User, 'createdAt' | 'updatedAt'>;
-
-// Inferred types from schemas
-export type InsertIngredient = z.infer<typeof insertIngredientSchema>;
-export type InsertProduct = z.infer<typeof insertProductSchema>;
-export type InsertRecipe = z.infer<typeof insertRecipeSchema>;
+export type PriceHistory = z.infer<typeof priceHistorySchema>;
 export type InsertPriceHistory = z.infer<typeof insertPriceHistorySchema>;
-export type InsertFixedCost = z.infer<typeof insertFixedCostSchema>;
+
+// Work Configuration schemas
+export const workConfigurationSchema = z.object({
+  id: z.string(),
+  hoursPerDay: z.number(),
+  daysPerMonth: z.number(),
+  hourlyRate: z.number(),
+  highCostAlertThreshold: z.number(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+export const insertWorkConfigurationSchema = z.object({
+  hoursPerDay: z.number().positive().default(8.0),
+  daysPerMonth: z.number().positive().default(22.0),
+  hourlyRate: z.number().positive().default(25.0),
+  highCostAlertThreshold: z.number().positive().default(50.0),
+});
+
+export type WorkConfiguration = z.infer<typeof workConfigurationSchema>;
 export type InsertWorkConfiguration = z.infer<typeof insertWorkConfigurationSchema>;
-
-// Extended types
-export type ProductWithRecipes = Product & {
-  recipes: (Recipe & {
-    ingredient?: Ingredient;
-    productIngredient?: Product;
-  })[];
-};
-
-export type ProductCost = {
-  productId: number;
-  totalCost: number;
-  fixedCostPerUnit: number;
-  suggestedPrice: number;
-  margin: number;
-};

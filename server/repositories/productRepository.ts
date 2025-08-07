@@ -1,101 +1,65 @@
-
 import { prisma } from "../db";
 import type { Product, InsertProduct } from "@shared/schema";
 
 export const productRepository = {
   async findAll(): Promise<Product[]> {
-    const products = await prisma.product.findMany({
-      orderBy: { name: 'asc' }
+    return await prisma.product.findMany({
+      orderBy: { createdAt: 'desc' }
     });
-    
-    return products.map(product => ({
-      ...product,
-      marginPercentage: product.marginPercentage.toString(),
-    }));
   },
 
-  async findById(id: number): Promise<Product | null> {
-    const product = await prisma.product.findUnique({
+  async findById(id: string): Promise<Product | null> {
+    return await prisma.product.findUnique({
       where: { id }
     });
-    
-    if (!product) return null;
-    
-    return {
-      ...product,
-      marginPercentage: product.marginPercentage.toString(),
-    };
-  },
-
-  async findWithRecipes(id: number) {
-    const product = await prisma.product.findUnique({
-      where: { id },
-      include: {
-        recipes: {
-          include: {
-            ingredient: true,
-            productIngredient: true
-          }
-        }
-      }
-    });
-    
-    if (!product) return null;
-    
-    return {
-      ...product,
-      marginPercentage: product.marginPercentage.toString(),
-      recipes: product.recipes.map(recipe => ({
-        ...recipe,
-        quantity: recipe.quantity.toString(),
-        ingredient: recipe.ingredient ? {
-          ...recipe.ingredient,
-          quantity: recipe.ingredient.quantity.toString(),
-          price: recipe.ingredient.price.toString(),
-        } : undefined,
-        productIngredient: recipe.productIngredient ? {
-          ...recipe.productIngredient,
-          marginPercentage: recipe.productIngredient.marginPercentage.toString(),
-        } : undefined,
-      }))
-    };
   },
 
   async create(data: InsertProduct): Promise<Product> {
-    const product = await prisma.product.create({
-      data: {
-        ...data,
-        marginPercentage: parseFloat(data.marginPercentage),
-      }
+    return await prisma.product.create({
+      data
     });
-    
-    return {
-      ...product,
-      marginPercentage: product.marginPercentage.toString(),
-    };
   },
 
-  async update(id: number, data: Partial<InsertProduct>): Promise<Product> {
-    const updateData: any = { ...data };
-    
-    if (data.marginPercentage) {
-      updateData.marginPercentage = parseFloat(data.marginPercentage);
-    }
-    
-    const product = await prisma.product.update({
+  async update(id: string, data: Partial<InsertProduct>): Promise<Product> {
+    return await prisma.product.update({
       where: { id },
-      data: updateData
+      data
     });
-    
-    return {
-      ...product,
-      marginPercentage: product.marginPercentage.toString(),
-    };
   },
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     await prisma.product.delete({
       where: { id }
     });
+  },
+
+  async findByCategory(category: string): Promise<Product[]> {
+    return await prisma.product.findMany({
+      where: { category },
+      orderBy: { name: 'asc' }
+    });
+  },
+
+  async findByName(name: string): Promise<Product | null> {
+    return await prisma.product.findFirst({
+      where: { name }
+    });
+  },
+
+  async findProductIngredients(): Promise<Product[]> {
+    return await prisma.product.findMany({
+      where: { isAlsoIngredient: true },
+      orderBy: { name: 'asc' }
+    });
+  },
+
+  async getCategories(): Promise<string[]> {
+    const result = await prisma.product.findMany({
+      select: { category: true },
+      distinct: ['category'],
+      orderBy: { category: 'asc' }
+    });
+
+    return result.map(item => item.category);
   }
 };
