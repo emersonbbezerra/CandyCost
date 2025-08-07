@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { FixedCostRepository } from "../repositories/fixedCostRepository";
 import { FixedCostService } from "../services/fixedCostService";
-import type { InsertFixedCost, InsertWorkConfiguration } from "../../shared/schema";
+import type { InsertFixedCost, InsertWorkConfiguration, insertFixedCostSchema } from "../../shared/schema";
 
 export class FixedCostController {
   private fixedCostRepository = new FixedCostRepository();
@@ -89,6 +89,32 @@ export class FixedCostController {
       res.json({ message: "Custo fixo excluído com sucesso" });
     } catch (error) {
       console.error("Erro ao excluir custo fixo:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  }
+
+  async toggleActive(req: Request, res: Response) {
+    try {
+      const id = parseInt(req.params.id);
+
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "ID inválido" });
+      }
+
+      const currentFixedCost = await this.fixedCostRepository.findById(id);
+      if (!currentFixedCost) {
+        return res.status(404).json({ message: "Custo fixo não encontrado" });
+      }
+
+      const updatedFixedCost = await this.fixedCostRepository.toggleActive(id, !currentFixedCost.isActive);
+
+      if (!updatedFixedCost) {
+        return res.status(404).json({ message: "Custo fixo não encontrado" });
+      }
+
+      res.json(updatedFixedCost);
+    } catch (error) {
+      console.error("Erro ao alterar status do custo fixo:", error);
       res.status(500).json({ message: "Erro interno do servidor" });
     }
   }
