@@ -76,7 +76,4 @@ export const productRepository = {
     
     return result.map(item => item.category);
   }
-
-    return result.map(item => item.category);
-  }
 };
