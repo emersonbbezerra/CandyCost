@@ -23,8 +23,12 @@ const registerSchema = z.object({
   password: z.string()
     .min(8, "Senha deve ter pelo menos 8 caracteres")
     .regex(passwordRegex, passwordErrorMessage),
+  confirmPassword: z.string(),
   firstName: z.string().min(1, "Nome é obrigatório"),
   lastName: z.string().optional()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Senhas não coincidem",
+  path: ["confirmPassword"],
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -47,6 +51,7 @@ export default function Login() {
     defaultValues: {
       email: "",
       password: "",
+      confirmPassword: "",
       firstName: "",
       lastName: "",
     },
@@ -107,6 +112,11 @@ export default function Login() {
                               type="email"
                               placeholder="seu@email.com"
                               {...field}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                // Trigger validation immediately
+                                loginForm.trigger("email");
+                              }}
                             />
                           </FormControl>
                           <FormMessage />
@@ -195,6 +205,11 @@ export default function Login() {
                               type="email"
                               placeholder="seu@email.com"
                               {...field}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                // Trigger validation immediately
+                                registerForm.trigger("email");
+                              }}
                             />
                           </FormControl>
                           <FormMessage />
@@ -221,6 +236,28 @@ export default function Login() {
                             <p>✓ Pelo menos 1 número (0-9)</p>
                             <p>✓ Pelo menos 1 símbolo (@$!%*?&#+\-_.=)</p>
                           </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={registerForm.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirmar Senha</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="password"
+                              placeholder="Digite a senha novamente"
+                              {...field}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                // Trigger validation immediately
+                                registerForm.trigger("confirmPassword");
+                              }}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
