@@ -1,6 +1,6 @@
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
 import type { PriceHistory } from "@shared/schema";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Cookie, Sprout, ExternalLink, Edit } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
@@ -24,6 +24,7 @@ export function RecentUpdatesCard() {
     const [isProductFormOpen, setIsProductFormOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<any>();
     const { toast } = useToast();
+    const queryClient = useQueryClient();
 
     const { data, isLoading } = useQuery<RecentUpdates>({
         queryKey: ["/api/dashboard/recent-updates"],
@@ -64,6 +65,12 @@ export function RecentUpdatesCard() {
     const handleFormClose = () => {
         setIsProductFormOpen(false);
         setEditingProduct(undefined);
+        
+        // Invalidar cache das atualizações recentes e outras queries relacionadas
+        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/products"] });
     };
 
     return (
