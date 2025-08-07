@@ -1,7 +1,7 @@
 import { Express } from "express";
 
 import authRoutes from "./authRoutes";
-import dashboardRoutes from "./dashboardRoutes";
+import { dashboardRoutes } from "./dashboardRoutes";
 import ingredientRoutes from "./ingredientRoutes";
 import priceHistoryRoutes from "./priceHistoryRoutes";
 import productRoutes from "./productRoutes";
