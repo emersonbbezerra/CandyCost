@@ -2,201 +2,334 @@
 @import "tailwindcss";
 
 * {
-  border-color: #e2e8f0;
+  border-color: hsl(var(--border));
 }
 
 body {
-  background-color: #ffffff;
-  color: #0f172a;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: linear-gradient(135deg, #fef7ff 0%, #fff1f2 50%, #fef3f2 100%);
+  color: hsl(var(--foreground));
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
   min-height: 100vh;
+  line-height: 1.6;
 }
 
 :root {
+  /* Light theme - Cores modernas e atraentes para confeitaria */
   --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
+  --foreground: 240 10% 3.9%;
   --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
+  --card-foreground: 240 10% 3.9%;
   --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-  --primary: 221.2 83.2% 53.3%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222.2 84% 4.9%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96%;
-  --accent-foreground: 222.2 84% 4.9%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 221.2 83.2% 53.3%;
-  --radius: 0.5rem;
-  --chart-1: 12 76% 61%;
-  --chart-2: 173 58% 39%;
-  --chart-3: 197 37% 24%;
-  --chart-4: 43 74% 66%;
-  --chart-5: 27 87% 67%;
+  --popover-foreground: 240 10% 3.9%;
   
-  /* Sidebar variables - tema claro */
-  --sidebar-background: 0 0% 100%;
-  --sidebar-foreground: 222.2 84% 4.9%;
-  --sidebar-primary: 221.2 83.2% 53.3%;
-  --sidebar-primary-foreground: 210 40% 98%;
-  --sidebar-accent: 210 40% 96%;
-  --sidebar-accent-foreground: 222.2 84% 4.9%;
-  --sidebar-border: 214.3 31.8% 91.4%;
-  --sidebar-ring: 221.2 83.2% 53.3%;
+  /* Rosa elegante como cor principal */
+  --primary: 336 84% 57%;
+  --primary-foreground: 355 100% 97%;
+  
+  /* Tons suaves complementares */
+  --secondary: 280 20% 96%;
+  --secondary-foreground: 240 10% 3.9%;
+  --muted: 280 14% 97%;
+  --muted-foreground: 240 3.8% 46.1%;
+  --accent: 315 100% 96%;
+  --accent-foreground: 240 10% 3.9%;
+  
+  /* Cores de sistema */
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 280 14% 91%;
+  --input: 280 14% 91%;
+  --ring: 336 84% 57%;
+  --radius: 0.75rem;
+  
+  /* Charts com cores harmoniosas */
+  --chart-1: 336 84% 57%;
+  --chart-2: 280 100% 70%;
+  --chart-3: 45 93% 47%;
+  --chart-4: 156 73% 59%;
+  --chart-5: 197 71% 73%;
+  
+  /* Sidebar moderna */
+  --sidebar-background: 320 40% 98%;
+  --sidebar-foreground: 240 10% 3.9%;
+  --sidebar-primary: 336 84% 57%;
+  --sidebar-primary-foreground: 355 100% 97%;
+  --sidebar-accent: 315 100% 94%;
+  --sidebar-accent-foreground: 240 10% 3.9%;
+  --sidebar-border: 280 14% 88%;
+  --sidebar-ring: 336 84% 57%;
 }
 
-/* Força tema claro para toda aplicação */
-html,
-body,
-#root,
-.App,
-main,
-.main-content {
-  background-color: #ffffff !important;
-  color: #0f172a !important;
+/* Background gradiente sofisticado */
+.bg-gradient-main {
+  background: linear-gradient(135deg, 
+    hsl(320, 100%, 99%) 0%,
+    hsl(315, 100%, 98%) 25%,
+    hsl(310, 90%, 97%) 50%,
+    hsl(305, 80%, 96%) 75%,
+    hsl(300, 70%, 95%) 100%
+  );
 }
 
-/* Remove completamente qualquer tema escuro */
-.dark,
-[data-theme="dark"],
-html.dark,
-body.dark {
-  --background: 0 0% 100% !important;
-  --foreground: 222.2 84% 4.9% !important;
-  --card: 0 0% 100% !important;
-  --card-foreground: 222.2 84% 4.9% !important;
-  --popover: 0 0% 100% !important;
-  --popover-foreground: 222.2 84% 4.9% !important;
-  --primary: 221.2 83.2% 53.3% !important;
-  --primary-foreground: 210 40% 98% !important;
-  --secondary: 210 40% 96% !important;
-  --secondary-foreground: 222.2 84% 4.9% !important;
-  --muted: 210 40% 96% !important;
-  --muted-foreground: 215.4 16.3% 46.9% !important;
-  --accent: 210 40% 96% !important;
-  --accent-foreground: 222.2 84% 4.9% !important;
-  --destructive: 0 84.2% 60.2% !important;
-  --destructive-foreground: 210 40% 98% !important;
-  --border: 214.3 31.8% 91.4% !important;
-  --input: 214.3 31.8% 91.4% !important;
-  --ring: 221.2 83.2% 53.3% !important;
+/* Cards com sombra moderna */
+.card-modern {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 8px 32px rgba(248, 113, 113, 0.08),
+    0 4px 16px rgba(219, 39, 119, 0.04),
+    0 2px 8px rgba(147, 51, 234, 0.02);
 }
 
-/* Força cores específicas para elementos importantes */
-.bg-gray-50 {
-  background-color: #f9fafb !important;
+/* Botões com gradientes elegantes */
+.btn-primary-gradient {
+  background: linear-gradient(135deg, 
+    hsl(336, 84%, 57%) 0%,
+    hsl(320, 100%, 60%) 50%,
+    hsl(310, 90%, 58%) 100%
+  );
+  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.text-gray-900 {
-  color: #111827 !important;
+.btn-primary-gradient:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(236, 72, 153, 0.5);
 }
 
-.text-gray-600 {
-  color: #4b5563 !important;
+/* Efeitos de hover suaves */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.text-blue-600 {
-  color: #2563eb !important;
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
 }
 
-.border-gray-200 {
-  border-color: #e5e7eb !important;
+/* Cores específicas para a aplicação de confeitaria */
+.text-pink-primary { color: hsl(336, 84%, 57%); }
+.text-purple-elegant { color: hsl(280, 100%, 70%); }
+.text-gold-accent { color: hsl(45, 93%, 47%); }
+.text-mint-fresh { color: hsl(156, 73%, 59%); }
+.text-sky-soft { color: hsl(197, 71%, 73%); }
+
+.bg-pink-light { background-color: hsl(315, 100%, 96%); }
+.bg-purple-light { background-color: hsl(280, 100%, 97%); }
+.bg-gold-light { background-color: hsl(45, 100%, 96%); }
+.bg-mint-light { background-color: hsl(156, 100%, 96%); }
+.bg-sky-light { background-color: hsl(197, 100%, 96%); }
+
+/* Bordas com cores elegantes */
+.border-pink-elegant { border-color: hsl(315, 60%, 85%); }
+.border-purple-elegant { border-color: hsl(280, 60%, 85%); }
+.border-gold-elegant { border-color: hsl(45, 60%, 85%); }
+
+/* Badges modernas */
+.badge-modern {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 0.75rem;
+  letter-spacing: 0.025em;
 }
 
-/* Ícones coloridos */
-.text-pink-600 {
-  color: #db2777 !important;
+.badge-pink {
+  background: linear-gradient(135deg, hsl(336, 100%, 95%) 0%, hsl(315, 100%, 94%) 100%);
+  color: hsl(336, 84%, 40%);
+  border: 1px solid hsl(315, 60%, 85%);
 }
 
-.text-green-600 {
-  color: #16a34a !important;
+.badge-purple {
+  background: linear-gradient(135deg, hsl(280, 100%, 97%) 0%, hsl(270, 100%, 96%) 100%);
+  color: hsl(280, 100%, 45%);
+  border: 1px solid hsl(280, 60%, 85%);
 }
 
-.text-red-600 {
-  color: #dc2626 !important;
+.badge-gold {
+  background: linear-gradient(135deg, hsl(45, 100%, 96%) 0%, hsl(40, 100%, 95%) 100%);
+  color: hsl(45, 93%, 35%);
+  border: 1px solid hsl(45, 60%, 80%);
 }
 
-.text-yellow-600 {
-  color: #ca8a04 !important;
+.badge-mint {
+  background: linear-gradient(135deg, hsl(156, 100%, 96%) 0%, hsl(150, 100%, 95%) 100%);
+  color: hsl(156, 73%, 35%);
+  border: 1px solid hsl(156, 60%, 80%);
 }
 
-.text-indigo-600 {
-  color: #4f46e5 !important;
+.badge-sky {
+  background: linear-gradient(135deg, hsl(197, 100%, 96%) 0%, hsl(190, 100%, 95%) 100%);
+  color: hsl(197, 71%, 35%);
+  border: 1px solid hsl(197, 60%, 80%);
 }
 
-.text-purple-600 {
-  color: #9333ea !important;
+/* Animações suaves */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.text-orange-600 {
-  color: #ea580c !important;
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
-/* Cores de background para badges e categorias */
-.bg-green-100 {
-  background-color: #dcfce7 !important;
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.text-green-800 {
-  color: #166534 !important;
+.animate-slideIn {
+  animation: slideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.bg-blue-100 {
-  background-color: #dbeafe !important;
+/* Loading spinner moderno */
+.spinner-modern {
+  border: 3px solid rgba(236, 72, 153, 0.1);
+  border-radius: 50%;
+  border-top: 3px solid hsl(336, 84%, 57%);
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
 }
 
-.text-blue-800 {
-  color: #1e40af !important;
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-.bg-yellow-100 {
-  background-color: #fef3c7 !important;
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-.text-yellow-800 {
-  color: #92400e !important;
+::-webkit-scrollbar-track {
+  background: hsl(280, 20%, 96%);
 }
 
-.bg-purple-100 {
-  background-color: #f3e8ff !important;
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, hsl(336, 84%, 57%) 0%, hsl(280, 100%, 70%) 100%);
+  border-radius: 4px;
 }
 
-.text-purple-800 {
-  color: #6b21a8 !important;
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, hsl(336, 84%, 52%) 0%, hsl(280, 100%, 65%) 100%);
 }
 
-.bg-orange-100 {
-  background-color: #fed7aa !important;
+/* Inputs modernos */
+.input-modern {
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid hsl(280, 14%, 91%);
+  border-radius: 0.75rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.text-orange-800 {
-  color: #9a3412 !important;
+.input-modern:focus {
+  border-color: hsl(336, 84%, 57%);
+  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+  outline: none;
 }
 
-.bg-gray-100 {
-  background-color: #f3f4f6 !important;
+/* Tabelas modernas */
+.table-modern {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
-.text-gray-800 {
-  color: #1f2937 !important;
+.table-modern th {
+  background: linear-gradient(135deg, hsl(315, 100%, 96%) 0%, hsl(280, 20%, 96%) 100%);
+  color: hsl(240, 10%, 3.9%);
+  font-weight: 600;
+  padding: 1rem;
+  border-bottom: 2px solid hsl(280, 14%, 91%);
 }
 
-/* Gradientes para backgrounds */
-.bg-gradient-to-br {
-  background-image: linear-gradient(to bottom right, var(--tw-gradient-stops)) !important;
+.table-modern td {
+  padding: 1rem;
+  border-bottom: 1px solid hsl(280, 14%, 94%);
 }
 
-.from-pink-50 {
-  --tw-gradient-from: #fdf2f8 !important;
-  --tw-gradient-to: rgb(253 242 248 / 0) !important;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+.table-modern tr:hover {
+  background: rgba(315, 100%, 96%, 0.3);
 }
 
-.to-purple-50 {
-  --tw-gradient-to: #faf5ff !important;
+/* Status indicators */
+.status-active {
+  background: linear-gradient(135deg, hsl(156, 100%, 95%) 0%, hsl(150, 100%, 94%) 100%);
+  color: hsl(156, 73%, 35%);
+  border: 1px solid hsl(156, 60%, 80%);
+}
+
+.status-inactive {
+  background: linear-gradient(135deg, hsl(0, 100%, 96%) 0%, hsl(10, 100%, 95%) 100%);
+  color: hsl(0, 84%, 35%);
+  border: 1px solid hsl(0, 60%, 85%);
+}
+
+/* Sidebar enhancements */
+.sidebar-item {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 0.75rem;
+  margin: 0.25rem 0;
+}
+
+.sidebar-item:hover {
+  background: linear-gradient(135deg, hsl(315, 100%, 94%) 0%, hsl(280, 20%, 96%) 100%);
+  transform: translateX(4px);
+}
+
+.sidebar-item.active {
+  background: linear-gradient(135deg, hsl(336, 84%, 57%) 0%, hsl(320, 100%, 60%) 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+}
+
+/* Charts enhancements */
+.chart-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  body {
+    background: linear-gradient(135deg, #fef7ff 0%, #fff1f2 100%);
+  }
+  
+  .card-modern {
+    box-shadow: 0 4px 16px rgba(248, 113, 113, 0.06);
+  }
+}
+
+/* Dark mode prevention - força sempre light mode */
+html, body, #root {
+  color-scheme: light only;
+}
+
+* {
+  color-scheme: light;
+}
+
+.dark, [data-theme="dark"] {
+  display: none !important;
 }
