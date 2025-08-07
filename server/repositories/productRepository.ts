@@ -53,12 +53,29 @@ export const productRepository = {
     });
   },
 
+  async findWithRecipes(id: string) {
+    return await prisma.product.findUnique({
+      where: { id },
+      include: {
+        recipes: {
+          include: {
+            ingredient: true,
+            productIngredient: true
+          }
+        }
+      }
+    });
+  },
+
   async getCategories(): Promise<string[]> {
     const result = await prisma.product.findMany({
       select: { category: true },
       distinct: ['category'],
       orderBy: { category: 'asc' }
     });
+    
+    return result.map(item => item.category);
+  }
 
     return result.map(item => item.category);
   }

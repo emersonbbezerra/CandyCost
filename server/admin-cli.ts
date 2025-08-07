@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import readline from 'readline';
-import { userService } from './auth';
+import { userService } from './services/userService';
 import { prisma } from "./db";
 
 dotenv.config();

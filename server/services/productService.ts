@@ -10,11 +10,11 @@ export const productService = {
     return await productRepository.findAll();
   },
 
-  async getProductById(id: number) {
+  async getProductById(id: string) {
     return await productRepository.findById(id);
   },
 
-  async getProductWithRecipes(id: number) {
+  async getProductWithRecipes(id: string) {
     return await productRepository.findWithRecipes(id);
   },
 
@@ -22,15 +22,15 @@ export const productService = {
     return await productRepository.create(data);
   },
 
-  async updateProduct(id: number, data: Partial<InsertProduct>) {
+  async updateProduct(id: string, data: Partial<InsertProduct>) {
     return await productRepository.update(id, data);
   },
 
-  async deleteProduct(id: number) {
+  async deleteProduct(id: string) {
     await productRepository.delete(id);
   },
 
-  async calculateProductCost(productId: number): Promise<ProductCost> {
+  async calculateProductCost(productId: string): Promise<ProductCost> {
     const product = await productRepository.findWithRecipes(productId);
     if (!product) {
       throw new Error('Produto não encontrado');
