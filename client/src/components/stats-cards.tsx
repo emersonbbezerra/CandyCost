@@ -1,15 +1,18 @@
 import { formatCurrency } from "@/lib/utils";
 import { Calculator, Cookie, Sprout, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "./ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 interface StatsCardsProps {
     totalIngredients: number;
     totalProducts: number;
-    avgCost: string;
+    avgProfitMargin: string;
+    profitType: string;
     todayChanges: number;
+    onProfitTypeChange: (type: string) => void;
 }
 
-export function StatsCards({ totalIngredients, totalProducts, avgCost, todayChanges }: StatsCardsProps) {
+export function StatsCards({ totalIngredients, totalProducts, avgProfitMargin, profitType, todayChanges, onProfitTypeChange }: StatsCardsProps) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card>
@@ -49,16 +52,29 @@ export function StatsCards({ totalIngredients, totalProducts, avgCost, todayChan
             <Card>
                 <CardContent className="p-6">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-gray-600">Custo Médio/Produto</p>
-                            <p className="text-3xl font-bold text-gray-900">{formatCurrency(parseFloat(avgCost || "0"))}</p>
+                        <div className="flex-1">
+                            <div className="flex items-center justify-between mb-2">
+                                <p className="text-sm font-medium text-gray-600">Lucro Médio</p>
+                                <Select value={profitType} onValueChange={onProfitTypeChange}>
+                                    <SelectTrigger className="w-28 h-6 text-xs">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="product">Produto</SelectItem>
+                                        <SelectItem value="category">Categoria</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <p className="text-3xl font-bold text-gray-900">{avgProfitMargin}%</p>
                         </div>
                         <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                             <Calculator className="text-purple-600 w-6 h-6" />
                         </div>
                     </div>
                     <div className="mt-4 flex items-center text-sm">
-                        <span className="text-gray-500">média calculada</span>
+                        <span className="text-gray-500">
+                            {profitType === 'product' ? 'média por produto' : 'média por categoria'}
+                        </span>
                     </div>
                 </CardContent>
             </Card>

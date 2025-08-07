@@ -5,18 +5,16 @@ import { StatsCards } from "@/components/stats-cards";
 import type { Product } from "@shared/schema";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BarChart3 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function Dashboard() {
   const queryClient = useQueryClient();
+  const [selectedProduct, setSelectedProduct] = useState<string>("general");
+  const [profitType, setProfitType] = useState<string>("product");
 
-  const { data: stats, isLoading: statsLoading } = useQuery<{
-    totalIngredients: number;
-    totalProducts: number;
-    avgCost: string;
-    todayChanges: number;
-  }>({
-    queryKey: ["/api/dashboard/stats"],
+  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
+    queryKey: ["/api/dashboard/stats", profitType],
+    queryFn: () => fetch(`/api/dashboard/stats?type=${profitType}`).then(res => res.json()),
     refetchOnMount: "always",
     staleTime: 0,
   });
@@ -86,8 +84,13 @@ export default function Dashboard() {
       <StatsCards
         totalIngredients={stats?.totalIngredients || 0}
         totalProducts={stats?.totalProducts || 0}
-        avgCost={stats?.avgCost || "0"}
+        avgProfitMargin={stats?.avgProfitMargin || "0"}
+        profitType={profitType}
         todayChanges={stats?.todayChanges || 0}
+        onProfitTypeChange={(type) => {
+          setProfitType(type);
+          refetchStats();
+        }}
       />
 
       {/* Charts Section */}

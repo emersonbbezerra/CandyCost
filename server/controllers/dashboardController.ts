@@ -53,22 +53,58 @@ export const getCostEvolution = async (req: Request, res: Response) => {
 
 export const getDashboardStats = async (req: Request, res: Response) => {
   try {
+    const { type = 'product' } = req.query; // 'product' or 'category'
+    
     const ingredients = await productService.getIngredients();
     const products = await productService.getProducts();
     const history = await priceHistoryService.getPriceHistory();
 
-    // Calculate average cost
-    const costsPromises = products.map(async (product) => {
+    // Calculate profit margins
+    const profitMarginsPromises = products.map(async (product) => {
       try {
         const cost = await productService.calculateProductCost(product.id);
-        return cost.totalCost;
+        const marginPercentage = product.marginPercentage ? parseFloat(product.marginPercentage) : 60;
+        const profitMargin = marginPercentage;
+        return { 
+          profitMargin, 
+          category: product.category 
+        };
       } catch {
-        return 0;
+        return { 
+          profitMargin: 0, 
+          category: product.category 
+        };
       }
     });
 
-    const costs = await Promise.all(costsPromises);
-    const avgCost = costs.length > 0 ? costs.reduce((a, b) => a + b, 0) / costs.length : 0;
+    const profitData = await Promise.all(profitMarginsPromises);
+    
+    let avgProfitMargin = 0;
+
+    if (type === 'category') {
+      // Calculate average profit by category
+      const categoryGroups = profitData.reduce((acc, item) => {
+        if (!acc[item.category]) {
+          acc[item.category] = [];
+        }
+        acc[item.category].push(item.profitMargin);
+        return acc;
+      }, {} as Record<string, number[]>);
+
+      const categoryAverages = Object.values(categoryGroups).map(margins => 
+        margins.reduce((a, b) => a + b, 0) / margins.length
+      );
+
+      avgProfitMargin = categoryAverages.length > 0 
+        ? categoryAverages.reduce((a, b) => a + b, 0) / categoryAverages.length 
+        : 0;
+    } else {
+      // Calculate average profit by product
+      const margins = profitData.map(item => item.profitMargin);
+      avgProfitMargin = margins.length > 0 
+        ? margins.reduce((a, b) => a + b, 0) / margins.length 
+        : 0;
+    }
 
     // Today's changes
     const today = new Date();
@@ -78,7 +114,8 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     res.json({
       totalIngredients: ingredients.length,
       totalProducts: products.length,
-      avgCost: avgCost.toFixed(2),
+      avgProfitMargin: avgProfitMargin.toFixed(1),
+      profitType: type,
       todayChanges,
     });
   } catch (error) {
