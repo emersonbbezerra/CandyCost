@@ -1,7 +1,7 @@
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
 import type { PriceHistory } from "@shared/schema";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Cookie, Sprout, ExternalLink, Edit, Package } from "lucide-react"; // Import Package icon
+import { Sprout, ExternalLink, Edit, Package } from "lucide-react"; // Import Package icon
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { useLocation } from "wouter";
@@ -35,7 +35,7 @@ export function RecentUpdatesCard() {
     const queryClient = useQueryClient();
 
     const { data, isLoading, refetch } = useQuery<RecentUpdates>({
-        queryKey: ["/api/dashboard/recent-updates"],
+        queryKey: ["/api/dashboard/recent-updates", Date.now()], // Add timestamp to force fresh queries
         refetchOnMount: "always",
         staleTime: 0,
         cacheTime: 0,
@@ -86,7 +86,7 @@ export function RecentUpdatesCard() {
 
         // Forçar múltiplos refetch para garantir que os dados sejam atualizados
         setTimeout(async () => {
-            await queryClient.invalidateQueries({ 
+            await queryClient.invalidateQueries({
                 queryKey: ["/api/dashboard/recent-updates"]
             });
             await refetch();

@@ -37,20 +37,38 @@ export const getDashboardStats = async (_req: Request, res: Response) => {
   }
 };
 
-export const getRecentUpdates = async (_req: Request, res: Response) => {
-  // Disable caching for this endpoint
+export const getRecentUpdates = async (req: Request, res: Response) => {
+  // Strong cache-busting headers
   res.set({
-    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Cache-Control': 'no-cache, no-store, must-revalidate, private',
     'Pragma': 'no-cache',
-    'Expires': '0'
+    'Expires': '0',
+    'Last-Modified': new Date().toUTCString(),
+    'ETag': Math.random().toString(36)
   });
   
   try {
+    // Force fresh data by bypassing any potential caching
     const ingredients = await productService.getIngredients();
     const products = await productService.getProducts();
 
-    // Buscar TODO o histórico de preços
+    // Buscar TODO o histórico de preços com debugging
+    console.log("🔍 Fetching ALL price history at", new Date().toISOString());
     const allHistory = await priceHistoryService.getPriceHistory();
+    console.log("📊 Total history entries found:", allHistory.length);
+    
+    // Log recent entries for debugging
+    const recentEntries = allHistory
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 10);
+    
+    console.log("🔥 Most recent 10 entries:", recentEntries.map(h => ({
+      id: h.id,
+      productId: h.productId,
+      ingredientId: h.ingredientId,
+      createdAt: h.createdAt,
+      changeReason: h.changeReason
+    })));
 
     // Filtrar e ordenar atualizações de ingredientes
     const ingredientUpdatesFiltered = allHistory
@@ -79,13 +97,31 @@ export const getRecentUpdates = async (_req: Request, res: Response) => {
       name: productMap.get(update.productId!) || "Produto desconhecido"
     }));
 
-    console.log("Recent product updates found:", enrichedProductUpdates.length);
-    console.log("Recent ingredient updates found:", enrichedIngredientUpdates.length);
+    console.log("✅ Recent product updates found:", enrichedProductUpdates.length);
+    console.log("✅ Recent ingredient updates found:", enrichedIngredientUpdates.length);
+    
+    // Log the actual data being returned
+    console.log("📤 Product updates being returned:", enrichedProductUpdates.map(u => ({
+      id: u.id,
+      name: u.name,
+      productId: u.productId,
+      createdAt: u.createdAt
+    })));
+    
+    console.log("📤 Ingredient updates being returned:", enrichedIngredientUpdates.map(u => ({
+      id: u.id,
+      name: u.name,
+      ingredientId: u.ingredientId,
+      createdAt: u.createdAt
+    })));
 
-    res.json({
+    const responseData = {
       ingredientUpdates: enrichedIngredientUpdates,
       productUpdates: enrichedProductUpdates,
-    });
+      timestamp: new Date().toISOString(), // Add timestamp to prevent caching
+    };
+
+    res.json(responseData);
   } catch (error) {
     console.error("Error fetching recent updates:", error);
     res.status(500).json({ message: "Erro ao buscar atualizações recentes" });

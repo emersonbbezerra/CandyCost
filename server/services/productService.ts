@@ -67,12 +67,12 @@ export const productService = {
 
     // Create price history entry for any product update
     const { priceHistoryService } = await import("./priceHistoryService");
-    
+
     let changeReason = "Atualização do produto";
     const changedFields = [];
-    
+
     if (data.name !== undefined) changedFields.push("nome");
-    if (data.category !== undefined) changedFields.push("categoria");  
+    if (data.category !== undefined) changedFields.push("categoria");
     if (data.description !== undefined) changedFields.push("descrição");
     if (data.marginPercentage !== undefined) changedFields.push("margem de lucro");
     if (data.preparationTimeMinutes !== undefined) changedFields.push("tempo de preparo");
@@ -132,13 +132,13 @@ export const productService = {
     const suggestedPrice = totalCost * (1 + marginPercentage / 100);
     const margin = suggestedPrice - totalCost;
 
-    return { 
-      totalCost, 
-      ingredientsCost, 
-      fixedCostPerProduct, 
-      suggestedPrice, 
+    return {
+      totalCost,
+      ingredientsCost,
+      fixedCostPerProduct,
+      suggestedPrice,
       margin,
-      preparationTimeMinutes 
+      preparationTimeMinutes
     };
   },
 
@@ -171,12 +171,22 @@ export const productService = {
     price: string;
     brand?: string | null;
   }>) {
+    console.log("🔄 Updating ingredient", id, "with data:", data);
+
+    // Buscar ingrediente atual para comparação
     const currentIngredient = await ingredientRepository.getIngredient(id);
+
     if (!currentIngredient) {
       throw new Error("Ingrediente não encontrado");
     }
 
-    if (data.price !== undefined && data.price !== currentIngredient.price) {
+    // Sempre criar histórico de preço para ingredientes, mesmo se o preço não mudou
+    const oldPrice = currentIngredient.price || "0";
+    const newPrice = data.price !== undefined ? data.price : oldPrice;
+
+    console.log("💰 Price change for ingredient", id, ":", { oldPrice, newPrice });
+
+    if (data.price !== undefined) {
       // Registrar histórico de preço do ingrediente
       await import("./priceHistoryService").then(async ({ priceHistoryService }) => {
         await priceHistoryService.createPriceHistory({
@@ -209,11 +219,17 @@ export const productService = {
             }
           }
 
+          console.log("📊 Product cost impact for product", productId, ":", {
+            oldCost: oldCost.totalCost.toFixed(2),
+            newCost: newTotalCost.toFixed(2)
+          });
+
+          // Registrar histórico de custo do produto afetado
           await priceHistoryService.createPriceHistory({
             productId,
             oldPrice: oldCost.totalCost.toFixed(2),
             newPrice: newTotalCost.toFixed(2),
-            changeReason: `Atualização de custo devido à alteração do ingrediente ${currentIngredient.name}`,
+            changeReason: `Alteração no preço do ingrediente: ${currentIngredient.name}`,
             createdAt: new Date(),
           });
         }
