@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { z } from "zod";
 import { productService } from "../services/productService";
-import { ingredientService } from "../services/ingredientService"; // Assumindo que ingredientService existe e tem as funções necessárias
 
 export const getIngredients = async (_req: Request, res: Response) => {
   try {
@@ -54,14 +53,13 @@ export const updateIngredient = async (req: Request, res: Response) => {
     console.log("Updating ingredient:", id, ingredientData);
 
     // Buscar ingrediente anterior para comparar preços
-    const oldIngredient = await ingredientService.getIngredientById(parseInt(id));
+    const oldIngredient = await productService.getIngredient(parseInt(id));
 
-    const result = await ingredientService.updateIngredient(parseInt(id), ingredientData);
+    const result = await productService.updateIngredient(parseInt(id), ingredientData);
 
     // Se o preço mudou, rastrear mudanças nos produtos afetados
     if (oldIngredient && ingredientData.price && oldIngredient.price !== ingredientData.price) {
       console.log("Price changed, tracking affected products...");
-      const { productService } = require("../services/productService");
       await productService.trackCostChangesForAffectedProducts(
         parseInt(id),
         oldIngredient.price,
