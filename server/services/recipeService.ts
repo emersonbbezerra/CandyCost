@@ -1,20 +1,23 @@
-import { recipes } from "@shared/schema";
-import { eq } from "drizzle-orm";
-import { db } from "../db";
+
+import { prisma } from "../db";
 
 export const recipeService = {
-  async deleteRecipesByProduct(productId: number) {
-    await db.delete(recipes).where(eq(recipes.productId, productId));
+  async deleteRecipesByProduct(productId: string) {
+    await prisma.recipe.deleteMany({
+      where: { productId }
+    });
   },
 
   async createRecipe(data: {
-    productId: number;
+    productId: string;
     ingredientId: number | null;
-    productIngredientId: number | null;
+    productIngredientId: string | null;
     quantity: string;
     unit: string;
   }) {
-    const [newRecipe] = await db.insert(recipes).values(data).returning();
+    const newRecipe = await prisma.recipe.create({
+      data
+    });
     return newRecipe;
   }
 };
