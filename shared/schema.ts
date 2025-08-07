@@ -78,6 +78,27 @@ export type InsertRecipe = z.infer<typeof insertRecipeSchema>;
 export type PriceHistory = typeof priceHistory.$inferSelect;
 export type InsertPriceHistory = z.infer<typeof insertPriceHistorySchema>;
 
+export const fixedCosts = pgTable("fixed_costs", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  category: text("category").notNull(),
+  value: decimal("value", { precision: 10, scale: 2 }).notNull(),
+  recurrence: text("recurrence").notNull(), // monthly, quarterly, yearly
+  description: text("description"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertFixedCostSchema = createInsertSchema(fixedCosts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type FixedCost = typeof fixedCosts.$inferSelect;
+export type InsertFixedCost = z.infer<typeof insertFixedCostSchema>;
+
 export type ProductWithRecipes = Product & {
   recipes: (Recipe & {
     ingredient?: Ingredient;
@@ -88,6 +109,7 @@ export type ProductWithRecipes = Product & {
 export type ProductCost = {
   productId: number;
   totalCost: number;
+  fixedCostPerUnit: number;
   suggestedPrice: number;
   margin: number;
 };

@@ -8,6 +8,7 @@ import productRoutes from "./productRoutes";
 import recipeRoutes from "./recipeRoutes";
 import reportRoutes from "./reportRoutes";
 import userRoutes from "./userRoutes";
+import fixedCostRoutes from "./fixedCostRoutes";
 
 export async function registerRoutes(app: Express) {
   app.use(authRoutes);
@@ -18,4 +19,5 @@ export async function registerRoutes(app: Express) {
   app.use(recipeRoutes);
   app.use(reportRoutes);
   app.use(userRoutes);
+  app.use(fixedCostRoutes);
 }

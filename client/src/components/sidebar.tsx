@@ -26,8 +26,8 @@ const navigation = [
   { name: "Dashboard", href: "/", icon: BarChart3 },
   { name: "Ingredientes", href: "/ingredients", icon: Package },
   { name: "Receitas", href: "/products", icon: ChefHat },
-  { name: "Histórico de Preços", href: "/history", icon: History },
-  { name: "Histórico de Custos", href: "/costs-history", icon: TrendingUp },
+  { name: "Custos Fixos", href: "/fixed-costs", icon: Calculator },
+  { name: "Histórico de Preços", href: "/costs-history", icon: History },
   { name: "Relatórios", href: "/reports", icon: FileText },
   {
     name: "Sistema",

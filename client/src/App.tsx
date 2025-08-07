@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Dashboard from "@/pages/dashboard";
 import Ingredients from "@/pages/ingredients";
 import Products from "@/pages/products";
-import History from "@/pages/history";
+import FixedCosts from "@/pages/fixed-costs";
 import CostsHistory from "@/pages/costs-history";
 import Reports from "@/pages/reports";
 import System from "@/pages/system";
@@ -49,7 +49,7 @@ function Router() {
             <Route path="/ingredients" component={Ingredients} />
             <Route path="/products" component={Products} />
             <Route path="/recipes" component={Products} />
-            <Route path="/history" component={History} />
+            <Route path="/fixed-costs" component={FixedCosts} />
             <Route path="/costs-history" component={CostsHistory} />
             <Route path="/reports" component={Reports} />
             <Route path="/system" component={System} />

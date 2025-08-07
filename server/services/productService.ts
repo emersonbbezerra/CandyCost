@@ -4,6 +4,7 @@ import { db } from "../db";
 import { ingredientRepository } from "../repositories/ingredientRepository";
 import { productRepository } from "../repositories/productRepository";
 import { recipeRepository } from "../repositories/recipeRepository";
+import { FixedCostService } from "./fixedCostService";
 
 export const productService = {
   async getProducts() {
@@ -46,7 +47,7 @@ export const productService = {
     await productRepository.deleteProduct(productId);
   },
 
-  async calculateProductCost(productId: number) {
+  async calculateProductCost(productId: number, estimatedMonthlyProduction: number = 100) {
     const productRecipes = await recipeRepository.getRecipesByProduct(productId);
     let totalCost = 0;
 
