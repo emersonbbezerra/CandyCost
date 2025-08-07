@@ -35,11 +35,11 @@ export function RecentUpdatesCard() {
     const queryClient = useQueryClient();
 
     const { data, isLoading, refetch } = useQuery<RecentUpdates>({
-        queryKey: ["/api/dashboard/recent-updates", Date.now()], // Add timestamp to force fresh queries
+        queryKey: ["/api/dashboard/recent-updates"],
         refetchOnMount: "always",
         staleTime: 0,
         cacheTime: 0,
-        refetchInterval: 3000, // Refetch a cada 3 segundos
+        refetchInterval: 5000, // Refetch a cada 5 segundos
         refetchIntervalInBackground: false,
         refetchOnWindowFocus: true,
     });
@@ -110,12 +110,13 @@ export function RecentUpdatesCard() {
                 <div className="space-y-6">
                     {/* Ingredientes */}
                     <div>
-                        <h3 className="text-lg font-semibold mb-2">Ingredientes (3 mais recentes)</h3>
-                        {isLoading && <p>Carregando atualizações de ingredientes...</p>}
-                        {!isLoading && data?.ingredientUpdates.length === 0 && (
+                        <h3 className="text-lg font-semibold mb-2">Ingredientes</h3>
+                        {isLoading ? (
+                            <p className="text-gray-500">Carregando atualizações de ingredientes...</p>
+                        ) : data?.ingredientUpdates && data.ingredientUpdates.length === 0 ? (
                             <p className="text-gray-500">Nenhuma atualização de ingrediente registrada ainda.</p>
-                        )}
-                        {!isLoading && data?.ingredientUpdates.slice(0, 3).map((update) => ( // Limit to 3 ingredients
+                        ) : (
+                            data?.ingredientUpdates.slice(0, 3).map((update) => ( // Limit to 3 ingredients
                             <div key={`ingredient-${update.id}`} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg mb-2">
                                 <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                                     <Sprout className="text-green-600 w-5 h-5" />
@@ -149,17 +150,19 @@ export function RecentUpdatesCard() {
                                     </Button>
                                 </div>
                             </div>
-                        ))}
+                        ))
+                        )}
                     </div>
 
                     {/* Produtos */}
                     <div>
-                        <h3 className="text-lg font-semibold mb-2">Produtos (3 mais recentes)</h3>
-                        {isLoading && <p>Carregando atualizações de produtos...</p>}
-                        {!isLoading && data?.productUpdates.length === 0 && (
+                        <h3 className="text-lg font-semibold mb-2">Produtos</h3>
+                        {isLoading ? (
+                            <p className="text-gray-500">Carregando atualizações de produtos...</p>
+                        ) : data?.productUpdates && data.productUpdates.length === 0 ? (
                             <p className="text-gray-500">Nenhuma atualização de produto registrada ainda.</p>
-                        )}
-                        {!isLoading && data?.productUpdates.slice(0, 3).map((update) => ( // Limit to 3 products
+                        ) : (
+                            data?.productUpdates.slice(0, 3).map((update) => ( // Limit to 3 products
                             <div key={`product-${update.id}`} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg mb-2">
                                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                                     <Package className="text-blue-600 w-5 h-5" />
@@ -192,7 +195,8 @@ export function RecentUpdatesCard() {
                                     </Button>
                                 </div>
                             </div>
-                        ))}
+                        ))
+                        )}
                     </div>
                 </div>
             </CardContent>
