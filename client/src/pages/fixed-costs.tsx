@@ -48,6 +48,15 @@ export default function FixedCosts() {
     queryKey: ["/api/fixed-costs/by-category"],
   });
 
+  const { data: costPerHourData } = useQuery<{ costPerHour: number }>({
+    queryKey: ["/api/fixed-costs/cost-per-hour"],
+  });
+
+  const { data: workConfig } = useQuery<{ workConfig: { workDaysPerWeek: number; hoursPerDay: string; weeksPerMonth: string } }>({
+    queryKey: ["/api/work-config"],
+  });
+
+
   const createMutation = useMutation({
     mutationFn: (data: InsertFixedCost) => 
       apiRequest("POST", "/api/fixed-costs", data),
@@ -198,48 +207,54 @@ export default function FixedCosts() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-100 rounded-full">
+                <DollarSign className="w-6 h-6 text-blue-600" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Mensal</p>
-                <p className="text-3xl font-bold text-gray-900">
+                <p className="text-sm text-gray-600">Total Mensal</p>
+                <p className="text-2xl font-bold text-gray-900">
                   {formatCurrency(monthlyTotal?.monthlyTotal || 0)}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <DollarSign className="text-blue-600 w-6 h-6" />
-              </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total de Custos</p>
-                <p className="text-3xl font-bold text-gray-900">{fixedCosts.length}</p>
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-green-100 rounded-full">
+                <Calculator className="w-6 h-6 text-green-600" />
               </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <Calculator className="text-green-600 w-6 h-6" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Custos Ativos</p>
-                <p className="text-3xl font-bold text-gray-900">
-                  {fixedCosts.filter(cost => cost.isActive).length}
+                <p className="text-sm text-gray-600">Custo por Hora</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {formatCurrency(costPerHourData?.costPerHour || 0)}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <TrendingUp className="text-purple-600 w-6 h-6" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-purple-100 rounded-full">
+                <TrendingUp className="w-6 h-6 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Horas/Mês</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {workConfig ? (
+                    (workConfig.workDaysPerWeek * 
+                    parseFloat(workConfig.hoursPerDay) * 
+                    parseFloat(workConfig.weeksPerMonth))
+                  ).toFixed(0) : "0"}
+                </p>
               </div>
             </div>
           </CardContent>

@@ -49,24 +49,43 @@ export const productService = {
 
   async calculateProductCost(productId: number, estimatedMonthlyProduction: number = 100) {
     const productRecipes = await recipeRepository.getRecipesByProduct(productId);
-    let totalCost = 0;
+    let ingredientsCost = 0;
 
+    // Calculate ingredients cost
     for (const recipe of productRecipes) {
       if (recipe.ingredientId === null) continue;
       const ingredient = await ingredientRepository.getIngredient(recipe.ingredientId);
       if (ingredient && ingredient.price) {
-        totalCost += parseFloat(ingredient.price) * Number(recipe.quantity);
+        ingredientsCost += parseFloat(ingredient.price) * Number(recipe.quantity);
       }
     }
 
-    // Get product to access marginPercentage
+    // Get product to access marginPercentage and preparationTimeMinutes
     const product = await productRepository.getProduct(productId);
-    const marginPercentage = product?.marginPercentage ? parseFloat(product.marginPercentage) : 60;
+    if (!product) {
+      throw new Error("Produto não encontrado");
+    }
 
+    const marginPercentage = product.marginPercentage ? parseFloat(product.marginPercentage) : 60;
+    const preparationTimeMinutes = product.preparationTimeMinutes || 60;
+
+    // Calculate fixed cost based on preparation time
+    const fixedCostService = new FixedCostService();
+    const fixedCostPerProduct = await fixedCostService.calculateProductFixedCost(preparationTimeMinutes);
+
+    // Total cost = ingredients + fixed costs
+    const totalCost = ingredientsCost + fixedCostPerProduct;
     const suggestedPrice = totalCost * (1 + marginPercentage / 100);
     const margin = suggestedPrice - totalCost;
 
-    return { totalCost, suggestedPrice, margin };
+    return { 
+      totalCost, 
+      ingredientsCost, 
+      fixedCostPerProduct, 
+      suggestedPrice, 
+      margin,
+      preparationTimeMinutes 
+    };
   },
 
 

@@ -25,6 +25,7 @@ const productSchema = insertProductSchema.extend({
       productIngredientId: z.number().nullable(),
     })
   ).optional(),
+  preparationTimeMinutes: z.number().min(1).default(60),
 });
 
 interface ProductFormProps {
@@ -55,6 +56,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
       description: product?.description || "",
       isAlsoIngredient: product?.isAlsoIngredient || false,
       marginPercentage: product?.marginPercentage || "60",
+      preparationTimeMinutes: product?.preparationTimeMinutes || 60,
       recipes: product?.recipes?.map((r) => ({
         ingredientId: r.ingredientId,
         productIngredientId: r.productIngredientId,
@@ -78,6 +80,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
         description: product.description || "",
         isAlsoIngredient: product.isAlsoIngredient || false,
         marginPercentage: product.marginPercentage || "60",
+        preparationTimeMinutes: product.preparationTimeMinutes || 60,
         recipes: product.recipes?.map((r) => ({
           ingredientId: r.ingredientId,
           productIngredientId: r.productIngredientId,
@@ -93,6 +96,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
         description: "",
         isAlsoIngredient: false,
         marginPercentage: "60",
+        preparationTimeMinutes: 60,
         recipes: [],
       });
     }
@@ -103,11 +107,11 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
       const { recipes, ...productData } = data;
       const response = await apiRequest("POST", "/api/products", productData);
       const newProduct = await response.json();
-      
+
       if (recipes && recipes.length > 0) {
         await apiRequest("POST", `/api/products/${newProduct.id}/recipes`, recipes);
       }
-      
+
       return newProduct;
     },
     onSuccess: () => {
@@ -135,11 +139,11 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
       const { recipes, ...productData } = data;
       const response = await apiRequest("PUT", `/api/products/${product?.id}`, productData);
       const updatedProduct = await response.json();
-      
+
       if (recipes) {
         await apiRequest("POST", `/api/products/${product?.id}/recipes`, recipes);
       }
-      
+
       return updatedProduct;
     },
     onSuccess: () => {
@@ -256,7 +260,34 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                   <FormItem>
                     <FormLabel>Margem de Lucro (%)</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" placeholder="60" {...field} />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="60"
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="preparationTimeMinutes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tempo de Preparo (minutos)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="1"
+                        placeholder="60"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 60)}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

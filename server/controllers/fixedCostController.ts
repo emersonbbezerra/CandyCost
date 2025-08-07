@@ -1,8 +1,7 @@
-
 import { Request, Response } from "express";
 import { FixedCostRepository } from "../repositories/fixedCostRepository";
 import { FixedCostService } from "../services/fixedCostService";
-import { insertFixedCostSchema } from "../../shared/schema";
+import type { InsertFixedCost, InsertWorkConfiguration } from "../../shared/schema";
 
 export class FixedCostController {
   private fixedCostRepository = new FixedCostRepository();
@@ -32,11 +31,11 @@ export class FixedCostController {
     try {
       const id = parseInt(req.params.id);
       const fixedCost = await this.fixedCostRepository.findById(id);
-      
+
       if (!fixedCost) {
         return res.status(404).json({ error: "Custo fixo não encontrado" });
       }
-      
+
       res.json(fixedCost);
     } catch (error) {
       console.error("Erro ao buscar custo fixo:", error);
@@ -59,13 +58,13 @@ export class FixedCostController {
     try {
       const id = parseInt(req.params.id);
       const validatedData = insertFixedCostSchema.partial().parse(req.body);
-      
+
       const fixedCost = await this.fixedCostRepository.update(id, validatedData);
-      
+
       if (!fixedCost) {
         return res.status(404).json({ error: "Custo fixo não encontrado" });
       }
-      
+
       res.json(fixedCost);
     } catch (error) {
       console.error("Erro ao atualizar custo fixo:", error);
@@ -76,34 +75,52 @@ export class FixedCostController {
   async delete(req: Request, res: Response) {
     try {
       const id = parseInt(req.params.id);
-      const deleted = await this.fixedCostRepository.delete(id);
-      
-      if (!deleted) {
-        return res.status(404).json({ error: "Custo fixo não encontrado" });
+
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "ID inválido" });
       }
-      
-      res.status(204).send();
+
+      const success = await this.fixedCostService.deleteFixedCost(id);
+
+      if (!success) {
+        return res.status(404).json({ message: "Custo fixo não encontrado" });
+      }
+
+      res.json({ message: "Custo fixo excluído com sucesso" });
     } catch (error) {
-      console.error("Erro ao deletar custo fixo:", error);
-      res.status(500).json({ error: "Erro interno do servidor" });
+      console.error("Erro ao excluir custo fixo:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
     }
   }
 
-  async toggleActive(req: Request, res: Response) {
+  async getWorkConfiguration(req: Request, res: Response) {
     try {
-      const id = parseInt(req.params.id);
-      const { isActive } = req.body;
-      
-      const fixedCost = await this.fixedCostRepository.toggleActive(id, isActive);
-      
-      if (!fixedCost) {
-        return res.status(404).json({ error: "Custo fixo não encontrado" });
-      }
-      
-      res.json(fixedCost);
+      const config = await this.fixedCostService.getWorkConfiguration();
+      res.json(config);
     } catch (error) {
-      console.error("Erro ao alterar status do custo fixo:", error);
-      res.status(500).json({ error: "Erro interno do servidor" });
+      console.error("Erro ao buscar configuração de trabalho:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  }
+
+  async updateWorkConfiguration(req: Request, res: Response) {
+    try {
+      const data: Partial<InsertWorkConfiguration> = req.body;
+      const config = await this.fixedCostService.updateWorkConfiguration(data);
+      res.json(config);
+    } catch (error) {
+      console.error("Erro ao atualizar configuração de trabalho:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  }
+
+  async getFixedCostPerHour(req: Request, res: Response) {
+    try {
+      const costPerHour = await this.fixedCostService.calculateFixedCostPerHour();
+      res.json({ costPerHour });
+    } catch (error) {
+      console.error("Erro ao calcular custo fixo por hora:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
     }
   }
 

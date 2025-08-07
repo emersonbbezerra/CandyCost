@@ -18,6 +18,7 @@ export const productRepository = {
     description?: string;
     isAlsoIngredient?: boolean;
     marginPercentage?: string;
+    preparationTimeMinutes?: number;
   }) {
     const [newProduct] = await db.insert(products).values(data).returning();
     return newProduct;
@@ -29,6 +30,7 @@ export const productRepository = {
     description?: string;
     isAlsoIngredient?: boolean;
     marginPercentage?: string;
+    preparationTimeMinutes?: number;
   }>) {
     const [updatedProduct] = await db.update(products).set(data).where(eq(products.id, id)).returning();
     return updatedProduct;

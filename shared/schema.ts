@@ -22,6 +22,7 @@ export const products = pgTable("products", {
   description: text("description"),
   isAlsoIngredient: boolean("is_also_ingredient").notNull().default(false),
   marginPercentage: decimal("margin_percentage", { precision: 5, scale: 2 }).notNull().default("60"),
+  preparationTimeMinutes: integer("preparation_time_minutes").notNull().default(60),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -90,6 +91,15 @@ export const fixedCosts = pgTable("fixed_costs", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const workConfiguration = pgTable("work_configuration", {
+  id: serial("id").primaryKey(),
+  workDaysPerWeek: integer("work_days_per_week").notNull().default(5),
+  hoursPerDay: decimal("hours_per_day", { precision: 4, scale: 2 }).notNull().default("8.00"),
+  weeksPerMonth: decimal("weeks_per_month", { precision: 3, scale: 1 }).notNull().default("4.0"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const insertFixedCostSchema = createInsertSchema(fixedCosts).omit({
   id: true,
   createdAt: true,
@@ -98,6 +108,15 @@ export const insertFixedCostSchema = createInsertSchema(fixedCosts).omit({
 
 export type FixedCost = typeof fixedCosts.$inferSelect;
 export type InsertFixedCost = z.infer<typeof insertFixedCostSchema>;
+
+export const insertWorkConfigurationSchema = createInsertSchema(workConfiguration).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type WorkConfiguration = typeof workConfiguration.$inferSelect;
+export type InsertWorkConfiguration = z.infer<typeof insertWorkConfigurationSchema>;
 
 export type ProductWithRecipes = Product & {
   recipes: (Recipe & {

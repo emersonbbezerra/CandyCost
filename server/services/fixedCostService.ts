@@ -1,7 +1,10 @@
 
 import { FixedCostRepository } from "../repositories/fixedCostRepository";
 import { productRepository } from "../repositories/productRepository";
-import type { FixedCost } from "../../shared/schema";
+import { db } from "../db";
+import { eq } from "drizzle-orm";
+import { workConfiguration } from "../../shared/schema";
+import type { FixedCost, WorkConfiguration } from "../../shared/schema";
 
 export class FixedCostService {
   private fixedCostRepository = new FixedCostRepository();
@@ -42,6 +45,60 @@ export class FixedCostService {
     }
     
     return monthlyFixedCosts / estimatedMonthlyProduction;
+  }
+
+  async getWorkConfiguration(): Promise<WorkConfiguration> {
+    const result = await db.select().from(workConfiguration).limit(1);
+    
+    if (result.length === 0) {
+      // Create default configuration if none exists
+      const [defaultConfig] = await db.insert(workConfiguration).values({
+        workDaysPerWeek: 5,
+        hoursPerDay: "8.00",
+        weeksPerMonth: "4.0",
+      }).returning();
+      return defaultConfig;
+    }
+    
+    return result[0];
+  }
+
+  async updateWorkConfiguration(data: Partial<WorkConfiguration>): Promise<WorkConfiguration> {
+    const config = await this.getWorkConfiguration();
+    
+    const [updated] = await db.update(workConfiguration)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(workConfiguration.id, config.id))
+      .returning();
+    
+    return updated;
+  }
+
+  async calculateFixedCostPerHour(): Promise<number> {
+    const monthlyFixedCosts = await this.calculateMonthlyFixedCosts();
+    const workConfig = await this.getWorkConfiguration();
+    
+    const workDays = workConfig.workDaysPerWeek;
+    const hoursPerDay = parseFloat(workConfig.hoursPerDay);
+    const weeksPerMonth = parseFloat(workConfig.weeksPerMonth);
+    
+    const totalHoursPerMonth = workDays * hoursPerDay * weeksPerMonth;
+    
+    if (totalHoursPerMonth <= 0) {
+      return 0;
+    }
+    
+    return monthlyFixedCosts / totalHoursPerMonth;
+  }
+
+  async calculateProductFixedCost(preparationTimeMinutes: number): Promise<number> {
+    const fixedCostPerHour = await this.calculateFixedCostPerHour();
+    const preparationTimeHours = preparationTimeMinutes / 60;
+    
+    return fixedCostPerHour * preparationTimeHours;
   }
 
   async getFixedCostsByCategory(): Promise<Record<string, { total: number; costs: FixedCost[] }>> {
