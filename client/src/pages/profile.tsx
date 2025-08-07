@@ -19,14 +19,13 @@ const profileSchema = z.object({
   email: z.string().email("Email inválido"),
 });
 
+import { passwordErrorMessage, passwordRegex } from "../../../shared/passwordValidation";
+
 const passwordSchema = z.object({
   currentPassword: z.string().min(1, "Senha atual é obrigatória"),
   newPassword: z.string()
     .min(8, "Nova senha deve ter pelo menos 8 caracteres")
-    .regex(/^(?=.*[a-z])/, "Nova senha deve conter pelo menos uma letra minúscula")
-    .regex(/^(?=.*[A-Z])/, "Nova senha deve conter pelo menos uma letra maiúscula") 
-    .regex(/^(?=.*\d)/, "Nova senha deve conter pelo menos um número")
-    .regex(/^(?=.*[@$!%*?&])/, "Nova senha deve conter pelo menos um caractere especial (@$!%*?&)"),
+    .regex(passwordRegex, passwordErrorMessage),
   confirmPassword: z.string()
 });
 

@@ -11,6 +11,7 @@ import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { ChefHat, LogIn, UserPlus } from "lucide-react";
 
+import { passwordErrorMessage, passwordRegex } from "../../../shared/passwordValidation";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -21,12 +22,9 @@ const registerSchema = z.object({
   email: z.string().email("Email inválido"),
   password: z.string()
     .min(8, "Senha deve ter pelo menos 8 caracteres")
-    .regex(/^(?=.*[a-z])/, "Senha deve conter pelo menos uma letra minúscula")
-    .regex(/^(?=.*[A-Z])/, "Senha deve conter pelo menos uma letra maiúscula") 
-    .regex(/^(?=.*\d)/, "Senha deve conter pelo menos um número")
-    .regex(/^(?=.*[@$!%*?&])/, "Senha deve conter pelo menos um caractere especial (@$!%*?&)"),
+    .regex(passwordRegex, passwordErrorMessage),
   firstName: z.string().min(1, "Nome é obrigatório"),
-  lastName: z.string().optional(),
+  lastName: z.string().optional()
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
