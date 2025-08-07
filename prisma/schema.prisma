@@ -28,10 +28,10 @@ model User {
 model Session {
   id      String @id
   sid     String @unique
-  data    String
-  expires DateTime
+  sess    String
+  expire  DateTime
 
-  @@index([expires])
+  @@index([expire])
   @@map("sessions")
 }
 
