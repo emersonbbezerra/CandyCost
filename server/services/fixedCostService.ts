@@ -1,11 +1,11 @@
 
-import { FixedCostRepository } from "../repositories/fixedCostRepository";
+import { fixedCostRepository } from "../repositories/fixedCostRepository";
 import { productRepository } from "../repositories/productRepository";
 import { prisma } from "../db";
 import type { FixedCost, WorkConfiguration } from "../../shared/schema";
 
 export class FixedCostService {
-  private fixedCostRepository = new FixedCostRepository();
+  private fixedCostRepository = fixedCostRepository;
   private productRepository = productRepository;
 
   async getAllFixedCosts(): Promise<FixedCost[]> {
@@ -135,8 +135,12 @@ export class FixedCostService {
     return categorized;
   }
 
-  async deleteFixedCost(id: number): Promise<boolean> {
-    const result = await this.fixedCostRepository.delete(id);
-    return result !== null;
+  async deleteFixedCost(id: string): Promise<boolean> {
+    try {
+      await this.fixedCostRepository.delete(id);
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 }
