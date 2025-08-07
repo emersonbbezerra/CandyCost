@@ -121,7 +121,7 @@ export function RecentUpdatesCard() {
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-gray-900">
-                                        Custo atualizado de {formatCurrency(parseFloat(update.oldPrice))} para {formatCurrency(parseFloat(update.newPrice))} - <strong>{update.name}</strong>
+                                        Custo atualizado de {formatCurrency(parseFloat(update.oldPrice || "0"))} para {formatCurrency(parseFloat(update.newPrice || "0"))} - <strong>{update.name}</strong>
                                     </p>
                                     <p className="text-sm text-gray-500 mt-1">
                                         {update.changeReason || "Atualização manual"}
@@ -135,8 +135,17 @@ export function RecentUpdatesCard() {
                                         ? "bg-red-100 text-red-700"
                                         : "bg-green-100 text-green-700"
                                         }`}>
-                                        {parseFloat(update.newPrice) > parseFloat(update.oldPrice) ? "+" : ""}
-                                        {(((parseFloat(update.newPrice) - parseFloat(update.oldPrice)) / parseFloat(update.oldPrice)) * 100).toFixed(1)}%
+                                        {(() => {
+                                            const oldPrice = parseFloat(update.oldPrice || "0");
+                                            const newPrice = parseFloat(update.newPrice || "0");
+                                            
+                                            if (oldPrice === 0) {
+                                                return newPrice > 0 ? "Novo" : "0%";
+                                            }
+                                            
+                                            const percentChange = ((newPrice - oldPrice) / oldPrice) * 100;
+                                            return `${percentChange > 0 ? "+" : ""}${percentChange.toFixed(1)}%`;
+                                        })()}
                                     </span>
                                     <Button
                                         variant="ghost"
@@ -167,7 +176,7 @@ export function RecentUpdatesCard() {
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-gray-900">
-                                        <strong>{update.name}</strong> - Custo atualizado de {formatCurrency(parseFloat(update.oldPrice))} para {formatCurrency(parseFloat(update.newPrice))}
+                                        <strong>{update.name}</strong> - Custo atualizado de {formatCurrency(parseFloat(update.oldPrice || "0"))} para {formatCurrency(parseFloat(update.newPrice || "0"))}
                                     </p>
                                     <p className="text-xs text-gray-400 mt-1">
                                         {formatDate(new Date(update.createdAt))} - {update.changeReason}
@@ -175,12 +184,21 @@ export function RecentUpdatesCard() {
                                 </div>
                                 <div className="flex items-center space-x-2">
                                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                        parseFloat(update.newPrice) > parseFloat(update.oldPrice)
+                                        parseFloat(update.newPrice || "0") > parseFloat(update.oldPrice || "0")
                                             ? "bg-red-100 text-red-700"
                                             : "bg-green-100 text-green-700"
                                     }`}>
-                                        {parseFloat(update.newPrice) > parseFloat(update.oldPrice) ? "+" : ""}
-                                        {(((parseFloat(update.newPrice) - parseFloat(update.oldPrice)) / parseFloat(update.oldPrice)) * 100).toFixed(1)}%
+                                        {(() => {
+                                            const oldPrice = parseFloat(update.oldPrice || "0");
+                                            const newPrice = parseFloat(update.newPrice || "0");
+                                            
+                                            if (oldPrice === 0) {
+                                                return newPrice > 0 ? "Novo" : "0%";
+                                            }
+                                            
+                                            const percentChange = ((newPrice - oldPrice) / oldPrice) * 100;
+                                            return `${percentChange > 0 ? "+" : ""}${percentChange.toFixed(1)}%`;
+                                        })()}
                                     </span>
                                     <Button
                                         size="sm"

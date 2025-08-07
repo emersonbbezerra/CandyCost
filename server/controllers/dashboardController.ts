@@ -54,7 +54,7 @@ export const getCostEvolution = async (req: Request, res: Response) => {
 export const getDashboardStats = async (req: Request, res: Response) => {
   try {
     const { type = 'product', category = 'all' } = req.query;
-    
+
     const ingredients = await productService.getIngredients();
     const products = await productService.getProducts();
     const history = await priceHistoryService.getPriceHistory();
@@ -81,7 +81,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     });
 
     const profitData = await Promise.all(profitMarginsPromises);
-    
+
     let avgProfitMargin = 0;
     let categoryBreakdown: any[] = [];
 
