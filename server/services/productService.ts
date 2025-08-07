@@ -204,9 +204,10 @@ export const productService = {
         for (const productId of productIds) {
           const oldCost = await this.calculateProductCost(productId);
 
-          // Calcular novo custo simulando alteração do preço do ingrediente
+          // Calculate new cost properly including fixed costs
           const productRecipes = await recipeRepository.getRecipesByProduct(productId);
-          let newTotalCost = 0;
+          let newIngredientsCost = 0;
+          
           for (const recipe of productRecipes) {
             if (recipe.ingredientId === null) continue;
             const ingredient = await ingredientRepository.getIngredient(recipe.ingredientId);
@@ -215,13 +216,23 @@ export const productService = {
               if (ingredient.id === id) {
                 price = data.price ?? ingredient.price;
               }
-              newTotalCost += parseFloat(price) * Number(recipe.quantity);
+              newIngredientsCost += parseFloat(price || "0") * Number(recipe.quantity);
             }
           }
 
+          // Add fixed costs to get total cost
+          const product = await productRepository.getProduct(productId);
+          const preparationTimeMinutes = product?.preparationTimeMinutes || 60;
+          const fixedCostService = new FixedCostService();
+          const fixedCostPerProduct = await fixedCostService.calculateProductFixedCost(preparationTimeMinutes);
+          const newTotalCost = newIngredientsCost + fixedCostPerProduct;
+
           console.log("📊 Product cost impact for product", productId, ":", {
             oldCost: oldCost.totalCost.toFixed(2),
-            newCost: newTotalCost.toFixed(2)
+            newCost: newTotalCost.toFixed(2),
+            oldIngredientsCost: oldCost.ingredientsCost.toFixed(2),
+            newIngredientsCost: newIngredientsCost.toFixed(2),
+            fixedCost: fixedCostPerProduct.toFixed(2)
           });
 
           // Registrar histórico de custo do produto afetado
