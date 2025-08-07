@@ -1,0 +1,36 @@
+~/workspace$ npm run dev:frontend
+
+> rest-express@1.0.0 dev:frontend
+> vite --host 0.0.0.0 --port 3000 --force
+
+10:30:40 PM [vite] (client) Forced re-optimization of dependencies
+
+  VITE v7.1.0  ready in 243 ms
+
+  ➜  Local:   http://localhost:3000/
+  ➜  Network: http://172.31.110.162:3000/
+  ➜  press h + enter to show help
+10:30:41 PM [vite] (client) Pre-transform error: Failed to load PostCSS config (searchPath: /home/runner/workspace/client): [Error] Loading PostCSS Plugin failed: No "exports" main defined in /home/runner/workspace/node_modules/@tailwindcss/vite/package.json
+
+(@/home/runner/workspace/postcss.config.js)
+Error: Loading PostCSS Plugin failed: No "exports" main defined in /home/runner/workspace/node_modules/@tailwindcss/vite/package.json
+
+(@/home/runner/workspace/postcss.config.js)
+    at load$1 (file:///home/runner/workspace/node_modules/vite/dist/node/chunks/dep-CZAfWeT9.js:8814:10)
+    at async Promise.all (index 0)
+    at async plugins (file:///home/runner/workspace/node_modules/vite/dist/node/chunks/dep-CZAfWeT9.js:8836:11)
+    at async processResult (file:///home/runner/workspace/node_modules/vite/dist/node/chunks/dep-CZAfWeT9.js:8875:13)
+  Plugin: vite:css
+  File: /home/runner/workspace/client/src/index.css
+10:30:42 PM [vite] Internal server error: Failed to load PostCSS config (searchPath: /home/runner/workspace/client): [Error] Loading PostCSS Plugin failed: No "exports" main defined in /home/runner/workspace/node_modules/@tailwindcss/vite/package.json
+
+(@/home/runner/workspace/postcss.config.js)
+Error: Loading PostCSS Plugin failed: No "exports" main defined in /home/runner/workspace/node_modules/@tailwindcss/vite/package.json
+
+(@/home/runner/workspace/postcss.config.js)
+    at load$1 (file:///home/runner/workspace/node_modules/vite/dist/node/chunks/dep-CZAfWeT9.js:8814:10)
+    at async Promise.all (index 0)
+    at async plugins (file:///home/runner/workspace/node_modules/vite/dist/node/chunks/dep-CZAfWeT9.js:8836:11)
+    at async processResult (file:///home/runner/workspace/node_modules/vite/dist/node/chunks/dep-CZAfWeT9.js:8875:13)
+  Plugin: vite:css
+  File: /home/runner/workspace/client/src/index.css
