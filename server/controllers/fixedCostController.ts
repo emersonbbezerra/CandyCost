@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
-import { FixedCostRepository } from "../repositories/fixedCostRepository";
+import { fixedCostRepository } from "../repositories/fixedCostRepository";
 import { FixedCostService } from "../services/fixedCostService";
 import type { InsertFixedCost, InsertWorkConfiguration } from "../../shared/schema";
 import { insertFixedCostSchema } from "../../shared/schema";
 
 export class FixedCostController {
-  private fixedCostRepository = new FixedCostRepository();
+  private fixedCostRepository = fixedCostRepository;
   private fixedCostService = new FixedCostService();
 
   async getAll(req: Request, res: Response) {
@@ -30,7 +30,7 @@ export class FixedCostController {
 
   async getById(req: Request, res: Response) {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       const fixedCost = await this.fixedCostRepository.findById(id);
 
       if (!fixedCost) {
@@ -57,7 +57,7 @@ export class FixedCostController {
 
   async update(req: Request, res: Response) {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       const validatedData = insertFixedCostSchema.partial().parse(req.body);
 
       const fixedCost = await this.fixedCostRepository.update(id, validatedData);
@@ -75,9 +75,9 @@ export class FixedCostController {
 
   async delete(req: Request, res: Response) {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
 
-      if (isNaN(id)) {
+      if (!id) {
         return res.status(400).json({ message: "ID inválido" });
       }
 
@@ -96,9 +96,9 @@ export class FixedCostController {
 
   async toggleActive(req: Request, res: Response) {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
 
-      if (isNaN(id)) {
+      if (!id) {
         return res.status(400).json({ message: "ID inválido" });
       }
 
@@ -107,7 +107,7 @@ export class FixedCostController {
         return res.status(404).json({ message: "Custo fixo não encontrado" });
       }
 
-      const updatedFixedCost = await this.fixedCostRepository.toggleActive(id, !currentFixedCost.isActive);
+      const updatedFixedCost = await this.fixedCostRepository.update(id, { isActive: !currentFixedCost.isActive });
 
       if (!updatedFixedCost) {
         return res.status(404).json({ message: "Custo fixo não encontrado" });
