@@ -199,8 +199,8 @@ export const productService = {
               difference: (newCost.totalCost - oldCostValue).toFixed(2)
             });
 
-            // Registrar histórico apenas se houve mudança significativa
-            if (Math.abs(newCost.totalCost - oldCostValue) > 0.01) {
+            // Registrar histórico apenas se houve mudança significativa E se o oldCost não é zero
+            if (Math.abs(newCost.totalCost - oldCostValue) > 0.01 && oldCostValue > 0) {
               console.log(`💾 Registrando histórico - Produto ${productId}: R$ ${oldCostValue.toFixed(2)} → R$ ${newCost.totalCost.toFixed(2)}`);
               await priceHistoryService.createPriceHistory({
                 productId: productId,
@@ -210,7 +210,7 @@ export const productService = {
                 createdAt: new Date(),
               });
             } else {
-              console.log(`⏭️ Produto ${productId}: Sem mudança significativa de custo`);
+              console.log(`⏭️ Produto ${productId}: Sem mudança significativa de custo ou custo anterior inválido`);
             }
           } catch (error) {
             console.error(`❌ Erro ao processar produto ${productId}:`, error);
@@ -268,45 +268,5 @@ export const productService = {
     }
   },
 
-  async trackCostChangesForAffectedProducts(ingredientId: number, oldPrice: string, newPrice: string) {
-    try {
-      console.log("🔍 Finding products affected by ingredient change:", ingredientId);
-
-      // Buscar todos os produtos que usam este ingrediente
-      const allProducts = await productRepository.getProducts();
-      const affectedProducts: number[] = [];
-
-      for (const product of allProducts) {
-        const recipes = await recipeRepository.getRecipesByProduct(product.id);
-        const usesIngredient = recipes.some(recipe => recipe.ingredientId === ingredientId);
-
-        if (usesIngredient) {
-          affectedProducts.push(product.id);
-        }
-      }
-
-      console.log("📊 Affected products:", affectedProducts);
-
-      // Para cada produto afetado, calcular o novo custo e registrar mudança
-      for (const productId of affectedProducts) {
-        const newCost = await this.calculateProductCost(productId);
-
-        if (newCost) {
-          console.log("💰 Recording cost change for product:", productId);
-          await priceHistoryService.createPriceHistory({
-            productId: productId,
-            oldPrice: "0.00", // Custo anterior seria complexo de calcular
-            newPrice: newCost.totalCost.toFixed(2),
-            changeReason: `Alteração no ingrediente (preço mudou de ${oldPrice} para ${newPrice})`,
-            createdAt: new Date()
-          });
-        }
-      }
-
-      return affectedProducts;
-    } catch (error) {
-      console.error("❌ Error tracking cost changes:", error);
-      return [];
-    }
-  },
+  
 };
