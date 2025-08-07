@@ -2,12 +2,13 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { db } from "./db";
 
 async function createTables() {
   try {
-    // Create tables using raw SQL
+    console.log("Criando tabelas...");
+
+    // Criar tabela de ingredientes
     await db.execute(`
       CREATE TABLE IF NOT EXISTS ingredients (
         id SERIAL PRIMARY KEY,
@@ -21,7 +22,9 @@ async function createTables() {
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
     `);
+    console.log("✓ Tabela ingredients criada");
 
+    // Criar tabela de produtos
     await db.execute(`
       CREATE TABLE IF NOT EXISTS products (
         id SERIAL PRIMARY KEY,
@@ -34,16 +37,10 @@ async function createTables() {
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
-
-    -- Adicionar coluna preparation_time_minutes se ela não existir
-    DO $$ 
-    BEGIN 
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'products' AND column_name = 'preparation_time_minutes') THEN
-            ALTER TABLE products ADD COLUMN preparation_time_minutes INTEGER NOT NULL DEFAULT 60;
-        END IF;
-    END $$;
     `);
+    console.log("✓ Tabela products criada");
 
+    // Criar tabela de receitas
     await db.execute(`
       CREATE TABLE IF NOT EXISTS recipes (
         id SERIAL PRIMARY KEY,
@@ -54,7 +51,9 @@ async function createTables() {
         unit TEXT NOT NULL
       );
     `);
+    console.log("✓ Tabela recipes criada");
 
+    // Criar tabela de custos fixos
     await db.execute(`
       CREATE TABLE IF NOT EXISTS fixed_costs (
         id SERIAL PRIMARY KEY,
@@ -68,7 +67,9 @@ async function createTables() {
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
     `);
+    console.log("✓ Tabela fixed_costs criada");
 
+    // Criar tabela de histórico de preços
     await db.execute(`
       CREATE TABLE IF NOT EXISTS price_history (
         id SERIAL PRIMARY KEY,
@@ -80,7 +81,9 @@ async function createTables() {
         created_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
     `);
+    console.log("✓ Tabela price_history criada");
 
+    // Criar tabela de sessões
     await db.execute(`
       CREATE TABLE IF NOT EXISTS sessions (
         sid VARCHAR PRIMARY KEY,
@@ -88,11 +91,15 @@ async function createTables() {
         expire TIMESTAMP NOT NULL
       );
     `);
+    console.log("✓ Tabela sessions criada");
 
+    // Criar índice para sessões
     await db.execute(`
       CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON sessions(expire);
     `);
+    console.log("✓ Índice sessions criado");
 
+    // Criar tabela de usuários
     await db.execute(`
       CREATE TABLE IF NOT EXISTS users (
         id VARCHAR PRIMARY KEY NOT NULL,
@@ -106,7 +113,9 @@ async function createTables() {
         updated_at TIMESTAMP DEFAULT NOW()
       );
     `);
+    console.log("✓ Tabela users criada");
 
+    // Criar tabela de configuração de trabalho
     await db.execute(`
       CREATE TABLE IF NOT EXISTS work_configuration (
         id SERIAL PRIMARY KEY,
@@ -117,17 +126,20 @@ async function createTables() {
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
     `);
+    console.log("✓ Tabela work_configuration criada");
 
-    // Insert default work configuration if not exists
+    // Inserir configuração padrão de trabalho se não existir
     await db.execute(`
       INSERT INTO work_configuration (work_days_per_week, hours_per_day, weeks_per_month)
       SELECT 5, 8.00, 4.0
       WHERE NOT EXISTS (SELECT 1 FROM work_configuration LIMIT 1);
     `);
+    console.log("✓ Configuração padrão de trabalho inserida");
 
-    console.log("Todas as tabelas foram criadas com sucesso!");
+    console.log("🎉 Todas as tabelas foram criadas com sucesso!");
   } catch (error) {
-    console.error("Erro ao criar tabelas:", error);
+    console.error("❌ Erro ao criar tabelas:", error);
+    process.exit(1);
   } finally {
     process.exit(0);
   }
