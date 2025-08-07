@@ -67,10 +67,10 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
+      <div className="min-h-screen bg-white">
         <Toaster />
         <Router />
-      </TooltipProvider>
+      </div>
     </QueryClientProvider>
   );
 }

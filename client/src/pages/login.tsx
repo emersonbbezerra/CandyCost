@@ -66,14 +66,14 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50 p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <ChefHat className="h-12 w-12 text-pink-600 dark:text-pink-400" />
+            <ChefHat className="h-12 w-12 text-pink-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">CandyCost</h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-2">
+          <h1 className="text-3xl font-bold text-gray-900">CandyCost</h1>
+          <p className="text-gray-600 mt-2">
             Sistema de Gestão de Custos para Confeitaria
           </p>
         </div>
@@ -150,11 +150,11 @@ export default function Login() {
                   </form>
                 </Form>
 
-                <div className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                    <p className="font-medium text-blue-800 dark:text-blue-200">Conta de Administrador:</p>
-                    <p className="text-blue-600 dark:text-blue-300">Email: admin@confeitaria.com</p>
-                    <p className="text-blue-600 dark:text-blue-300">Senha: admin123!</p>
+                <div className="text-center text-sm text-gray-600 mt-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="font-medium text-blue-800">Conta de Administrador:</p>
+                    <p className="text-blue-600">Email: admin@confeitaria.com</p>
+                    <p className="text-blue-600">Senha: admin123!</p>
                   </div>
                 </div>
               </TabsContent>
@@ -276,7 +276,7 @@ export default function Login() {
           </CardContent>
         </Card>
 
-        <div className="text-center mt-6 text-sm text-gray-600 dark:text-gray-400">
+        <div className="text-center mt-6 text-sm text-gray-600">
           <p>Sistema profissional para gestão de custos</p>
           <p>Controle total dos seus insumos e produtos</p>
         </div>
