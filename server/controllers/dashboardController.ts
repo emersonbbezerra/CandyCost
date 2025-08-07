@@ -195,7 +195,11 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
 
     // Criar mapas para busca rápida de nomes
     const ingredientMap = new Map(ingredients.map(i => [i.id, i.name]));
-    const productMap = new Map(products.map(p => [p.id, p.name]));
+    const productsMap: Record<number, string> = {};
+    products.forEach(p => {
+      productsMap[p.id] = p.name;
+    });
+
 
     // Enriquecer atualizações com nomes
     const enrichedIngredientUpdates = ingredientUpdatesFiltered.map(update => ({
@@ -203,19 +207,22 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
       name: ingredientMap.get(update.ingredientId!) || "Ingrediente desconhecido"
     }));
 
+    // Enrich product updates with product names
     const enrichedProductUpdates = productUpdatesFiltered.map(update => ({
       ...update,
-      name: productMap.get(update.productId!) || "Produto desconhecido"
+      name: productsMap[update.productId || 0] || "Produto desconhecido"
     }));
 
     console.log("✅ Recent product updates found:", enrichedProductUpdates.length);
     console.log("✅ Recent ingredient updates found:", enrichedIngredientUpdates.length);
 
-    // Log the actual data being returned
+    // Log the actual data being returned with all fields
     console.log("📤 Product updates being returned:", enrichedProductUpdates.map(u => ({
       id: u.id,
       name: u.name,
       productId: u.productId,
+      oldPrice: u.oldPrice,
+      newPrice: u.newPrice,
       createdAt: u.createdAt
     })));
 
@@ -223,13 +230,14 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
       id: u.id,
       name: u.name,
       ingredientId: u.ingredientId,
+      oldPrice: u.oldPrice,
+      newPrice: u.newPrice,
       createdAt: u.createdAt
     })));
 
     const responseData = {
       ingredientUpdates: enrichedIngredientUpdates,
       productUpdates: enrichedProductUpdates,
-      timestamp: new Date().toISOString(), // Add timestamp to prevent caching
     };
 
     res.json(responseData);
