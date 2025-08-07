@@ -38,22 +38,19 @@ export default function FixedCosts() {
 
   const { data: fixedCosts = [], isLoading } = useQuery<FixedCost[]>({
     queryKey: ["/api/fixed-costs"],
-    queryFn: apiRequest,
   });
 
   const { data: monthlyTotal } = useQuery<{ monthlyTotal: number }>({
     queryKey: ["/api/fixed-costs/monthly-total"],
-    queryFn: apiRequest,
   });
 
   const { data: costsByCategory } = useQuery<Record<string, { total: number; costs: FixedCost[] }>>({
     queryKey: ["/api/fixed-costs/by-category"],
-    queryFn: apiRequest,
   });
 
   const createMutation = useMutation({
     mutationFn: (data: InsertFixedCost) => 
-      apiRequest("/api/fixed-costs", { method: "POST", body: JSON.stringify(data) }),
+      apiRequest("POST", "/api/fixed-costs", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs"] });
       toast({ title: "Custo fixo criado com sucesso!" });
@@ -66,7 +63,7 @@ export default function FixedCosts() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<InsertFixedCost> }) =>
-      apiRequest(`/api/fixed-costs/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+      apiRequest("PUT", `/api/fixed-costs/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs"] });
       toast({ title: "Custo fixo atualizado com sucesso!" });
@@ -103,7 +100,7 @@ export default function FixedCosts() {
 
   const toggleActiveMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest("PATCH", `/api/fixed-costs/${id}/toggle`);
+      const response = await apiRequest("PATCH", `/api/fixed-costs/${id}/toggle`, { isActive: true });
       return response.json();
     },
     onSuccess: () => {
