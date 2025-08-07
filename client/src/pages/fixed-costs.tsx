@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -80,30 +79,49 @@ export default function FixedCosts() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => 
-      apiRequest(`/api/fixed-costs/${id}`, { method: "DELETE" }),
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/fixed-costs/${id}`);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs"] });
-      toast({ title: "Custo fixo excluído com sucesso!" });
-      setDeleteConfirm(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/active"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/monthly-total"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      toast({
+        title: "Sucesso",
+        description: "Custo fixo excluído com sucesso!",
+      });
     },
-    onError: () => {
-      toast({ title: "Erro ao excluir custo fixo", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
   const toggleActiveMutation = useMutation({
-    mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
-      apiRequest(`/api/fixed-costs/${id}/toggle`, { 
-        method: "PATCH", 
-        body: JSON.stringify({ isActive }) 
-      }),
+    mutationFn: async (id: number) => {
+      const response = await apiRequest("PATCH", `/api/fixed-costs/${id}/toggle`);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs"] });
-      toast({ title: "Status alterado com sucesso!" });
+      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/active"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/monthly-total"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      toast({
+        title: "Sucesso",
+        description: "Status do custo fixo alterado com sucesso!",
+      });
     },
-    onError: () => {
-      toast({ title: "Erro ao alterar status", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -114,7 +132,7 @@ export default function FixedCosts() {
     const matchesStatus = statusFilter === "all" || 
                          (statusFilter === "active" && cost.isActive) ||
                          (statusFilter === "inactive" && !cost.isActive);
-    
+
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
@@ -136,7 +154,7 @@ export default function FixedCosts() {
   };
 
   const handleToggleActive = (fixedCost: FixedCost) => {
-    toggleActiveMutation.mutate({ id: fixedCost.id, isActive: !fixedCost.isActive });
+    toggleActiveMutation.mutate(fixedCost.id);
   };
 
   const getRecurrenceLabel = (recurrence: string) => {
@@ -246,7 +264,7 @@ export default function FixedCosts() {
                 />
               </div>
             </div>
-            
+
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger className="w-full lg:w-48">
                 <SelectValue placeholder="Filtrar por categoria" />
@@ -318,7 +336,7 @@ export default function FixedCosts() {
             </CardHeader>
             <CardContent className="space-y-3">
               <Badge variant="secondary">{fixedCost.category}</Badge>
-              
+
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Valor:</span>
@@ -326,12 +344,12 @@ export default function FixedCosts() {
                     {formatCurrency(parseFloat(fixedCost.value))}
                   </span>
                 </div>
-                
+
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Recorrência:</span>
                   <span>{getRecurrenceLabel(fixedCost.recurrence)}</span>
                 </div>
-                
+
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Valor Mensal:</span>
                   <span className="font-semibold text-primary">
