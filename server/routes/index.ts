@@ -19,5 +19,5 @@ export async function registerRoutes(app: Express) {
   app.use(recipeRoutes);
   app.use(reportRoutes);
   app.use(userRoutes);
-  app.use(fixedCostRoutes);
+  app.use("/api/fixed-costs", fixedCostRoutes);
 }
