@@ -1,13 +1,13 @@
-import { users, type UpsertUser, type User } from '@shared/schema';
+
 import bcrypt from 'bcryptjs';
 import connectPg from 'connect-pg-simple';
-import { eq, sql } from 'drizzle-orm';
 import type { Express, RequestHandler } from 'express';
 import session from 'express-session';
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
-import { db } from './db';
+import { prisma } from './db';
 import { findUserByEmail, verifyPassword } from './utils/authUtils';
+import type { User } from '@shared/schema';
 
 const PgSession = connectPg(session);
 
@@ -49,7 +49,9 @@ passport.serializeUser((user: any, done) => {
 // Deserialize user from session
 passport.deserializeUser(async (id: string, done) => {
   try {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
+    const user = await prisma.user.findUnique({
+      where: { id }
+    });
     done(null, user);
   } catch (error) {
     done(error);
@@ -116,13 +118,12 @@ export const isAdmin: RequestHandler = (req, res, next) => {
 // User service functions
 export const userService = {
   async hasAdmin(): Promise<boolean> {
-    const [admin] = await db
-      .select()
-      .from(users)
-      .where(eq(users.role, 'admin'))
-      .limit(1);
+    const admin = await prisma.user.findFirst({
+      where: { role: 'admin' }
+    });
     return !!admin;
   },
+
   async createUser(userData: {
     email: string;
     password: string;
@@ -133,31 +134,29 @@ export const userService = {
     // Hash password
     const hashedPassword = await bcrypt.hash(userData.password, 12);
 
-    // Generate unique ID
-    const userId =
-      Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    const newUser = await prisma.user.create({
+      data: {
+        email: userData.email,
+        password: hashedPassword,
+        firstName: userData.firstName || null,
+        lastName: userData.lastName || null,
+        role: userData.role || 'user',
+      }
+    });
 
-    const newUser: UpsertUser = {
-      id: userId,
-      email: userData.email,
-      password: hashedPassword,
-      firstName: userData.firstName || null,
-      lastName: userData.lastName || null,
-      role: userData.role || 'user',
-    };
-
-    const [user] = await db.insert(users).values(newUser).returning();
-    return user;
+    return newUser;
   },
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user;
+  async getUserByEmail(email: string): Promise<User | null> {
+    return await prisma.user.findUnique({
+      where: { email }
+    });
   },
 
-  async getUserById(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+  async getUserById(id: string): Promise<User | null> {
+    return await prisma.user.findUnique({
+      where: { id }
+    });
   },
 
   async createAdminUser(): Promise<User> {
@@ -192,11 +191,10 @@ export const userService = {
       throw new Error('Usuário já é administrador');
     }
 
-    const [updatedUser] = await db
-      .update(users)
-      .set({ role: 'admin', updatedAt: new Date() })
-      .where(eq(users.id, user.id))
-      .returning();
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: { role: 'admin' }
+    });
 
     console.log(`✓ User ${userEmail} promoted to admin`);
     return updatedUser;
@@ -210,11 +208,9 @@ export const userService = {
     lastName?: string
   ): Promise<User> {
     // Check if any admin exists
-    const [existingAdmin] = await db
-      .select()
-      .from(users)
-      .where(eq(users.role, 'admin'))
-      .limit(1);
+    const existingAdmin = await prisma.user.findFirst({
+      where: { role: 'admin' }
+    });
 
     if (existingAdmin) {
       throw new Error(
@@ -244,14 +240,10 @@ export const userService = {
       role?: string;
     }
   ): Promise<User> {
-    const [updatedUser] = await db
-      .update(users)
-      .set({
-        ...userData,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, userId))
-      .returning();
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: userData
+    });
 
     if (!updatedUser) {
       throw new Error('Usuário não encontrado');
@@ -264,41 +256,37 @@ export const userService = {
     userId: string,
     hashedPassword: string
   ): Promise<void> {
-    await db
-      .update(users)
-      .set({
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, userId));
-
-    // Update password separately using SQL
-    await db.execute(
-      sql`UPDATE users SET password = ${hashedPassword} WHERE id = ${userId}`
-    );
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword }
+    });
   },
 
   async deleteUser(userId: string): Promise<void> {
-    await db.delete(users).where(eq(users.id, userId));
+    await prisma.user.delete({
+      where: { id: userId }
+    });
   },
 
   async getAllUsers(): Promise<User[]> {
-    return await db
-      .select({
-        id: users.id,
-        email: users.email,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        profileImageUrl: users.profileImageUrl,
-        role: users.role,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt,
-        password: users.password,
-      })
-      .from(users);
+    return await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        profileImageUrl: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+        password: true,
+      }
+    });
   },
 
-  async getUserWithPassword(userId: string): Promise<any> {
-    const [user] = await db.select().from(users).where(eq(users.id, userId));
-    return user;
+  async getUserWithPassword(userId: string): Promise<User | null> {
+    return await prisma.user.findUnique({
+      where: { id: userId }
+    });
   },
 };
