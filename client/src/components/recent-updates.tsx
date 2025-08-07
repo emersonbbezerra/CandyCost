@@ -26,10 +26,12 @@ export function RecentUpdatesCard() {
     const { toast } = useToast();
     const queryClient = useQueryClient();
 
-    const { data, isLoading } = useQuery<RecentUpdates>({
+    const { data, isLoading, refetch } = useQuery<RecentUpdates>({
         queryKey: ["/api/dashboard/recent-updates"],
         refetchOnMount: "always",
         staleTime: 0,
+        refetchInterval: 5000, // Refetch a cada 5 segundos
+        refetchIntervalInBackground: false,
     });
 
     const handleEditProduct = async (productId: number) => {
@@ -66,11 +68,19 @@ export function RecentUpdatesCard() {
         setIsProductFormOpen(false);
         setEditingProduct(undefined);
         
-        // Invalidar cache das atualizações recentes e outras queries relacionadas
-        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+        // Remover dados do cache e forçar refetch
+        queryClient.removeQueries({ queryKey: ["/api/dashboard/recent-updates"] });
+        queryClient.removeQueries({ queryKey: ["/api/dashboard/stats"] });
+        queryClient.removeQueries({ queryKey: ["/api/price-history"] });
+        queryClient.removeQueries({ queryKey: ["/api/products"] });
+        
+        // Forçar refetch imediato das atualizações recentes
+        setTimeout(() => {
+            queryClient.refetchQueries({ 
+                queryKey: ["/api/dashboard/recent-updates"],
+                type: 'active'
+            });
+        }, 100);
     };
 
     return (
