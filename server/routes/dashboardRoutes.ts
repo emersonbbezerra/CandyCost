@@ -7,4 +7,4 @@ router.get("/stats", getDashboardStats);
 router.get("/recent-updates", getRecentUpdates);
 router.get("/cost-evolution", getCostEvolution);
 
-export { router as dashboardRoutes };
+export default router;
