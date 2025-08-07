@@ -137,18 +137,6 @@ async function seed() {
       });
     }
 
-    // Criar configuração de trabalho padrão se não existir
-    const existingWorkConfig = await db.select().from(workConfigurationTable).limit(1);
-    if (existingWorkConfig.length === 0) {
-      await db.insert(workConfigurationTable).values({
-        workDaysPerWeek: 5,
-        hoursPerDay: "8.00",
-        weeksPerMonth: "4.0",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-    }
-
     // Inserir alguns custos fixos de exemplo
     const sampleFixedCosts = [
       { name: "Aluguel da Cozinha", category: "Imóvel", value: "1500.00", recurrence: "monthly", description: "Aluguel mensal do espaço de produção", isActive: true },
