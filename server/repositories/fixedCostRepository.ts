@@ -54,4 +54,11 @@ export class FixedCostRepository {
       .returning();
     return result[0] || null;
   }
+
+  async delete(id: number): Promise<FixedCost | null> {
+    const result = await db.delete(fixedCosts)
+      .where(eq(fixedCosts.id, id))
+      .returning();
+    return result[0] || null;
+  }
 }

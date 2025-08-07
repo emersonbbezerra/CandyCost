@@ -131,4 +131,9 @@ export class FixedCostService {
 
     return categorized;
   }
+
+  async deleteFixedCost(id: number): Promise<boolean> {
+    const result = await this.fixedCostRepository.delete(id);
+    return result !== null;
+  }
 }
