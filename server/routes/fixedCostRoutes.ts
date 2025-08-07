@@ -1,12 +1,12 @@
 
 import { Router } from "express";
 import { FixedCostController } from "../controllers/fixedCostController";
-import { requireAuth } from "../middlewares/authMiddleware";
+import { isAuthenticated } from "../middlewares/authMiddleware";
 
 const router = Router();
 const fixedCostController = new FixedCostController();
 
-router.use(requireAuth);
+router.use(isAuthenticated);
 
 router.get("/", fixedCostController.getAll.bind(fixedCostController));
 router.get("/active", fixedCostController.getActive.bind(fixedCostController));
