@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Cookie, Sprout, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "wouter";
 
 interface PriceHistoryWithName extends PriceHistory {
     name: string;
@@ -16,7 +16,7 @@ interface RecentUpdates {
 }
 
 export function RecentUpdatesCard() {
-    const navigate = useNavigate();
+    const [, setLocation] = useLocation();
     const { data, isLoading } = useQuery<RecentUpdates>({
         queryKey: ["/api/dashboard/recent-updates"],
         refetchOnMount: "always",
@@ -64,7 +64,7 @@ export function RecentUpdatesCard() {
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => navigate("/ingredients")}
+                                        onClick={() => setLocation("/ingredients")}
                                         className="px-2 py-1 h-8"
                                     >
                                         <ExternalLink className="w-3 h-3" />
@@ -108,7 +108,7 @@ export function RecentUpdatesCard() {
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => navigate("/products")}
+                                        onClick={() => setLocation("/products")}
                                         className="px-2 py-1 h-8"
                                     >
                                         <ExternalLink className="w-3 h-3" />
