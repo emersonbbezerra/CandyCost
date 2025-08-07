@@ -56,7 +56,9 @@ export async function setupApp() {
 
 
 export async function setupViteIfDev(app: express.Express, server: any) {
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
+  // Vite runs separately in development
+  if (app.get("env") !== "development") {
+    const { serveStatic } = await import("./vite");
+    serveStatic(app);
   }
 }
