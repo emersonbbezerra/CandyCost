@@ -34,6 +34,14 @@ async function createTables() {
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
+
+    -- Adicionar coluna preparation_time_minutes se ela não existir
+    DO $$ 
+    BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'products' AND column_name = 'preparation_time_minutes') THEN
+            ALTER TABLE products ADD COLUMN preparation_time_minutes INTEGER NOT NULL DEFAULT 60;
+        END IF;
+    END $$;
     `);
 
     await db.execute(`
