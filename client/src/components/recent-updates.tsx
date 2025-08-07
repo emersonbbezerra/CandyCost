@@ -1,10 +1,14 @@
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
 import type { PriceHistory } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
-import { Cookie, Sprout, ExternalLink } from "lucide-react";
+import { Cookie, Sprout, ExternalLink, Edit } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { useLocation } from "wouter";
+import { ProductForm } from "./product-form";
+import { useState } from "react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface PriceHistoryWithName extends PriceHistory {
     name: string;
@@ -17,11 +21,50 @@ interface RecentUpdates {
 
 export function RecentUpdatesCard() {
     const [, setLocation] = useLocation();
+    const [isProductFormOpen, setIsProductFormOpen] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<any>();
+    const { toast } = useToast();
+
     const { data, isLoading } = useQuery<RecentUpdates>({
         queryKey: ["/api/dashboard/recent-updates"],
         refetchOnMount: "always",
         staleTime: 0,
     });
+
+    const handleEditProduct = async (productId: number) => {
+        try {
+            const response = await apiRequest("GET", `/api/products/${productId}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const productWithRecipes = await response.json();
+            
+            // Ensure the product has the required structure
+            const sanitizedProduct = {
+                ...productWithRecipes,
+                marginPercentage: productWithRecipes.marginPercentage || "60",
+                preparationTimeMinutes: productWithRecipes.preparationTimeMinutes || 60,
+                recipes: productWithRecipes.recipes || []
+            };
+            
+            setEditingProduct(sanitizedProduct);
+            setIsProductFormOpen(true);
+        } catch (error) {
+            console.error("Erro ao carregar produto:", error);
+            toast({
+                title: "Erro",
+                description: "Erro ao carregar dados do produto. Tente novamente.",
+                variant: "destructive",
+            });
+        }
+    };
+
+    const handleFormClose = () => {
+        setIsProductFormOpen(false);
+        setEditingProduct(undefined);
+    };
 
     return (
         <Card>
@@ -108,10 +151,11 @@ export function RecentUpdatesCard() {
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => setLocation("/products")}
+                                        onClick={() => update.productId && handleEditProduct(update.productId)}
                                         className="px-2 py-1 h-8"
+                                        title="Editar produto"
                                     >
-                                        <ExternalLink className="w-3 h-3" />
+                                        <Edit className="w-3 h-3" />
                                     </Button>
                                 </div>
                             </div>
@@ -119,6 +163,12 @@ export function RecentUpdatesCard() {
                     </div>
                 </div>
             </CardContent>
+
+            <ProductForm
+                open={isProductFormOpen}
+                onOpenChange={handleFormClose}
+                product={editingProduct}
+            />
         </Card>
     );
 }
