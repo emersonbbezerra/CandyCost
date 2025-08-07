@@ -43,7 +43,7 @@ function Router() {
   return (
     <div className="min-h-screen flex bg-gray-50">
       <Sidebar />
-      <main className="lg:ml-64 flex-1 pt-16 lg:pt-0">
+      <main className="lg:ml-64 flex-1 pt-16 lg:pt-0 bg-white">
         <Switch>
             <Route path="/" component={Dashboard} />
             <Route path="/ingredients" component={Ingredients} />
