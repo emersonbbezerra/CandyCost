@@ -1,9 +1,7 @@
 
 import { FixedCostRepository } from "../repositories/fixedCostRepository";
 import { productRepository } from "../repositories/productRepository";
-import { db } from "../db";
-import { eq } from "drizzle-orm";
-import { workConfiguration } from "../../shared/schema";
+import { prisma } from "../db";
 import type { FixedCost, WorkConfiguration } from "../../shared/schema";
 
 export class FixedCostService {
@@ -48,19 +46,21 @@ export class FixedCostService {
   }
 
   async getWorkConfiguration(): Promise<WorkConfiguration> {
-    const result = await db.select().from(workConfiguration).limit(1);
+    const result = await prisma.workConfiguration.findFirst();
     
-    if (result.length === 0) {
+    if (!result) {
       // Create default configuration if none exists
-      const [defaultConfig] = await db.insert(workConfiguration).values({
-        workDaysPerWeek: 5,
-        hoursPerDay: "8.00",
-        weeksPerMonth: "4.0",
-      }).returning();
+      const defaultConfig = await prisma.workConfiguration.create({
+        data: {
+          workDaysPerWeek: 5,
+          hoursPerDay: "8.00",
+          weeksPerMonth: "4.0",
+        }
+      });
       return defaultConfig;
     }
     
-    return result[0];
+    return result;
   }
 
   async updateWorkConfiguration(data: Partial<WorkConfiguration>): Promise<WorkConfiguration> {
@@ -69,13 +69,13 @@ export class FixedCostService {
     // Remove all timestamp and ID fields to avoid conflicts
     const { id, createdAt, updatedAt, ...cleanData } = data as any;
     
-    const [updated] = await db.update(workConfiguration)
-      .set({
+    const updated = await prisma.workConfiguration.update({
+      where: { id: config.id },
+      data: {
         ...cleanData,
         updatedAt: new Date(),
-      })
-      .where(eq(workConfiguration.id, config.id))
-      .returning();
+      }
+    });
     
     return updated;
   }
