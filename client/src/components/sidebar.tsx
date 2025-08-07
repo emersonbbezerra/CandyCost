@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -57,7 +56,7 @@ export function Sidebar() {
         className="lg:hidden fixed top-4 left-4 z-50 bg-white/90 backdrop-blur-md shadow-lg"
         onClick={() => setIsMobileOpen(true)}
       >
-        <Menu className="h-6 w-6 text-pink-primary" />
+        <Menu className="h-6 w-6 text-primary" />
       </Button>
 
       {/* Mobile overlay */}
@@ -78,11 +77,11 @@ export function Sidebar() {
         <div className="p-6 border-b border-sidebar-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-pink-primary to-purple-elegant rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-primary to-blue-elegant rounded-lg flex items-center justify-center">
                 <ChefHat className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-pink-primary">CandyCost</h1>
+                <h1 className="text-lg font-bold text-primary">CandyCost</h1>
                 <p className="text-xs text-muted-foreground">Gestão de Custos</p>
               </div>
             </div>
@@ -122,7 +121,7 @@ export function Sidebar() {
             {menuItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
-              
+
               return (
                 <Link key={item.path} href={item.path}>
                   <div 
@@ -131,7 +130,7 @@ export function Sidebar() {
                     }`}
                     onClick={() => setIsMobileOpen(false)}
                   >
-                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    <Icon className="w-5 h-5 flex-shrink-0 text-primary" />
                     <span className="font-medium">{item.label}</span>
                   </div>
                 </Link>
@@ -146,7 +145,7 @@ export function Sidebar() {
                   }`}
                   onClick={() => setIsMobileOpen(false)}
                 >
-                  <Users className="w-5 h-5 flex-shrink-0" />
+                  <Users className="w-5 h-5 flex-shrink-0 text-primary" />
                   <span className="font-medium">Usuários</span>
                 </div>
               </Link>
@@ -159,7 +158,7 @@ export function Sidebar() {
               {systemItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.path);
-                
+
                 return (
                   <Link key={item.path} href={item.path}>
                     <div 
@@ -168,7 +167,7 @@ export function Sidebar() {
                       }`}
                       onClick={() => setIsMobileOpen(false)}
                     >
-                      <Icon className="w-5 h-5 flex-shrink-0" />
+                      <Icon className="w-5 h-5 flex-shrink-0 text-primary" />
                       <span className="font-medium">{item.label}</span>
                     </div>
                   </Link>
@@ -185,7 +184,7 @@ export function Sidebar() {
             onClick={handleLogout}
             className="w-full justify-start text-sidebar-foreground hover:text-destructive hover:bg-destructive/10 transition-colors duration-300"
           >
-            <LogOut className="w-5 h-5 mr-3" />
+            <LogOut className="w-5 h-5 mr-3 text-primary" />
             Sair
           </Button>
         </div>

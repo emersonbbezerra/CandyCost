@@ -8,10 +8,10 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "badge-pink",
-        secondary: "badge-purple",
+        default: "badge-blue",
+        secondary: "badge-blue-light",
         destructive: "bg-gradient-to-r from-red-100 to-red-200 text-red-700 border border-red-300",
-        outline: "border-2 border-pink-primary text-pink-primary bg-transparent hover:bg-pink-primary hover:text-white",
+        outline: "border-2 border-primary text-primary bg-transparent hover:bg-primary hover:text-white",
         success: "badge-mint",
         warning: "badge-gold",
         info: "badge-sky",

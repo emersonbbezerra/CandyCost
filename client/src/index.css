@@ -6,7 +6,7 @@
 }
 
 body {
-  background: linear-gradient(135deg, #fef7ff 0%, #fff1f2 50%, #fef3f2 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
   color: hsl(var(--foreground));
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
   min-height: 100vh;
@@ -22,52 +22,52 @@ body {
   --popover: 0 0% 100%;
   --popover-foreground: 240 10% 3.9%;
   
-  /* Rosa elegante como cor principal */
-  --primary: 336 84% 57%;
-  --primary-foreground: 355 100% 97%;
+  /* Azul elegante como cor principal */
+  --primary: 217 91% 60%;
+  --primary-foreground: 210 40% 98%;
   
   /* Tons suaves complementares */
-  --secondary: 280 20% 96%;
-  --secondary-foreground: 240 10% 3.9%;
-  --muted: 280 14% 97%;
-  --muted-foreground: 240 3.8% 46.1%;
-  --accent: 315 100% 96%;
-  --accent-foreground: 240 10% 3.9%;
+  --secondary: 214 32% 91%;
+  --secondary-foreground: 220 14% 11%;
+  --muted: 220 14% 96%;
+  --muted-foreground: 220 8.9% 46.1%;
+  --accent: 210 40% 98%;
+  --accent-foreground: 220 14% 11%;
   
   /* Cores de sistema */
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
-  --border: 280 14% 91%;
-  --input: 280 14% 91%;
-  --ring: 336 84% 57%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 217 91% 60%;
   --radius: 0.75rem;
   
   /* Charts com cores harmoniosas */
-  --chart-1: 336 84% 57%;
-  --chart-2: 280 100% 70%;
+  --chart-1: 217 91% 60%;
+  --chart-2: 212 95% 68%;
   --chart-3: 45 93% 47%;
   --chart-4: 156 73% 59%;
   --chart-5: 197 71% 73%;
   
   /* Sidebar moderna */
-  --sidebar-background: 320 40% 98%;
-  --sidebar-foreground: 240 10% 3.9%;
-  --sidebar-primary: 336 84% 57%;
-  --sidebar-primary-foreground: 355 100% 97%;
-  --sidebar-accent: 315 100% 94%;
-  --sidebar-accent-foreground: 240 10% 3.9%;
-  --sidebar-border: 280 14% 88%;
-  --sidebar-ring: 336 84% 57%;
+  --sidebar-background: 210 40% 98%;
+  --sidebar-foreground: 220 14% 11%;
+  --sidebar-primary: 217 91% 60%;
+  --sidebar-primary-foreground: 210 40% 98%;
+  --sidebar-accent: 214 32% 91%;
+  --sidebar-accent-foreground: 220 14% 11%;
+  --sidebar-border: 214 32% 91%;
+  --sidebar-ring: 217 91% 60%;
 }
 
 /* Background gradiente sofisticado */
 .bg-gradient-main {
   background: linear-gradient(135deg, 
-    hsl(320, 100%, 99%) 0%,
-    hsl(315, 100%, 98%) 25%,
-    hsl(310, 90%, 97%) 50%,
-    hsl(305, 80%, 96%) 75%,
-    hsl(300, 70%, 95%) 100%
+    hsl(210, 40%, 99%) 0%,
+    hsl(212, 50%, 98%) 25%,
+    hsl(214, 60%, 97%) 50%,
+    hsl(216, 70%, 96%) 75%,
+    hsl(218, 80%, 95%) 100%
   );
 }
 
@@ -77,25 +77,25 @@ body {
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 
-    0 8px 32px rgba(248, 113, 113, 0.08),
-    0 4px 16px rgba(219, 39, 119, 0.04),
-    0 2px 8px rgba(147, 51, 234, 0.02);
+    0 8px 32px rgba(59, 130, 246, 0.08),
+    0 4px 16px rgba(37, 99, 235, 0.04),
+    0 2px 8px rgba(29, 78, 216, 0.02);
 }
 
 /* Botões com gradientes elegantes */
 .btn-primary-gradient {
   background: linear-gradient(135deg, 
-    hsl(336, 84%, 57%) 0%,
-    hsl(320, 100%, 60%) 50%,
-    hsl(310, 90%, 58%) 100%
+    hsl(217, 91%, 60%) 0%,
+    hsl(212, 95%, 68%) 50%,
+    hsl(208, 100%, 64%) 100%
   );
-  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-primary-gradient:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(236, 72, 153, 0.5);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
 }
 
 /* Efeitos de hover suaves */
@@ -108,22 +108,22 @@ body {
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
 }
 
-/* Cores específicas para a aplicação de confeitaria */
-.text-pink-primary { color: hsl(336, 84%, 57%); }
-.text-purple-elegant { color: hsl(280, 100%, 70%); }
+/* Cores específicas para a aplicação */
+.text-blue-primary { color: hsl(217, 91%, 60%); }
+.text-blue-elegant { color: hsl(212, 95%, 68%); }
 .text-gold-accent { color: hsl(45, 93%, 47%); }
 .text-mint-fresh { color: hsl(156, 73%, 59%); }
 .text-sky-soft { color: hsl(197, 71%, 73%); }
 
-.bg-pink-light { background-color: hsl(315, 100%, 96%); }
-.bg-purple-light { background-color: hsl(280, 100%, 97%); }
+.bg-blue-light { background-color: hsl(210, 40%, 98%); }
+.bg-blue-subtle { background-color: hsl(214, 32%, 91%); }
 .bg-gold-light { background-color: hsl(45, 100%, 96%); }
 .bg-mint-light { background-color: hsl(156, 100%, 96%); }
 .bg-sky-light { background-color: hsl(197, 100%, 96%); }
 
 /* Bordas com cores elegantes */
-.border-pink-elegant { border-color: hsl(315, 60%, 85%); }
-.border-purple-elegant { border-color: hsl(280, 60%, 85%); }
+.border-blue-elegant { border-color: hsl(214, 32%, 91%); }
+.border-blue-subtle { border-color: hsl(220, 14%, 96%); }
 .border-gold-elegant { border-color: hsl(45, 60%, 85%); }
 
 /* Badges modernas */
@@ -135,16 +135,16 @@ body {
   letter-spacing: 0.025em;
 }
 
-.badge-pink {
-  background: linear-gradient(135deg, hsl(336, 100%, 95%) 0%, hsl(315, 100%, 94%) 100%);
-  color: hsl(336, 84%, 40%);
-  border: 1px solid hsl(315, 60%, 85%);
+.badge-blue {
+  background: linear-gradient(135deg, hsl(217, 100%, 95%) 0%, hsl(212, 100%, 94%) 100%);
+  color: hsl(217, 91%, 40%);
+  border: 1px solid hsl(214, 32%, 91%);
 }
 
-.badge-purple {
-  background: linear-gradient(135deg, hsl(280, 100%, 97%) 0%, hsl(270, 100%, 96%) 100%);
-  color: hsl(280, 100%, 45%);
-  border: 1px solid hsl(280, 60%, 85%);
+.badge-blue-light {
+  background: linear-gradient(135deg, hsl(210, 40%, 98%) 0%, hsl(214, 32%, 96%) 100%);
+  color: hsl(220, 14%, 35%);
+  border: 1px solid hsl(214, 32%, 91%);
 }
 
 .badge-gold {
@@ -198,9 +198,9 @@ body {
 
 /* Loading spinner moderno */
 .spinner-modern {
-  border: 3px solid rgba(236, 72, 153, 0.1);
+  border: 3px solid rgba(59, 130, 246, 0.1);
   border-radius: 50%;
-  border-top: 3px solid hsl(336, 84%, 57%);
+  border-top: 3px solid hsl(217, 91%, 60%);
   width: 40px;
   height: 40px;
   animation: spin 1s linear infinite;
@@ -221,12 +221,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, hsl(336, 84%, 57%) 0%, hsl(280, 100%, 70%) 100%);
+  background: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(212, 95%, 68%) 100%);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, hsl(336, 84%, 52%) 0%, hsl(280, 100%, 65%) 100%);
+  background: linear-gradient(135deg, hsl(217, 91%, 55%) 0%, hsl(212, 95%, 63%) 100%);
 }
 
 /* Inputs modernos */
@@ -238,8 +238,8 @@ body {
 }
 
 .input-modern:focus {
-  border-color: hsl(336, 84%, 57%);
-  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+  border-color: hsl(217, 91%, 60%);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   outline: none;
 }
 
@@ -266,7 +266,7 @@ body {
 }
 
 .table-modern tr:hover {
-  background: rgba(315, 100%, 96%, 0.3);
+  background: rgba(210, 40%, 98%, 0.5);
 }
 
 /* Status indicators */
@@ -290,14 +290,14 @@ body {
 }
 
 .sidebar-item:hover {
-  background: linear-gradient(135deg, hsl(315, 100%, 94%) 0%, hsl(280, 20%, 96%) 100%);
+  background: linear-gradient(135deg, hsl(210, 40%, 98%) 0%, hsl(214, 32%, 91%) 100%);
   transform: translateX(4px);
 }
 
 .sidebar-item.active {
-  background: linear-gradient(135deg, hsl(336, 84%, 57%) 0%, hsl(320, 100%, 60%) 100%);
+  background: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(212, 95%, 68%) 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
 }
 
 /* Charts enhancements */
