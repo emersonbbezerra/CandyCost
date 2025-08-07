@@ -36,8 +36,65 @@ export const productService = {
     description?: string;
     isAlsoIngredient?: boolean;
     marginPercentage?: string;
+    preparationTimeMinutes?: number;
   }>) {
-    return await productRepository.updateProduct(productId, data);
+    // Get current product data before update
+    const currentProduct = await productRepository.getProduct(productId);
+    if (!currentProduct) {
+      throw new Error("Produto não encontrado");
+    }
+
+    // Calculate old cost
+    let oldCost = 0;
+    try {
+      const oldCostData = await this.calculateProductCost(productId);
+      oldCost = oldCostData.totalCost;
+    } catch {
+      oldCost = 0;
+    }
+
+    // Update the product
+    const updatedProduct = await productRepository.updateProduct(productId, data);
+
+    // Check if cost-affecting fields were changed
+    const costAffectingFieldsChanged = 
+      data.marginPercentage !== undefined || 
+      data.preparationTimeMinutes !== undefined;
+
+    if (costAffectingFieldsChanged) {
+      // Calculate new cost
+      let newCost = 0;
+      try {
+        const newCostData = await this.calculateProductCost(productId);
+        newCost = newCostData.totalCost;
+      } catch {
+        newCost = 0;
+      }
+
+      // Register price history if cost changed
+      if (oldCost !== newCost) {
+        const { priceHistoryService } = await import("./priceHistoryService");
+        
+        let changeReason = "Atualização do produto";
+        if (data.marginPercentage !== undefined && data.preparationTimeMinutes !== undefined) {
+          changeReason = "Atualização da margem de lucro e tempo de preparo";
+        } else if (data.marginPercentage !== undefined) {
+          changeReason = "Atualização da margem de lucro";
+        } else if (data.preparationTimeMinutes !== undefined) {
+          changeReason = "Atualização do tempo de preparo";
+        }
+
+        await priceHistoryService.createPriceHistory({
+          productId,
+          oldPrice: oldCost.toFixed(2),
+          newPrice: newCost.toFixed(2),
+          changeReason,
+          createdAt: new Date(),
+        });
+      }
+    }
+
+    return updatedProduct;
   },
 
   async deleteProduct(productId: number) {
