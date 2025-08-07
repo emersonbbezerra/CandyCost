@@ -19,10 +19,6 @@ author = 43871407
 task = "shell.exec"
 args = "npm run dev"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run dev-frontend"
-
 [[ports]]
 localPort = 3000
 externalPort = 3000
