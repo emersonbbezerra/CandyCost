@@ -23,14 +23,14 @@ export async function registerRoutes(app: Express) {
   app.use(reportRoutes);
   app.use(userRoutes);
   app.use("/api/fixed-costs", fixedCostRoutes);
-  
+
   // Work configuration routes
   const workConfigRouter = Router();
   const fixedCostController = new FixedCostController();
-  
+
   workConfigRouter.use(isAuthenticated);
   workConfigRouter.get("/work-configuration", fixedCostController.getWorkConfiguration.bind(fixedCostController));
   workConfigRouter.put("/work-configuration", fixedCostController.updateWorkConfiguration.bind(fixedCostController));
-  
+
   app.use("/api/work-config", workConfigRouter);
 }
