@@ -207,14 +207,19 @@ export const productService = {
             fixedCost: fixedCostPerProduct.toFixed(2)
           });
 
-          // Registrar histórico de custo do produto afetado
-          await priceHistoryService.createPriceHistory({
-            productId,
-            oldPrice: oldCost.totalCost.toFixed(2),
-            newPrice: newTotalCost.toFixed(2),
-            changeReason: `Alteração no preço do ingrediente: ${currentIngredient.name}`,
-            createdAt: new Date(),
-          });
+          // Registrar histórico do produto apenas se houve mudança significativa
+          if (Math.abs(newTotalCost - oldCost.totalCost) > 0.01) {
+            console.log(`💾 Registrando histórico - Produto ${productId}: R$ ${oldCost.totalCost.toFixed(2)} → R$ ${newTotalCost.toFixed(2)}`);
+            await priceHistoryService.createPriceHistory({
+              productId: productId,
+              oldPrice: oldCost.totalCost.toFixed(2),
+              newPrice: newTotalCost.toFixed(2),
+              changeReason: `Alteração no preço do ingrediente: ${currentIngredient.name}`,
+              createdAt: new Date(),
+            });
+          } else {
+            console.log(`⏭️ Produto ${productId}: Sem mudança significativa de custo`);
+          }
         }
       });
     }
@@ -239,7 +244,7 @@ export const productService = {
   async calculateProductCosts(productIds?: number[]) {
     try {
       console.log("🧮 Starting product costs calculation...");
-      const products = productIds 
+      const products = productIds
         ? await Promise.all(productIds.map(id => productRepository.getProductById(id)))
         : await productRepository.getProducts();
 
