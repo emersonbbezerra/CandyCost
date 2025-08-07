@@ -38,6 +38,13 @@ export const getDashboardStats = async (_req: Request, res: Response) => {
 };
 
 export const getRecentUpdates = async (_req: Request, res: Response) => {
+  // Disable caching for this endpoint
+  res.set({
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  });
+  
   try {
     const ingredients = await productService.getIngredients();
     const products = await productService.getProducts();

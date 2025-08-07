@@ -30,8 +30,10 @@ export function RecentUpdatesCard() {
         queryKey: ["/api/dashboard/recent-updates"],
         refetchOnMount: "always",
         staleTime: 0,
-        refetchInterval: 5000, // Refetch a cada 5 segundos
+        cacheTime: 0,
+        refetchInterval: 3000, // Refetch a cada 3 segundos
         refetchIntervalInBackground: false,
+        refetchOnWindowFocus: true,
     });
 
     const handleEditProduct = async (productId: number) => {
@@ -68,19 +70,27 @@ export function RecentUpdatesCard() {
         setIsProductFormOpen(false);
         setEditingProduct(undefined);
         
-        // Remover dados do cache e forçar refetch
+        // Remover dados do cache completamente
         queryClient.removeQueries({ queryKey: ["/api/dashboard/recent-updates"] });
         queryClient.removeQueries({ queryKey: ["/api/dashboard/stats"] });
         queryClient.removeQueries({ queryKey: ["/api/price-history"] });
         queryClient.removeQueries({ queryKey: ["/api/products"] });
         
-        // Forçar refetch imediato das atualizações recentes
-        setTimeout(() => {
-            queryClient.refetchQueries({ 
-                queryKey: ["/api/dashboard/recent-updates"],
-                type: 'active'
+        // Forçar múltiplos refetch para garantir que os dados sejam atualizados
+        setTimeout(async () => {
+            await queryClient.invalidateQueries({ 
+                queryKey: ["/api/dashboard/recent-updates"]
             });
-        }, 100);
+            await refetch();
+        }, 200);
+        
+        setTimeout(async () => {
+            await refetch();
+        }, 1000);
+        
+        setTimeout(async () => {
+            await refetch();
+        }, 2000);
     };
 
     return (

@@ -56,43 +56,40 @@ export const productService = {
     // Update the product
     const updatedProduct = await productRepository.updateProduct(productId, data);
 
-    // Check if cost-affecting fields were changed
-    const costAffectingFieldsChanged = 
-      data.marginPercentage !== undefined || 
-      data.preparationTimeMinutes !== undefined;
-
-    if (costAffectingFieldsChanged) {
-      // Calculate new cost
-      let newCost = 0;
-      try {
-        const newCostData = await this.calculateProductCost(productId);
-        newCost = newCostData.totalCost;
-      } catch {
-        newCost = 0;
-      }
-
-      // Register price history if cost changed
-      if (oldCost !== newCost) {
-        const { priceHistoryService } = await import("./priceHistoryService");
-        
-        let changeReason = "Atualização do produto";
-        if (data.marginPercentage !== undefined && data.preparationTimeMinutes !== undefined) {
-          changeReason = "Atualização da margem de lucro e tempo de preparo";
-        } else if (data.marginPercentage !== undefined) {
-          changeReason = "Atualização da margem de lucro";
-        } else if (data.preparationTimeMinutes !== undefined) {
-          changeReason = "Atualização do tempo de preparo";
-        }
-
-        await priceHistoryService.createPriceHistory({
-          productId,
-          oldPrice: oldCost.toFixed(2),
-          newPrice: newCost.toFixed(2),
-          changeReason,
-          createdAt: new Date(),
-        });
-      }
+    // Always calculate new cost after update
+    let newCost = 0;
+    try {
+      const newCostData = await this.calculateProductCost(productId);
+      newCost = newCostData.totalCost;
+    } catch {
+      newCost = 0;
     }
+
+    // Create price history entry for any product update
+    const { priceHistoryService } = await import("./priceHistoryService");
+    
+    let changeReason = "Atualização do produto";
+    const changedFields = [];
+    
+    if (data.name !== undefined) changedFields.push("nome");
+    if (data.category !== undefined) changedFields.push("categoria");  
+    if (data.description !== undefined) changedFields.push("descrição");
+    if (data.marginPercentage !== undefined) changedFields.push("margem de lucro");
+    if (data.preparationTimeMinutes !== undefined) changedFields.push("tempo de preparo");
+    if (data.isAlsoIngredient !== undefined) changedFields.push("configuração de ingrediente");
+
+    if (changedFields.length > 0) {
+      changeReason = `Atualização: ${changedFields.join(", ")}`;
+    }
+
+    // Always create history entry, even if cost didn't change
+    await priceHistoryService.createPriceHistory({
+      productId,
+      oldPrice: oldCost.toFixed(2),
+      newPrice: newCost.toFixed(2),
+      changeReason,
+      createdAt: new Date(),
+    });
 
     return updatedProduct;
   },
