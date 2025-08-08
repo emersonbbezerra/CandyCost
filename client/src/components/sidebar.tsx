@@ -70,7 +70,7 @@ export function Sidebar() {
       {/* Sidebar */}
       <div className={`
         fixed top-0 left-0 h-full w-64 bg-sidebar/95 backdrop-blur-xl border-r border-sidebar-border z-50 
-        transform transition-transform duration-300 ease-in-out flex flex-col
+        transform transition-transform duration-300 ease-in-out
         ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         {/* Header */}
@@ -116,7 +116,7 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <div className="flex-1 overflow-y-auto py-4 scrollbar-thin scrollbar-thumb-sidebar-border scrollbar-track-transparent">
+        <div className="flex-1 overflow-y-auto py-4">
           <nav className="px-4 space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -125,10 +125,8 @@ export function Sidebar() {
               return (
                 <Link key={item.path} href={item.path}>
                   <div 
-                    className={`sidebar-item flex items-center space-x-3 px-4 py-3 cursor-pointer rounded-lg transition-all duration-200 ${
-                      active 
-                        ? 'active bg-primary/10 text-primary border-l-4 border-primary' 
-                        : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
+                    className={`sidebar-item flex items-center space-x-3 px-4 py-3 cursor-pointer ${
+                      active ? 'active' : 'text-sidebar-foreground'
                     }`}
                     onClick={() => setIsMobileOpen(false)}
                   >
@@ -142,10 +140,8 @@ export function Sidebar() {
             {user?.role === 'admin' && (
               <Link href="/user-management">
                 <div 
-                  className={`sidebar-item flex items-center space-x-3 px-4 py-3 cursor-pointer rounded-lg transition-all duration-200 ${
-                    isActive('/user-management') 
-                      ? 'active bg-primary/10 text-primary border-l-4 border-primary' 
-                      : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
+                  className={`sidebar-item flex items-center space-x-3 px-4 py-3 cursor-pointer ${
+                    isActive('/user-management') ? 'active' : 'text-sidebar-foreground'
                   }`}
                   onClick={() => setIsMobileOpen(false)}
                 >
@@ -166,10 +162,8 @@ export function Sidebar() {
                 return (
                   <Link key={item.path} href={item.path}>
                     <div 
-                      className={`sidebar-item flex items-center space-x-3 px-4 py-3 cursor-pointer rounded-lg transition-all duration-200 ${
-                        active 
-                          ? 'active bg-primary/10 text-primary border-l-4 border-primary' 
-                          : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground'
+                      className={`sidebar-item flex items-center space-x-3 px-4 py-3 cursor-pointer ${
+                        active ? 'active' : 'text-sidebar-foreground'
                       }`}
                       onClick={() => setIsMobileOpen(false)}
                     >
@@ -184,14 +178,14 @@ export function Sidebar() {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-sidebar-border mt-auto flex-shrink-0">
+        <div className="p-4 border-t border-sidebar-border">
           <Button
             variant="ghost"
             onClick={handleLogout}
-            className="w-full justify-start text-sidebar-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-300 h-12 text-base font-medium rounded-lg"
+            className="w-full justify-start text-sidebar-foreground hover:text-destructive hover:bg-destructive/10 transition-colors duration-300"
           >
-            <LogOut className="w-5 h-5 mr-3" />
-            <span>Sair</span>
+            <LogOut className="w-5 h-5 mr-3 text-primary" />
+            Sair
           </Button>
         </div>
       </div>
