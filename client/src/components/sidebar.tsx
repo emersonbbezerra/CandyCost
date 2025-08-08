@@ -34,13 +34,16 @@ const systemItems = [
 ];
 
 export function Sidebar() {
+  const [isOpen, setIsOpen] = useState(false);
   const [location] = useLocation();
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, isLogoutPending } = useAuth();
 
-  const handleLogout = () => {
-    logout();
-  };
+  const adminItems = user?.role === 'admin' ? [
+    { path: "/user-management", label: "Usuários", icon: Users },
+    { path: "/system", label: "Sistema", icon: Settings },
+  ] : [];
+
+  const allMenuItems = [...menuItems, ...adminItems];
 
   const isActive = (path: string) => {
     if (path === "/") return location === "/";
@@ -49,144 +52,120 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile menu button */}
+      {/* Mobile Menu Button */}
       <Button
         variant="ghost"
-        size="icon"
-        className="lg:hidden fixed top-4 left-4 z-50 bg-white/90 backdrop-blur-md shadow-lg"
-        onClick={() => setIsMobileOpen(true)}
+        size="sm"
+        className="fixed top-4 left-4 z-50 md:hidden"
+        onClick={() => setIsOpen(!isOpen)}
       >
-        <Menu className="h-6 w-6 text-primary" />
+        {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </Button>
 
-      {/* Mobile overlay */}
-      {isMobileOpen && (
+      {/* Overlay for mobile */}
+      {isOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
-          onClick={() => setIsMobileOpen(false)}
+          className="fixed inset-0 bg-black/20 z-40 md:hidden"
+          onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <div className={`
-        fixed top-0 left-0 h-full w-64 bg-sidebar/95 backdrop-blur-xl border-r border-sidebar-border z-50 
-        transform transition-transform duration-300 ease-in-out
-        ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        fixed top-0 left-0 h-full bg-white border-r border-gray-200 z-40 transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:translate-x-0 md:static md:z-auto
+        w-64 flex flex-col
       `}>
         {/* Header */}
-        <div className="p-6 border-b border-sidebar-border">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-primary to-blue-elegant rounded-lg flex items-center justify-center">
-                <ChefHat className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-primary">CandyCost</h1>
-                <p className="text-xs text-muted-foreground">Gestão de Custos</p>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden"
-              onClick={() => setIsMobileOpen(false)}
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-
-        {/* User info */}
-        <div className="p-4 border-b border-sidebar-border">
+        <div className="p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-gold-accent to-mint-fresh rounded-full flex items-center justify-center">
-              <span className="text-white font-semibold text-sm">
-                {user?.username?.charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-sidebar-foreground truncate">
-                {user?.username}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {user?.role === 'admin' ? 'Administrador' : 'Usuário'}
-              </p>
+            <ChefHat className="h-8 w-8 text-pink-600" />
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">CandyCost</h1>
+              <p className="text-sm text-gray-600">Sistema de Custos</p>
             </div>
           </div>
         </div>
 
         {/* Navigation */}
-        <div className="flex-1 overflow-y-auto py-4">
-          <nav className="px-4 space-y-2">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.path);
-
-              return (
-                <Link key={item.path} href={item.path}>
-                  <div 
-                    className={`sidebar-item flex items-center space-x-3 px-4 py-3 cursor-pointer ${
-                      active ? 'active' : 'text-sidebar-foreground'
+        <nav className="flex-1 p-4">
+          <ul className="space-y-2">
+            {allMenuItems.map((item) => (
+              <li key={item.path}>
+                <Link href={item.path}>
+                  <Button
+                    variant={isActive(item.path) ? "default" : "ghost"}
+                    className={`w-full justify-start text-left ${
+                      isActive(item.path)
+                        ? "bg-pink-600 text-white hover:bg-pink-700"
+                        : "text-gray-700 hover:bg-gray-100"
                     }`}
-                    onClick={() => setIsMobileOpen(false)}
+                    onClick={() => setIsOpen(false)}
                   >
-                    <Icon className="w-5 h-5 flex-shrink-0 text-primary" />
-                    <span className="font-medium">{item.label}</span>
-                  </div>
+                    <item.icon className="h-4 w-4 mr-3" />
+                    {item.label}
+                  </Button>
                 </Link>
-              );
-            })}
+              </li>
+            ))}
+          </ul>
+        </nav>
 
+        {/* User Info and Logout */}
+        <div className="p-4 border-t border-gray-200">
+          <div className="mb-4 bg-gray-50 rounded-lg p-3">
+            <div className="flex items-center space-x-2 mb-2">
+              <div className="w-8 h-8 bg-pink-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                {user?.firstName?.charAt(0)?.toUpperCase() || 'U'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-900 truncate">
+                  {user?.firstName && user?.lastName
+                    ? `${user.firstName} ${user.lastName}`
+                    : user?.firstName || 'Usuário'
+                  }
+                </p>
+                <p className="text-xs text-gray-600 truncate">{user?.email}</p>
+              </div>
+            </div>
             {user?.role === 'admin' && (
-              <Link href="/user-management">
-                <div 
-                  className={`sidebar-item flex items-center space-x-3 px-4 py-3 cursor-pointer ${
-                    isActive('/user-management') ? 'active' : 'text-sidebar-foreground'
-                  }`}
-                  onClick={() => setIsMobileOpen(false)}
-                >
-                  <Users className="w-5 h-5 flex-shrink-0 text-primary" />
-                  <span className="font-medium">Usuários</span>
-                </div>
-              </Link>
+              <div className="flex justify-center">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
+                  <Settings className="w-3 h-3 mr-1" />
+                  Administrador
+                </span>
+              </div>
             )}
-          </nav>
-
-          <div className="mt-8 px-4">
-            <div className="h-px bg-sidebar-border mb-4"></div>
-            <nav className="space-y-2">
-              {systemItems.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.path);
-
-                return (
-                  <Link key={item.path} href={item.path}>
-                    <div 
-                      className={`sidebar-item flex items-center space-x-3 px-4 py-3 cursor-pointer ${
-                        active ? 'active' : 'text-sidebar-foreground'
-                      }`}
-                      onClick={() => setIsMobileOpen(false)}
-                    >
-                      <Icon className="w-5 h-5 flex-shrink-0 text-primary" />
-                      <span className="font-medium">{item.label}</span>
-                    </div>
-                  </Link>
-                );
-              })}
-            </nav>
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-sidebar-border">
-          <Button
-            variant="ghost"
-            onClick={handleLogout}
-            className="w-full justify-start text-sidebar-foreground hover:text-destructive hover:bg-destructive/10 transition-colors duration-300"
-          >
-            <LogOut className="w-5 h-5 mr-3 text-primary" />
-            Sair
-          </Button>
+          <div className="space-y-1">
+            <Link href="/profile">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start text-gray-700 hover:bg-gray-100"
+                onClick={() => setIsOpen(false)}
+              >
+                <User className="h-4 w-4 mr-3" />
+                Meu Perfil
+              </Button>
+            </Link>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
+              onClick={() => {
+                logout();
+                setIsOpen(false);
+              }}
+              disabled={isLogoutPending}
+            >
+              <LogOut className="h-4 w-4 mr-3" />
+              {isLogoutPending ? "Saindo..." : "Sair da Conta"}
+            </Button>
+          </div>
         </div>
       </div>
     </>
