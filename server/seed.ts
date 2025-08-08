@@ -40,6 +40,22 @@ async function seed() {
     // Setup sessions table first
     await setupSessionsTable();
     
+    // Check if data already exists
+    const existingIngredients = await prisma.ingredient.count();
+    const existingProducts = await prisma.product.count();
+    const existingFixedCosts = await prisma.fixedCost.count();
+    
+    if (existingIngredients > 0 || existingProducts > 0 || existingFixedCosts > 0) {
+      console.log("✓ Dados já existem no banco - pulando inserção de dados de exemplo");
+      
+      // Ainda assim, vamos garantir que o usuário admin existe
+      await userService.createAdminUser();
+      console.log("✓ Verificação de usuário admin concluída");
+      return;
+    }
+    
+    console.log("📝 Inserindo dados de exemplo...");
+    
     // Sample ingredients
     const sampleIngredients = [
       { name: "Farinha de Trigo", category: "Farinhas", quantity: "5", unit: "kg", price: "12.50", brand: "Marca Premium" },
