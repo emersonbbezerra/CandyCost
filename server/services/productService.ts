@@ -1,4 +1,3 @@
-
 import { prisma } from "../db";
 import { productRepository } from "../repositories/productRepository";
 import { fixedCostRepository } from "../repositories/fixedCostRepository";
@@ -44,7 +43,7 @@ export const productService = {
         const ingredientPrice = parseFloat(recipe.ingredient.price);
         const ingredientQuantity = parseFloat(recipe.ingredient.quantity);
         const recipeQuantity = parseFloat(recipe.quantity);
-        
+
         const costPerUnit = ingredientPrice / ingredientQuantity;
         const recipeCost = costPerUnit * recipeQuantity;
         totalCost += recipeCost;
@@ -63,11 +62,11 @@ export const productService = {
     const weeksPerMonth = parseFloat(workConfig?.weeksPerMonth.toString() || "4");
 
     const totalWorkHoursPerMonth = workDaysPerWeek * hoursPerDay * weeksPerMonth;
-    
+
     // Calculate total monthly fixed costs
     const fixedCosts = await fixedCostRepository.findActive();
     let totalMonthlyFixedCosts = 0;
-    
+
     for (const fixedCost of fixedCosts) {
       const value = parseFloat(fixedCost.value);
       switch (fixedCost.recurrence) {
@@ -85,7 +84,7 @@ export const productService = {
 
     // Calculate fixed cost per minute
     const fixedCostPerMinute = totalMonthlyFixedCosts / (totalWorkHoursPerMonth * 60);
-    
+
     // Calculate fixed cost for this product based on preparation time
     const fixedCostPerUnit = fixedCostPerMinute * product.preparationTimeMinutes;
 
@@ -116,7 +115,7 @@ export const productService = {
       try {
         // Calculate old cost
         const oldCost = await this.calculateProductCostAtPrice(recipe.product.id, ingredientId, oldPrice);
-        
+
         // Calculate new cost
         const newCost = await this.calculateProductCost(recipe.product.id);
 
@@ -141,7 +140,7 @@ export const productService = {
     return updatedProducts;
   },
 
-  async calculateProductCostAtPrice(productId: number, ingredientId: number, priceOverride: string): Promise<ProductCost> {
+  async calculateProductCostAtPrice(productId: string, ingredientId: number, priceOverride: string): Promise<ProductCost> {
     const product = await productRepository.findWithRecipes(productId);
     if (!product) {
       throw new Error('Produto não encontrado');
@@ -153,15 +152,15 @@ export const productService = {
     for (const recipe of product.recipes) {
       if (recipe.ingredient) {
         let ingredientPrice = parseFloat(recipe.ingredient.price);
-        
+
         // Use override price if this is the ingredient being updated
         if (recipe.ingredient.id === ingredientId) {
           ingredientPrice = parseFloat(priceOverride);
         }
-        
+
         const ingredientQuantity = parseFloat(recipe.ingredient.quantity);
         const recipeQuantity = parseFloat(recipe.quantity);
-        
+
         const costPerUnit = ingredientPrice / ingredientQuantity;
         const recipeCost = costPerUnit * recipeQuantity;
         totalCost += recipeCost;
@@ -180,11 +179,11 @@ export const productService = {
     const weeksPerMonth = parseFloat(workConfig?.weeksPerMonth.toString() || "4");
 
     const totalWorkHoursPerMonth = workDaysPerWeek * hoursPerDay * weeksPerMonth;
-    
+
     // Calculate total monthly fixed costs
     const fixedCosts = await fixedCostRepository.findActive();
     let totalMonthlyFixedCosts = 0;
-    
+
     for (const fixedCost of fixedCosts) {
       const value = parseFloat(fixedCost.value);
       switch (fixedCost.recurrence) {
@@ -202,7 +201,7 @@ export const productService = {
 
     // Calculate fixed cost per minute
     const fixedCostPerMinute = totalMonthlyFixedCosts / (totalWorkHoursPerMonth * 60);
-    
+
     // Calculate fixed cost for this product based on preparation time
     const fixedCostPerUnit = fixedCostPerMinute * product.preparationTimeMinutes;
 

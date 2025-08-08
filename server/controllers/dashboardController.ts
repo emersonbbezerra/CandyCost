@@ -56,32 +56,22 @@ export const getDashboardStats = async (req: Request, res: Response) => {
   try {
     const { type = 'product', category = 'all' } = req.query;
 
-    const ingredients = await productService.getIngredients();
-    const products = await productService.getProducts();
-    const history = await priceHistoryService.getPriceHistory();
+    // Get ingredient count
+    const ingredientCount = await prisma.ingredient.count();
+
+    // Get product count
+    const productCount = await prisma.product.count();
+
+    const products = await prisma.product.findMany();
 
     // Filter products by category if specified
     const filteredProducts = category === 'all' ? products : products.filter(p => p.category === category);
 
-    // Calculate profit margins
-    const profitMarginsPromises = filteredProducts.map(async (product) => {
-      try {
-        const cost = await productService.calculateProductCost(product.id);
-        const marginPercentage = product.marginPercentage ? parseFloat(product.marginPercentage) : 60;
-        const profitMargin = marginPercentage;
-        return {
-          profitMargin,
-          category: product.category
-        };
-      } catch {
-        return {
-          profitMargin: 0,
-          category: product.category
-        };
-      }
-    });
-
-    const profitData = await Promise.all(profitMarginsPromises);
+    // Calculate profit margins (using marginPercentage from database)
+    const profitData = filteredProducts.map((product) => ({
+      profitMargin: product.marginPercentage,
+      category: product.category
+    }));
 
     let avgProfitMargin = 0;
     let categoryBreakdown: any[] = [];
@@ -129,76 +119,26 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     // Today's changes
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const todayChanges = history.filter(h => h.createdAt >= today).length;
+    const todayChanges = await prisma.priceHistory.count({
+      where: {
+        createdAt: {
+          gte: today
+        }
+      }
+    });
 
     // Get unique categories for frontend
     const uniqueCategories = [...new Set(products.map(p => p.category))].sort();
 
-    // Get ingredient count
-    const ingredientCount = await prisma.ingredient.count();
-
-    // Get product count
-    const productCount = await prisma.product.count();
-
-    // Get recent updates (ingredients and products)
-    const recentIngredientUpdates = await prisma.priceHistory.findMany({
-      where: { ingredientId: { not: null } },
-      include: { ingredient: true },
-      orderBy: { createdAt: 'desc' },
-      take: 10
-    });
-
-    const recentProductUpdates = await prisma.priceHistory.findMany({
-      where: { productId: { not: null } },
-      include: { product: true },
-      orderBy: { createdAt: 'desc' },
-      take: 10
-    });
-
-    // Combine and sort recent updates
-    const combinedIngredientUpdates = recentIngredientUpdates.map(update => ({
-      type: 'ingredient' as const,
-      name: update.ingredient!.name,
-      id: update.ingredient!.id,
-      oldPrice: update.oldPrice.toString(),
-      newPrice: update.newPrice.toString(),
-      changeReason: update.changeReason,
-      createdAt: update.createdAt,
-    }));
-
-    const combinedProductUpdates = recentProductUpdates.map(update => ({
-      type: 'product' as const,
-      name: update.product!.name,
-      id: update.product!.id,
-      oldPrice: update.oldPrice.toString(),
-      newPrice: update.newPrice.toString(),
-      changeReason: update.changeReason,
-      createdAt: update.createdAt,
-    }));
-
-    const recentUpdates = [
-      ...combinedIngredientUpdates,
-      ...combinedProductUpdates,
-    ]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 10);
-
-    let profitMarginStats = {
-      avgProfitMargin: avgProfitMargin.toFixed(1),
-      profitType: type,
-      selectedCategory: category,
-      categoryBreakdown,
-      availableCategories: uniqueCategories,
-      todayChanges,
-    };
-
     res.json({
       totalIngredients: ingredientCount,
       totalProducts: productCount,
-      recentUpdates,
-      profitMarginStats,
+      avgProfitMargin: avgProfitMargin.toFixed(1),
+      availableCategories: uniqueCategories,
+      todayChanges,
     });
   } catch (error) {
+    console.error("Error getting dashboard stats:", error);
     res.status(500).json({ message: "Erro ao buscar estatísticas" });
   }
 };
@@ -214,81 +154,53 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
   });
 
   try {
-    // Force fresh data by bypassing any potential caching
-    const ingredients = await productService.getIngredients();
-    const products = await productService.getProducts();
-
-    // Buscar TODO o histórico de preços com debugging
-    console.log("🔍 Fetching ALL price history at", new Date().toISOString());
-    const allHistory = await priceHistoryService.getPriceHistory();
-    console.log("📊 Total history entries found:", allHistory.length);
-
-    // Log recent entries for debugging
-    const recentEntries = allHistory
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 10);
-
-    console.log("🔥 Most recent 10 entries:", recentEntries.map(h => ({
-      id: h.id,
-      productId: h.productId,
-      ingredientId: h.ingredientId,
-      createdAt: h.createdAt,
-      changeReason: h.changeReason
-    })));
-
-    // Filtrar e ordenar atualizações de ingredientes
-    const ingredientUpdatesFiltered = allHistory
-      .filter(update => update.ingredientId !== null && update.ingredientId !== undefined)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 3); // Limitar a 3 ingredientes
-
-    // Filtrar e ordenar atualizações de produtos
-    const productUpdatesFiltered = allHistory
-      .filter(update => update.productId !== null && update.productId !== undefined)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 3); // Limitar a 3 produtos
-
-    // Criar mapas para busca rápida de nomes
-    const ingredientMap = new Map(ingredients.map(i => [i.id, i.name]));
-    const productsMap: Record<number, string> = {};
-    products.forEach(p => {
-      productsMap[p.id] = p.name;
+    // Get recent ingredient updates with proper relations
+    const recentIngredientUpdates = await prisma.priceHistory.findMany({
+      where: { 
+        ingredientId: { not: null } 
+      },
+      include: { 
+        ingredient: true 
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5
     });
 
+    // Get recent product updates with proper relations  
+    const recentProductUpdates = await prisma.priceHistory.findMany({
+      where: { 
+        productId: { not: null } 
+      },
+      include: { 
+        product: true 
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5
+    });
 
-    // Enriquecer atualizações com nomes
-    const enrichedIngredientUpdates = ingredientUpdatesFiltered.map(update => ({
-      ...update,
-      name: ingredientMap.get(update.ingredientId!) || "Ingrediente desconhecido"
+    // Format ingredient updates
+    const enrichedIngredientUpdates = recentIngredientUpdates.map(update => ({
+      id: update.id,
+      type: 'ingredient' as const,
+      name: update.ingredient?.name || "Ingrediente desconhecido",
+      itemId: update.ingredientId,
+      oldPrice: update.oldPrice,
+      newPrice: update.newPrice,
+      changeType: update.changeType,
+      createdAt: update.createdAt
     }));
 
-    // Enrich product updates with product names
-    const enrichedProductUpdates = productUpdatesFiltered.map(update => ({
-      ...update,
-      name: productsMap[update.productId || 0] || "Produto desconhecido"
+    // Format product updates
+    const enrichedProductUpdates = recentProductUpdates.map(update => ({
+      id: update.id,
+      type: 'product' as const,
+      name: update.product?.name || "Produto desconhecido", 
+      itemId: update.productId,
+      oldPrice: update.oldPrice,
+      newPrice: update.newPrice,
+      changeType: update.changeType,
+      createdAt: update.createdAt
     }));
-
-    console.log("✅ Recent product updates found:", enrichedProductUpdates.length);
-    console.log("✅ Recent ingredient updates found:", enrichedIngredientUpdates.length);
-
-    // Log the actual data being returned with all fields
-    console.log("📤 Product updates being returned:", enrichedProductUpdates.map(u => ({
-      id: u.id,
-      name: u.name,
-      productId: u.productId,
-      oldPrice: u.oldPrice,
-      newPrice: u.newPrice,
-      createdAt: u.createdAt
-    })));
-
-    console.log("📤 Ingredient updates being returned:", enrichedIngredientUpdates.map(u => ({
-      id: u.id,
-      name: u.name,
-      ingredientId: u.ingredientId,
-      oldPrice: u.oldPrice,
-      newPrice: u.newPrice,
-      createdAt: u.createdAt
-    })));
 
     const responseData = {
       ingredientUpdates: enrichedIngredientUpdates,
