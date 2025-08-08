@@ -8,7 +8,7 @@
 }
 
 .scrollbar-thumb-sidebar-border {
-  scrollbar-color: hsl(var(--sidebar-border)) transparent;
+  scrollbar-color: rgb(229 231 235) transparent;
 }
 
 .scrollbar-track-transparent {
@@ -17,7 +17,7 @@
 
 /* Webkit scrollbar styles for better browser support */
 .scrollbar-thin::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
@@ -25,14 +25,12 @@
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: hsl(var(--sidebar-border));
-  border-radius: 4px;
-  border: 2px solid transparent;
-  background-clip: content-box;
+  background-color: rgb(229 231 235);
+  border-radius: 3px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: hsl(var(--primary));
+  background-color: rgb(209 213 219);
 }
 
 

@@ -116,7 +116,7 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <div className="flex-1 overflow-y-auto py-4 scrollbar-thin scrollbar-thumb-sidebar-border scrollbar-track-transparent min-h-0">
+        <div className="flex-1 overflow-y-auto py-4 scrollbar-thin scrollbar-thumb-sidebar-border scrollbar-track-transparent">
           <nav className="px-4 space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -156,7 +156,7 @@ export function Sidebar() {
             )}
           </nav>
 
-          <div className="mt-8 px-4 pb-4">
+          <div className="mt-8 px-4">
             <div className="h-px bg-sidebar-border mb-4"></div>
             <nav className="space-y-2">
               {systemItems.map((item) => {
@@ -184,7 +184,7 @@ export function Sidebar() {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-sidebar-border flex-shrink-0 bg-sidebar/95">
+        <div className="p-4 border-t border-sidebar-border mt-auto flex-shrink-0">
           <Button
             variant="ghost"
             onClick={handleLogout}
