@@ -13,10 +13,10 @@ const buttonVariants = cva(
         destructive:
           "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl transition-all duration-300",
         outline:
-          "border-2 border-primary bg-transparent text-primary hover:bg-blue-light hover:text-primary hover:border-primary transition-all duration-300",
+          "border-2 border-primary bg-white text-primary hover:bg-blue-light hover:text-primary hover:border-primary hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300",
         secondary:
-          "bg-gradient-to-r from-blue-100 to-slate-100 text-primary hover:from-blue-200 hover:to-slate-200 border-0 shadow-md hover:shadow-lg transition-all duration-300",
-        ghost: "text-primary hover:bg-blue-light hover:text-primary transition-all duration-300",
+          "bg-gradient-to-r from-blue-100 to-slate-100 text-primary hover:from-blue-200 hover:to-slate-200 border-0 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300",
+        ghost: "text-primary hover:bg-blue-light hover:text-primary hover:shadow-md hover:-translate-y-0.5 transition-all duration-300",
         link: "text-primary underline-offset-4 hover:underline hover:text-blue-600 transition-colors duration-300",
       },
       size: {

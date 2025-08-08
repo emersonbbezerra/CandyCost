@@ -136,12 +136,16 @@ body {
 /* Hover states específicos para botões interativos */
 .btn-interactive {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid hsl(217, 20%, 85%);
 }
 
 .btn-interactive:hover {
   background-color: hsl(217, 100%, 97%);
   color: hsl(217, 91%, 60%);
   border-color: hsl(217, 91%, 80%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
 }
 
 .btn-interactive:focus {
@@ -149,6 +153,11 @@ body {
   color: hsl(217, 91%, 60%);
   border-color: hsl(217, 91%, 60%);
   box-shadow: 0 0 0 2px hsl(217, 91%, 60%, 0.2);
+}
+
+.btn-interactive:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
 }
 
 /* Cores específicas para a aplicação */
@@ -379,42 +388,63 @@ html, body, #root {
 
 /* Correção para botões de paginação e navegação */
 .pagination-fix {
-  background-color: transparent !important;
+  background-color: rgba(255, 255, 255, 0.95) !important;
   color: hsl(217, 91%, 45%) !important;
   border: 1px solid hsl(217, 20%, 85%) !important;
-  transition: all 0.2s ease !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  backdrop-filter: blur(8px) !important;
 }
 
 .pagination-fix:hover {
-  background-color: var(--blue-light) !important;
-  color: var(--primary-text) !important;
+  background-color: hsl(217, 100%, 97%) !important;
+  color: hsl(217, 91%, 60%) !important;
   border-color: hsl(217, 91%, 60%) !important;
-  transform: none !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15) !important;
 }
 
 .pagination-fix[data-active="true"] {
   background: linear-gradient(135deg, hsl(217, 91%, 60%), hsl(212, 95%, 68%)) !important;
   color: white !important;
   border-color: transparent !important;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3) !important;
+}
+
+.pagination-fix[data-active="true"]:hover {
+  background: linear-gradient(135deg, hsl(217, 91%, 55%), hsl(212, 95%, 63%)) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
 }
 
 /* Correção para dropdowns */
 .dropdown-fix {
-  background-color: var(--dropdown-bg) !important;
-  border: 1px solid var(--dropdown-border) !important;
-  box-shadow: var(--dropdown-shadow) !important;
-  backdrop-filter: blur(8px) !important;
+  background-color: rgba(255, 255, 255, 0.98) !important;
+  border: 1px solid hsl(217, 20%, 85%) !important;
+  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.15), 0 4px 16px rgba(37, 99, 235, 0.08) !important;
+  backdrop-filter: blur(12px) !important;
+  border-radius: 0.75rem !important;
 }
 
 .dropdown-item-fix {
-  color: hsl(217, 91%, 45%) !important;
+  color: hsl(220, 14%, 35%) !important;
   background-color: transparent !important;
-  transition: all 0.15s ease !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border-radius: 0.5rem !important;
+  margin: 0.125rem !important;
 }
 
 .dropdown-item-fix:hover {
-  background-color: var(--hover-bg) !important;
-  color: var(--primary-text) !important;
+  background-color: hsl(217, 100%, 97%) !important;
+  color: hsl(217, 91%, 60%) !important;
+  transform: translateX(2px) !important;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1) !important;
+}
+
+.dropdown-item-fix:focus {
+  background-color: hsl(217, 100%, 97%) !important;
+  color: hsl(217, 91%, 60%) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px hsl(217, 91%, 60%, 0.2) !important;
 }
 
 /* Correção para menus de navegação */
