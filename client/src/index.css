@@ -126,6 +126,24 @@ body {
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
 }
 
+/* Hover states específicos para botões interativos */
+.btn-interactive {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-interactive:hover {
+  background-color: hsl(217, 100%, 97%);
+  color: hsl(217, 91%, 60%);
+  border-color: hsl(217, 91%, 80%);
+}
+
+.btn-interactive:focus {
+  background-color: hsl(217, 100%, 97%);
+  color: hsl(217, 91%, 60%);
+  border-color: hsl(217, 91%, 60%);
+  box-shadow: 0 0 0 2px hsl(217, 91%, 60%, 0.2);
+}
+
 /* Cores específicas para a aplicação */
 .text-blue-primary { color: hsl(217, 91%, 60%); }
 .text-blue-elegant { color: hsl(212, 95%, 68%); }
@@ -133,7 +151,7 @@ body {
 .text-mint-fresh { color: hsl(156, 73%, 59%); }
 .text-sky-soft { color: hsl(197, 71%, 73%); }
 
-.bg-blue-light { background-color: hsl(210, 40%, 98%); }
+.bg-blue-light { background-color: hsl(217, 100%, 97%); }
 .bg-blue-subtle { background-color: hsl(214, 32%, 91%); }
 .bg-gold-light { background-color: hsl(45, 100%, 96%); }
 .bg-mint-light { background-color: hsl(156, 100%, 96%); }
