@@ -59,7 +59,7 @@ export default function Ingredients() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       await apiRequest("DELETE", `/api/ingredients/${id}`);
     },
     onSuccess: () => {

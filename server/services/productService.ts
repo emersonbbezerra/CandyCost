@@ -2,7 +2,7 @@ import { prisma } from "../db";
 import { productRepository } from "../repositories/productRepository";
 import { fixedCostRepository } from "../repositories/fixedCostRepository";
 import { priceHistoryRepository } from "../repositories/priceHistoryRepository";
-import type { ProductCost, InsertProduct } from "@shared/schema";
+import type { ProductCost, InsertProduct, Ingredient } from "@shared/schema";
 import { priceHistoryService } from "./priceHistoryService"; // Importar o serviço de histórico de preços
 
 export const productService = {
@@ -221,9 +221,30 @@ export const productService = {
   },
 
   // --- Ingredient Methods ---
-  async getIngredient(id: string): Promise<Ingredient | null> {
+  async getIngredients() {
+    return await prisma.ingredient.findMany({
+      orderBy: { name: 'asc' }
+    });
+  },
+
+  async getIngredient(id: string) {
     return await prisma.ingredient.findUnique({
       where: { id }
+    });
+  },
+
+  async createIngredient(data: any) {
+    const ingredientData = {
+      name: data.name,
+      category: data.category,
+      quantity: parseFloat(data.quantity),
+      unit: data.unit,
+      price: parseFloat(data.price),
+      brand: data.brand || null,
+    };
+
+    return await prisma.ingredient.create({
+      data: ingredientData,
     });
   },
 

@@ -79,6 +79,13 @@ export const updateIngredient = async (req: Request, res: Response) => {
 export const deleteIngredient = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    
+    // Verificar se o ingrediente existe
+    const existingIngredient = await productService.getIngredient(id);
+    if (!existingIngredient) {
+      return res.status(404).json({ message: "Ingrediente não encontrado" });
+    }
+    
     await productService.deleteIngredient(id);
     res.status(204).send();
   } catch (error) {
