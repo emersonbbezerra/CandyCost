@@ -84,7 +84,7 @@ export default function CostsHistory() {
               <SelectTrigger className="w-full sm:w-64">
                 <SelectValue placeholder="Todos os produtos" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[200px] overflow-y-auto">
                 <SelectItem value="all">Todos os produtos</SelectItem>
                 {products.map((product) => (
                   <SelectItem key={product.id} value={product.id.toString()}>

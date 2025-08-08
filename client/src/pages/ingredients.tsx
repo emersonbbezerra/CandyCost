@@ -260,7 +260,7 @@ export default function Ingredients() {
                 <SelectTrigger className="w-48">
                   <SelectValue placeholder="Todas as categorias" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[200px] overflow-y-auto">
                   <SelectItem value="all">Todas as categorias</SelectItem>
                   {INGREDIENT_CATEGORIES.map((category) => (
                     <SelectItem key={category.value} value={category.value}>
@@ -330,7 +330,7 @@ export default function Ingredients() {
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Última atualização" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[200px] overflow-y-auto">
                   <SelectItem value="all">Todas</SelectItem>
                   <SelectItem value="7">Últimos 7 dias</SelectItem>
                   <SelectItem value="30">Últimos 30 dias</SelectItem>

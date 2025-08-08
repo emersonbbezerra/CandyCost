@@ -73,7 +73,7 @@ export function StatsCards({
                                         <SelectTrigger className="w-24 h-6 text-xs">
                                             <SelectValue />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent className="max-h-[200px] overflow-y-auto">
                                             <SelectItem value="product">Produto</SelectItem>
                                             <SelectItem value="category">Categoria</SelectItem>
                                         </SelectContent>
@@ -83,7 +83,7 @@ export function StatsCards({
                                             <SelectTrigger className="w-32 h-6 text-xs">
                                                 <SelectValue />
                                             </SelectTrigger>
-                                            <SelectContent>
+                                            <SelectContent className="max-h-[200px] overflow-y-auto">
                                                 <SelectItem value="all">Todas</SelectItem>
                                                 {availableCategories.map(category => (
                                                     <SelectItem key={category} value={category}>

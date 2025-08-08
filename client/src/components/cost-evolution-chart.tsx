@@ -62,7 +62,7 @@ export function CostEvolutionChart({ products }: CostEvolutionChartProps) {
                         <SelectTrigger className="w-48">
                             <SelectValue placeholder="Custos gerais" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="max-h-[200px] overflow-y-auto">
                             <SelectItem value="general">Custos gerais</SelectItem>
                             {products.map((product) => (
                                 <SelectItem key={product.id} value={product.id.toString()}>

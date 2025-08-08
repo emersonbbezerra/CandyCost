@@ -1,5 +1,6 @@
 node_modules
 dist
+AGENT.md
 .env
 .env.development.local
 .env.test.local

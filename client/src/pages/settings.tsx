@@ -251,7 +251,7 @@ export default function Settings() {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-[200px] overflow-y-auto">
                     <SelectItem value="R$">R$ (Real)</SelectItem>
                     <SelectItem value="$">$ (Dólar)</SelectItem>
                     <SelectItem value="€">€ (Euro)</SelectItem>

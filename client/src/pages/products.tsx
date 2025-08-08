@@ -235,11 +235,11 @@ export default function Products() {
                 <SelectTrigger className="w-48">
                   <SelectValue placeholder="Todas as categorias" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[200px] overflow-y-auto">
                   <SelectItem value="all">Todas as categorias</SelectItem>
                   {PRODUCT_CATEGORIES.map((category) => (
-                    <SelectItem key={category.value} value={category.value}>
-                      {category.label}
+                    <SelectItem key={category} value={category}>
+                      {category}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -253,7 +253,7 @@ export default function Products() {
                 <SelectTrigger className="w-48">
                   <SelectValue placeholder="Ordenar por" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[200px] overflow-y-auto">
                   <SelectItem value="name-asc">Nome A-Z</SelectItem>
                   <SelectItem value="name-desc">Nome Z-A</SelectItem>
                   <SelectItem value="totalCost-asc">Menor Custo</SelectItem>

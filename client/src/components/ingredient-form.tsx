@@ -166,7 +166,7 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
                         <SelectValue placeholder="Selecione uma categoria" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="max-h-[200px] overflow-y-auto">
                       {INGREDIENT_CATEGORIES.map((category) => (
                         <SelectItem key={category.value} value={category.value}>
                           {category.label}
@@ -206,7 +206,7 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
                           <SelectValue placeholder="Unidade" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="max-h-[200px] overflow-y-auto">
                         {UNITS.map((unit) => (
                           <SelectItem key={unit.value} value={unit.value}>
                             {unit.label}

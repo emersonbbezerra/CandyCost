@@ -228,7 +228,7 @@ export function ExportReports() {
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[200px] overflow-y-auto">
                 <SelectItem value="complete">Relatório Completo</SelectItem>
                 <SelectItem value="ingredients">Apenas Ingredientes</SelectItem>
                 <SelectItem value="products">Apenas Produtos</SelectItem>
@@ -245,7 +245,7 @@ export function ExportReports() {
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[200px] overflow-y-auto">
                 <SelectItem value="csv">CSV (Excel)</SelectItem>
                 <SelectItem value="json">JSON (Dados)</SelectItem>
               </SelectContent>

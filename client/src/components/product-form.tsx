@@ -224,10 +224,10 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                           <SelectValue placeholder="Selecione uma categoria" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="max-h-[200px] overflow-y-auto">
                         {PRODUCT_CATEGORIES.map((category) => (
-                          <SelectItem key={category.value} value={category.value}>
-                            {category.label}
+                          <SelectItem key={category} value={category}>
+                            {category}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -394,7 +394,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                                   </SelectValue>
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent>
+                              <SelectContent className="max-h-[200px] overflow-y-auto">
                                 <SelectItem value="null">Selecione...</SelectItem>
                                 {ingredients.map((ingredient) => (
                                   <SelectItem key={ingredient.id} value={ingredient.id.toString()}>
@@ -446,7 +446,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                                   <SelectValue placeholder="Unidade" />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent>
+                              <SelectContent className="max-h-[200px] overflow-y-auto">
                                 {UNITS.map((unit) => (
                                   <SelectItem key={unit.value} value={unit.value}>
                                     {unit.label}

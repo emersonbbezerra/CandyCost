@@ -90,7 +90,7 @@ export default function History() {
                 <SelectTrigger className="w-64">
                   <SelectValue placeholder="Todos os ingredientes" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[200px] overflow-y-auto">
                   <SelectItem value="all">Todos os ingredientes</SelectItem>
                   {ingredients.map((ingredient) => (
                     <SelectItem key={ingredient.id} value={ingredient.id.toString()}>

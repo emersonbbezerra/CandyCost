@@ -67,12 +67,12 @@ export function FixedCostForm({ fixedCost, onSubmit, onCancel, isLoading }: Fixe
               <SelectTrigger>
                 <SelectValue placeholder="Selecione uma categoria" />
               </SelectTrigger>
-              <SelectContent>
-                {FIXED_COST_CATEGORIES.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
+              <SelectContent className="max-h-[200px] overflow-y-auto">
+              {FIXED_COST_CATEGORIES.map((category) => (
+              <SelectItem key={category} value={category}>
+              {category}
+              </SelectItem>
+              ))}
               </SelectContent>
             </Select>
           </div>
@@ -100,7 +100,7 @@ export function FixedCostForm({ fixedCost, onSubmit, onCancel, isLoading }: Fixe
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a recorrência" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[200px] overflow-y-auto">
                 {RECURRENCE_TYPES.map((type) => (
                   <SelectItem key={type.value} value={type.value}>
                     {type.label}

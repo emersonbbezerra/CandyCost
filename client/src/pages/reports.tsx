@@ -260,7 +260,7 @@ export default function Reports() {
                   <Filter className="w-4 h-4 mr-2" />
                   <SelectValue placeholder="Categoria" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[200px] overflow-y-auto">
                   <SelectItem value="all">Todas as categorias</SelectItem>
                   {categories.map(category => (
                     <SelectItem key={category} value={category}>{category}</SelectItem>
@@ -275,7 +275,7 @@ export default function Reports() {
                 <SelectTrigger>
                   <SelectValue placeholder="Lucratividade" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[200px] overflow-y-auto">
                   <SelectItem value="all">Todas</SelectItem>
                   <SelectItem value="high">Alta (acima de 50%)</SelectItem>
                   <SelectItem value="medium">Média (30-50%)</SelectItem>
@@ -293,7 +293,7 @@ export default function Reports() {
                   {sortOrder === "asc" ? <SortAsc className="w-4 h-4 mr-2" /> : <SortDesc className="w-4 h-4 mr-2" />}
                   <SelectValue placeholder="Ordenar" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[200px] overflow-y-auto">
                   <SelectItem value="profitMargin-desc">Maior Lucratividade</SelectItem>
                   <SelectItem value="profitMargin-asc">Menor Lucratividade</SelectItem>
                   <SelectItem value="name-asc">Nome A-Z</SelectItem>
@@ -432,7 +432,7 @@ export default function Reports() {
                 <SelectTrigger>
                   <SelectValue placeholder="Categoria" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[200px] overflow-y-auto">
                   <SelectItem value="all">Todas as categorias</SelectItem>
                   {ingredientCategories.map(category => (
                     <SelectItem key={category} value={category}>{category}</SelectItem>
@@ -450,7 +450,7 @@ export default function Reports() {
                   {criticalSortOrder === "asc" ? <SortAsc className="w-4 h-4 mr-2" /> : <SortDesc className="w-4 h-4 mr-2" />}
                   <SelectValue placeholder="Ordenar" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[200px] overflow-y-auto">
                   <SelectItem value="totalImpact-desc">Maior Impacto</SelectItem>
                   <SelectItem value="totalImpact-asc">Menor Impacto</SelectItem>
                   <SelectItem value="usageCount-desc">Mais Usado</SelectItem>

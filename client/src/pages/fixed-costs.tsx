@@ -271,7 +271,7 @@ export default function FixedCosts() {
               <SelectTrigger className="w-full lg:w-48">
                 <SelectValue placeholder="Filtrar por categoria" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[200px] overflow-y-auto">
                 <SelectItem value="all">Todas as categorias</SelectItem>
                 {FIXED_COST_CATEGORIES.map(category => (
                   <SelectItem key={category} value={category}>
@@ -285,7 +285,7 @@ export default function FixedCosts() {
               <SelectTrigger className="w-full lg:w-32">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[200px] overflow-y-auto">
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="active">Ativos</SelectItem>
                 <SelectItem value="inactive">Inativos</SelectItem>

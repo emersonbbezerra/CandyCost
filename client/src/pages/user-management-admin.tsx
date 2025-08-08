@@ -503,7 +503,7 @@ export default function UserManagementAdmin() {
                           <SelectValue placeholder="Selecione o papel" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="max-h-[200px] overflow-y-auto">
                         <SelectItem value="user">Usuário Padrão</SelectItem>
                         <SelectItem value="admin">Administrador</SelectItem>
                       </SelectContent>
