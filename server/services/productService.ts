@@ -3,6 +3,7 @@ import { productRepository } from "../repositories/productRepository";
 import { fixedCostRepository } from "../repositories/fixedCostRepository";
 import { priceHistoryRepository } from "../repositories/priceHistoryRepository";
 import type { ProductCost, InsertProduct } from "@shared/schema";
+import { priceHistoryService } from "./priceHistoryService"; // Importar o serviço de histórico de preços
 
 export const productService = {
   async getProducts() {
@@ -102,7 +103,7 @@ export const productService = {
     };
   },
 
-  async updateProductsCostByIngredient(ingredientId: number, oldPrice: string, newPrice: string) {
+  async updateProductsCostByIngredient(ingredientId: string, oldPrice: string, newPrice: string) {
     // Find products that use this ingredient
     const recipes = await prisma.recipe.findMany({
       where: { ingredientId },
@@ -140,7 +141,7 @@ export const productService = {
     return updatedProducts;
   },
 
-  async calculateProductCostAtPrice(productId: string, ingredientId: number, priceOverride: string): Promise<ProductCost> {
+  async calculateProductCostAtPrice(productId: string, ingredientId: string, priceOverride: string): Promise<ProductCost> {
     const product = await productRepository.findWithRecipes(productId);
     if (!product) {
       throw new Error('Produto não encontrado');
@@ -217,5 +218,69 @@ export const productService = {
       suggestedPrice,
       margin: marginPercentage
     };
-  }
+  },
+
+  // --- Ingredient Methods ---
+  async getIngredient(id: string): Promise<Ingredient | null> {
+    return await prisma.ingredient.findUnique({
+      where: { id }
+    });
+  },
+
+  async updateIngredient(id: string, data: any): Promise<Ingredient> {
+    const updateData: any = {
+      name: data.name,
+      category: data.category,
+      quantity: parseFloat(data.quantity),
+      unit: data.unit,
+      price: parseFloat(data.price),
+      brand: data.brand || null,
+    };
+
+    return await prisma.ingredient.update({
+      where: { id },
+      data: updateData,
+    });
+  },
+
+  async deleteIngredient(id: string): Promise<void> {
+    await prisma.ingredient.delete({
+      where: { id }
+    });
+  },
+
+  async trackCostChangesForAffectedProducts(ingredientId: string, oldPrice: number, newPrice: number): Promise<void> {
+    try {
+      console.log(`Tracking cost changes for ingredient ${ingredientId}: ${oldPrice} -> ${newPrice}`);
+
+      // Buscar todas as receitas que usam este ingrediente
+      const recipesWithIngredient = await prisma.recipe.findMany({
+        where: { ingredientId },
+        include: { 
+          product: true,
+          ingredient: true 
+        }
+      });
+
+      console.log(`Found ${recipesWithIngredient.length} recipes using this ingredient`);
+
+      for (const recipe of recipesWithIngredient) {
+        const ingredientCostDifference = (newPrice - oldPrice) * recipe.quantity;
+        console.log(`Product ${recipe.product.name} cost change: ${ingredientCostDifference}`);
+
+        // Criar entrada no histórico de preços para o produto
+        await priceHistoryService.createPriceHistory({
+          itemType: 'product',
+          itemName: recipe.product.name,
+          oldPrice: 0, // Não temos o custo total anterior facilmente disponível
+          newPrice: ingredientCostDifference, // Registrar a diferença de custo
+          changeType: 'ingredient_update',
+          description: `Alteração de preço do ingrediente: ${recipe.ingredient?.name || 'desconhecido'}`,
+          productId: recipe.productId,
+        });
+      }
+    } catch (error) {
+      console.error('Error tracking cost changes:', error);
+    }
+  },
 };
