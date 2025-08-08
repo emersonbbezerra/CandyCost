@@ -51,9 +51,10 @@ export class FixedCostService {
       // Create default configuration if none exists
       const defaultConfig = await prisma.workConfiguration.create({
         data: {
-          workDaysPerWeek: 5,
-          hoursPerDay: "8.00",
-          weeksPerMonth: "4.0",
+          hoursPerDay: 8.0,
+          daysPerMonth: 22.0,
+          hourlyRate: 25.0,
+          highCostAlertThreshold: 50.0,
         }
       });
       return defaultConfig;

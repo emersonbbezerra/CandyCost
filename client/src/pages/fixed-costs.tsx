@@ -52,7 +52,7 @@ export default function FixedCosts() {
     queryKey: ["/api/fixed-costs/cost-per-hour"],
   });
 
-  const { data: workConfig } = useQuery<{ workDaysPerWeek: number; hoursPerDay: string; weeksPerMonth: string }>({
+  const { data: workConfig } = useQuery<{ hoursPerDay: number; daysPerMonth: number; hourlyRate: number; highCostAlertThreshold: number }>({
     queryKey: ["/api/fixed-costs/work-configuration"],
   });
 
@@ -260,9 +260,7 @@ export default function FixedCosts() {
                 <p className="text-sm text-gray-600">Horas/Mês</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {workConfig ? (
-                    (workConfig.workDaysPerWeek * 
-                    parseFloat(workConfig.hoursPerDay) * 
-                    parseFloat(workConfig.weeksPerMonth))
+                    (workConfig.daysPerMonth * workConfig.hoursPerDay)
                   ).toFixed(0) : "0"}
                 </p>
               </div>
