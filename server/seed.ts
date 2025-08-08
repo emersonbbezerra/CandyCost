@@ -13,7 +13,6 @@ async function setupSessionsTable() {
     // Create sessions table with correct structure for connect-pg-simple
     await prisma.$executeRaw`
       CREATE TABLE sessions (
-        id VARCHAR NOT NULL,
         sid VARCHAR NOT NULL COLLATE "default",
         sess JSON NOT NULL,
         expire TIMESTAMP(6) NOT NULL
@@ -23,10 +22,6 @@ async function setupSessionsTable() {
     
     await prisma.$executeRaw`
       ALTER TABLE sessions ADD CONSTRAINT session_pkey PRIMARY KEY (sid) NOT DEFERRABLE INITIALLY IMMEDIATE;
-    `;
-    
-    await prisma.$executeRaw`
-      CREATE UNIQUE INDEX sessions_sid_idx ON sessions (sid);
     `;
     
     await prisma.$executeRaw`
