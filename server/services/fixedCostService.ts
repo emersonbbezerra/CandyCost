@@ -1,4 +1,3 @@
-
 import { fixedCostRepository } from "../repositories/fixedCostRepository";
 import { productRepository } from "../repositories/productRepository";
 import { prisma } from "../db";
@@ -18,10 +17,10 @@ export class FixedCostService {
 
   async calculateMonthlyFixedCosts(): Promise<number> {
     const activeCosts = await this.getActiveFixedCosts();
-    
+
     return activeCosts.reduce((total, cost) => {
       const value = parseFloat(cost.value);
-      
+
       switch (cost.recurrence) {
         case "monthly":
           return total + value;
@@ -37,17 +36,17 @@ export class FixedCostService {
 
   async calculateFixedCostPerUnit(estimatedMonthlyProduction: number): Promise<number> {
     const monthlyFixedCosts = await this.calculateMonthlyFixedCosts();
-    
+
     if (estimatedMonthlyProduction <= 0) {
       return 0;
     }
-    
+
     return monthlyFixedCosts / estimatedMonthlyProduction;
   }
 
   async getWorkConfiguration(): Promise<WorkConfiguration> {
     const result = await prisma.workConfiguration.findFirst();
-    
+
     if (!result) {
       // Create default configuration if none exists
       const defaultConfig = await prisma.workConfiguration.create({
@@ -59,16 +58,16 @@ export class FixedCostService {
       });
       return defaultConfig;
     }
-    
+
     return result;
   }
 
   async updateWorkConfiguration(data: Partial<WorkConfiguration>): Promise<WorkConfiguration> {
     const config = await this.getWorkConfiguration();
-    
+
     // Remove all timestamp and ID fields to avoid conflicts
     const { id, createdAt, updatedAt, ...cleanData } = data as any;
-    
+
     const updated = await prisma.workConfiguration.update({
       where: { id: config.id },
       data: {
@@ -76,31 +75,26 @@ export class FixedCostService {
         updatedAt: new Date(),
       }
     });
-    
+
     return updated;
   }
 
   async calculateFixedCostPerHour(): Promise<number> {
-    const monthlyFixedCosts = await this.calculateMonthlyFixedCosts();
     const workConfig = await this.getWorkConfiguration();
-    
-    const workDays = workConfig.workDaysPerWeek;
-    const hoursPerDay = parseFloat(workConfig.hoursPerDay);
-    const weeksPerMonth = parseFloat(workConfig.weeksPerMonth);
-    
-    const totalHoursPerMonth = workDays * hoursPerDay * weeksPerMonth;
-    
-    if (totalHoursPerMonth <= 0) {
-      return 0;
-    }
-    
-    return monthlyFixedCosts / totalHoursPerMonth;
+    const monthlyFixedCosts = await this.calculateMonthlyFixedCosts();
+
+    const daysPerMonth = workConfig.daysPerMonth || 22.0;
+    const hoursPerDay = workConfig.hoursPerDay || 8.0;
+
+    const totalWorkHoursPerMonth = daysPerMonth * hoursPerDay;
+
+    return monthlyFixedCosts / totalWorkHoursPerMonth;
   }
 
   async calculateProductFixedCost(preparationTimeMinutes: number): Promise<number> {
     const fixedCostPerHour = await this.calculateFixedCostPerHour();
     const preparationTimeHours = preparationTimeMinutes / 60;
-    
+
     return fixedCostPerHour * preparationTimeHours;
   }
 

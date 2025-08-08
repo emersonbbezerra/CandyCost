@@ -58,11 +58,10 @@ export const productService = {
 
     // Get work configuration for fixed cost calculation
     const workConfig = await prisma.workConfiguration.findFirst();
-    const workDaysPerWeek = workConfig?.workDaysPerWeek || 5;
-    const hoursPerDay = parseFloat(workConfig?.hoursPerDay.toString() || "8");
-    const weeksPerMonth = parseFloat(workConfig?.weeksPerMonth.toString() || "4");
+    const daysPerMonth = workConfig?.daysPerMonth || 22.0;
+    const hoursPerDay = workConfig?.hoursPerDay || 8.0;
 
-    const totalWorkHoursPerMonth = workDaysPerWeek * hoursPerDay * weeksPerMonth;
+    const totalWorkHoursPerMonth = daysPerMonth * hoursPerDay;
 
     // Calculate total monthly fixed costs
     const fixedCosts = await fixedCostRepository.findActive();
@@ -97,9 +96,13 @@ export const productService = {
     return {
       productId,
       totalCost: totalProductCost,
+      ingredientsCost: totalCost,
+      fixedCostPerProduct: fixedCostPerUnit,
       fixedCostPerUnit,
       suggestedPrice,
-      margin: marginPercentage
+      margin: totalProductCost * (marginPercentage / 100),
+      marginPercentage: marginPercentage,
+      preparationTimeMinutes: product.preparationTimeMinutes
     };
   },
 
@@ -175,11 +178,10 @@ export const productService = {
 
     // Get work configuration for fixed cost calculation
     const workConfig = await prisma.workConfiguration.findFirst();
-    const workDaysPerWeek = workConfig?.workDaysPerWeek || 5;
-    const hoursPerDay = parseFloat(workConfig?.hoursPerDay.toString() || "8");
-    const weeksPerMonth = parseFloat(workConfig?.weeksPerMonth.toString() || "4");
+    const daysPerMonth = workConfig?.daysPerMonth || 22.0;
+    const hoursPerDay = workConfig?.hoursPerDay || 8.0;
 
-    const totalWorkHoursPerMonth = workDaysPerWeek * hoursPerDay * weeksPerMonth;
+    const totalWorkHoursPerMonth = daysPerMonth * hoursPerDay;
 
     // Calculate total monthly fixed costs
     const fixedCosts = await fixedCostRepository.findActive();
@@ -214,9 +216,13 @@ export const productService = {
     return {
       productId,
       totalCost: totalProductCost,
+      ingredientsCost: totalCost,
+      fixedCostPerProduct: fixedCostPerUnit,
       fixedCostPerUnit,
       suggestedPrice,
-      margin: marginPercentage
+      margin: totalProductCost * (marginPercentage / 100),
+      marginPercentage: marginPercentage,
+      preparationTimeMinutes: product.preparationTimeMinutes
     };
   },
 

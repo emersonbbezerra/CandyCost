@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 
 // User schemas
@@ -173,3 +172,15 @@ export const insertWorkConfigurationSchema = z.object({
 
 export type WorkConfiguration = z.infer<typeof workConfigurationSchema>;
 export type InsertWorkConfiguration = z.infer<typeof insertWorkConfigurationSchema>;
+
+export interface ProductCost {
+  productId: string;
+  totalCost: number;
+  ingredientsCost: number;
+  fixedCostPerProduct: number;
+  fixedCostPerUnit: number;
+  suggestedPrice: number;
+  margin: number;
+  marginPercentage: number;
+  preparationTimeMinutes: number;
+}

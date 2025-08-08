@@ -23,9 +23,9 @@ export const getProducts = async (_req: Request, res: Response) => {
 
 export const getProductById = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = req.params.id;
     
-    if (isNaN(id)) {
+    if (!id || typeof id !== 'string') {
       return res.status(400).json({ message: "ID do produto inválido" });
     }
     
@@ -78,7 +78,7 @@ export const createProduct = async (req: Request, res: Response) => {
 
 export const updateProduct = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = req.params.id;
     const data = z.object({
       name: z.string().optional(),
       category: z.string().optional(),
@@ -100,7 +100,7 @@ export const updateProduct = async (req: Request, res: Response) => {
 
 export const deleteProduct = async (req: Request, res: Response) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = req.params.id;
     await productService.deleteProduct(id);
     res.status(204).send();
   } catch (error) {
