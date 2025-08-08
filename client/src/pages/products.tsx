@@ -271,10 +271,6 @@ export default function Products() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {paginatedProducts.map((product) => (
           <Card key={product.id} className="overflow-hidden">
-            <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-              <ChefHat className="w-16 h-16 text-gray-400" />
-            </div>
-
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
