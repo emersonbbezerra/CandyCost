@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Dashboard from "@/pages/dashboard";
 import Ingredients from "@/pages/ingredients";
 import Products from "@/pages/products";
-import History from "@/pages/history";
+import FixedCosts from "@/pages/fixed-costs";
 import CostsHistory from "@/pages/costs-history";
 import Reports from "@/pages/reports";
 import System from "@/pages/system";
@@ -25,10 +25,11 @@ function Router() {
   // Show loading while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-main">
+        <div className="text-center animate-fadeInUp">
+          <div className="spinner-modern mx-auto mb-6"></div>
+          <h2 className="text-xl font-semibold text-pink-primary mb-2">CandyCost</h2>
+          <p className="text-muted-foreground">Carregando sua aplicação...</p>
         </div>
       </div>
     );
@@ -41,15 +42,16 @@ function Router() {
 
   // Show main app if authenticated
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex bg-gradient-main">
       <Sidebar />
-      <main className="lg:ml-64 flex-1 pt-16 lg:pt-0">
+      <main className="flex-1 pt-16 lg:pt-0 bg-transparent">
+        <div className="animate-fadeInUp">
         <Switch>
             <Route path="/" component={Dashboard} />
             <Route path="/ingredients" component={Ingredients} />
             <Route path="/products" component={Products} />
             <Route path="/recipes" component={Products} />
-            <Route path="/history" component={History} />
+            <Route path="/fixed-costs" component={FixedCosts} />
             <Route path="/costs-history" component={CostsHistory} />
             <Route path="/reports" component={Reports} />
             <Route path="/system" component={System} />
@@ -59,6 +61,7 @@ function Router() {
             {user?.role === 'admin' && <Route path="/user-management" component={UserManagementAdmin} />}
             <Route component={NotFound} />
           </Switch>
+        </div>
       </main>
     </div>
   );
@@ -67,10 +70,10 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
+      <div className="min-h-screen bg-gradient-main">
         <Toaster />
         <Router />
-      </TooltipProvider>
+      </div>
     </QueryClientProvider>
   );
 }

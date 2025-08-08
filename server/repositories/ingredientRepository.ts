@@ -1,42 +1,58 @@
-import { ingredients } from "@shared/schema";
-import { eq } from "drizzle-orm";
-import { db } from "../db";
+import { prisma } from "../db";
+import type { Ingredient, InsertIngredient } from "@shared/schema";
 
 export const ingredientRepository = {
-  async getIngredients() {
-    return await db.select().from(ingredients).execute();
+  async findAll(): Promise<Ingredient[]> {
+    return await prisma.ingredient.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
   },
 
-  async getIngredient(id: number) {
-    const result = await db.select().from(ingredients).where(eq(ingredients.id, id)).limit(1).execute();
-    return result[0] || null;
+  async findById(id: string): Promise<Ingredient | null> {
+    return await prisma.ingredient.findUnique({
+      where: { id }
+    });
   },
 
-  async createIngredient(data: {
-    name: string;
-    category: string;
-    quantity: string;
-    unit: string;
-    price: string;
-    brand?: string | null;
-  }) {
-    const [newIngredient] = await db.insert(ingredients).values(data).returning();
-    return newIngredient;
+  async create(data: InsertIngredient): Promise<Ingredient> {
+    return await prisma.ingredient.create({
+      data
+    });
   },
 
-  async updateIngredient(id: number, data: Partial<{
-    name: string;
-    category: string;
-    quantity: string;
-    unit: string;
-    price: string;
-    brand?: string | null;
-  }>) {
-    const [updatedIngredient] = await db.update(ingredients).set(data).where(eq(ingredients.id, id)).returning();
-    return updatedIngredient;
+  async update(id: string, data: Partial<InsertIngredient>): Promise<Ingredient> {
+    return await prisma.ingredient.update({
+      where: { id },
+      data
+    });
   },
 
-  async deleteIngredient(id: number) {
-    await db.delete(ingredients).where(eq(ingredients.id, id));
+  async delete(id: string): Promise<void> {
+    await prisma.ingredient.delete({
+      where: { id }
+    });
+  },
+
+  async findByCategory(category: string): Promise<Ingredient[]> {
+    return await prisma.ingredient.findMany({
+      where: { category },
+      orderBy: { name: 'asc' }
+    });
+  },
+
+  async findByName(name: string): Promise<Ingredient | null> {
+    return await prisma.ingredient.findFirst({
+      where: { name }
+    });
+  },
+
+  async getCategories(): Promise<string[]> {
+    const result = await prisma.ingredient.findMany({
+      select: { category: true },
+      distinct: ['category'],
+      orderBy: { category: 'asc' }
+    });
+
+    return result.map(item => item.category);
   }
 };

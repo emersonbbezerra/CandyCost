@@ -1,78 +1,215 @@
 import { Request, Response } from "express";
+import { prisma } from "../db";
 import { priceHistoryService } from "../services/priceHistoryService";
 import { productService } from "../services/productService";
 
-export const getDashboardStats = async (_req: Request, res: Response) => {
+export const getCostEvolution = async (req: Request, res: Response) => {
   try {
-    const ingredients = await productService.getIngredients();
-    const products = await productService.getProducts();
-    const history = await priceHistoryService.getPriceHistory();
-    
-    // Calculate average cost
-    const costsPromises = products.map(async (product) => {
-      try {
-        const cost = await productService.calculateProductCost(product.id);
-        return cost.totalCost;
-      } catch {
-        return 0;
+    const { productId, months = 6 } = req.query;
+
+    let history: any[] = [];
+
+    if (productId && productId !== "general") {
+      // Dados específicos do produto
+      history = await priceHistoryService.getPriceHistory(undefined, parseInt(productId as string));
+    } else {
+      // Dados gerais (todos os produtos)
+      history = await priceHistoryService.getPriceHistory();
+      history = history.filter(item => item.productId); // Apenas produtos
+    }
+
+    // Agrupar por mês e calcular médias
+    const monthlyData = history.reduce((acc: any, item) => {
+      const date = new Date(item.createdAt);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+      if (!acc[monthKey]) {
+        acc[monthKey] = {
+          month: date.toLocaleDateString('pt-BR', { month: 'short' }),
+          costs: [],
+          date: date
+        };
       }
-    });
-    
-    const costs = await Promise.all(costsPromises);
-    const avgCost = costs.length > 0 ? costs.reduce((a, b) => a + b, 0) / costs.length : 0;
-    
+
+      acc[monthKey].costs.push(parseFloat(item.newPrice));
+      return acc;
+    }, {});
+
+    // Converter para array e ordenar por data
+    const evolutionData = Object.values(monthlyData)
+      .sort((a: any, b: any) => a.date.getTime() - b.date.getTime())
+      .slice(-parseInt(months as string)) // Últimos N meses
+      .map((data: any) => ({
+        month: data.month,
+        cost: data.costs.reduce((sum: number, cost: number) => sum + cost, 0) / data.costs.length,
+        changes: data.costs.length
+      }));
+
+    res.json(evolutionData);
+  } catch (error) {
+    console.error("Error getting cost evolution:", error);
+    res.status(500).json({ message: "Erro ao buscar evolução de custos" });
+  }
+};
+
+export const getDashboardStats = async (req: Request, res: Response) => {
+  try {
+    const { type = 'product', category = 'all' } = req.query;
+
+    // Get ingredient count
+    const ingredientCount = await prisma.ingredient.count();
+
+    // Get product count
+    const productCount = await prisma.product.count();
+
+    const products = await prisma.product.findMany();
+
+    // Filter products by category if specified
+    const filteredProducts = category === 'all' ? products : products.filter(p => p.category === category);
+
+    // Calculate profit margins (using marginPercentage from database)
+    const profitData = filteredProducts.map((product) => ({
+      profitMargin: product.marginPercentage,
+      category: product.category
+    }));
+
+    let avgProfitMargin = 0;
+    let categoryBreakdown: any[] = [];
+
+    if (type === 'category') {
+      // Calculate average profit by category
+      const categoryGroups = profitData.reduce((acc, item) => {
+        if (!acc[item.category]) {
+          acc[item.category] = [];
+        }
+        acc[item.category].push(item.profitMargin);
+        return acc;
+      }, {} as Record<string, number[]>);
+
+      // Create category breakdown for frontend
+      categoryBreakdown = Object.entries(categoryGroups).map(([cat, margins]) => ({
+        category: cat,
+        avgMargin: margins.reduce((a, b) => a + b, 0) / margins.length,
+        productCount: margins.length
+      }));
+
+      if (category === 'all') {
+        // General average across all categories
+        const categoryAverages = Object.values(categoryGroups).map(margins =>
+          margins.reduce((a, b) => a + b, 0) / margins.length
+        );
+        avgProfitMargin = categoryAverages.length > 0
+          ? categoryAverages.reduce((a, b) => a + b, 0) / categoryAverages.length
+          : 0;
+      } else {
+        // Average for specific category
+        const categoryMargins = categoryGroups[category] || [];
+        avgProfitMargin = categoryMargins.length > 0
+          ? categoryMargins.reduce((a, b) => a + b, 0) / categoryMargins.length
+          : 0;
+      }
+    } else {
+      // Calculate average profit by product
+      const margins = profitData.map(item => item.profitMargin);
+      avgProfitMargin = margins.length > 0
+        ? margins.reduce((a, b) => a + b, 0) / margins.length
+        : 0;
+    }
+
     // Today's changes
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const todayChanges = history.filter(h => h.createdAt >= today).length;
-    
+    const todayChanges = await prisma.priceHistory.count({
+      where: {
+        createdAt: {
+          gte: today
+        }
+      }
+    });
+
+    // Get unique categories for frontend
+    const uniqueCategories = [...new Set(products.map(p => p.category))].sort();
+
     res.json({
-      totalIngredients: ingredients.length,
-      totalProducts: products.length,
-      avgCost: avgCost.toFixed(2),
+      totalIngredients: ingredientCount,
+      totalProducts: productCount,
+      avgProfitMargin: avgProfitMargin.toFixed(1),
+      availableCategories: uniqueCategories,
       todayChanges,
     });
   } catch (error) {
+    console.error("Error getting dashboard stats:", error);
     res.status(500).json({ message: "Erro ao buscar estatísticas" });
   }
 };
 
-export const getRecentUpdates = async (_req: Request, res: Response) => {
+export const getRecentUpdates = async (req: Request, res: Response) => {
+  // Strong cache-busting headers
+  res.set({
+    'Cache-Control': 'no-cache, no-store, must-revalidate, private',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Last-Modified': new Date().toUTCString(),
+    'ETag': Math.random().toString(36)
+  });
+
   try {
-    const ingredients = await productService.getIngredients();
-    const products = await productService.getProducts();
-
-    // Buscar atualizações recentes para ingredientes e produtos separadamente
-    const ingredientUpdates = await priceHistoryService.getPriceHistory();
-    const productUpdates = await priceHistoryService.getPriceHistory();
-
-    // Filtrar atualizações por ingrediente e produto
-    const ingredientUpdatesFiltered = ingredientUpdates.filter(update => update.ingredientId !== null);
-    const productUpdatesFiltered = productUpdates.filter(update => update.productId !== null);
-
-    // Enriquecer atualizações com nomes
-    const ingredientMap = new Map(ingredients.map(i => [i.id, i.name]));
-    const productMap = new Map(products.map(p => [p.id, p.name]));
-
-    const enrichedIngredientUpdates = ingredientUpdatesFiltered.map(update => ({
-      ...update,
-      name: ingredientMap.get(update.ingredientId!) || "Ingrediente desconhecido"
-    }));
-
-    const enrichedProductUpdates = productUpdatesFiltered.map(update => ({
-      ...update,
-      name: productMap.get(update.productId!) || "Produto desconhecido"
-    }));
-
-    // Ordenar por data decrescente e limitar a 5
-    enrichedIngredientUpdates.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    enrichedProductUpdates.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-    res.json({
-      ingredientUpdates: enrichedIngredientUpdates.slice(0, 5),
-      productUpdates: enrichedProductUpdates.slice(0, 5),
+    // Get recent ingredient updates with proper relations
+    const recentIngredientUpdates = await prisma.priceHistory.findMany({
+      where: { 
+        ingredientId: { not: null } 
+      },
+      include: { 
+        ingredient: true 
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5
     });
+
+    // Get recent product updates with proper relations  
+    const recentProductUpdates = await prisma.priceHistory.findMany({
+      where: { 
+        productId: { not: null } 
+      },
+      include: { 
+        product: true 
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5
+    });
+
+    // Format ingredient updates
+    const enrichedIngredientUpdates = recentIngredientUpdates.map(update => ({
+      id: update.id,
+      type: 'ingredient' as const,
+      name: update.ingredient?.name || "Ingrediente desconhecido",
+      itemId: update.ingredientId,
+      oldPrice: update.oldPrice,
+      newPrice: update.newPrice,
+      changeType: update.changeType,
+      createdAt: update.createdAt
+    }));
+
+    // Format product updates
+    const enrichedProductUpdates = recentProductUpdates.map(update => ({
+      id: update.id,
+      type: 'product' as const,
+      name: update.product?.name || "Produto desconhecido", 
+      itemId: update.productId,
+      oldPrice: update.oldPrice,
+      newPrice: update.newPrice,
+      changeType: update.changeType,
+      createdAt: update.createdAt
+    }));
+
+    const responseData = {
+      ingredientUpdates: enrichedIngredientUpdates,
+      productUpdates: enrichedProductUpdates,
+    };
+
+    res.json(responseData);
   } catch (error) {
+    console.error("Error fetching recent updates:", error);
     res.status(500).json({ message: "Erro ao buscar atualizações recentes" });
   }
 };

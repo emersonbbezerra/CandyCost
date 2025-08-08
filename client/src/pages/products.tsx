@@ -12,12 +12,22 @@ import { PRODUCT_CATEGORIES } from "@shared/constants";
 import type { Product, ProductCost } from "@shared/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChefHat, Edit, Filter, Layers, Plus, Search, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type ProductWithCost = Product & { cost?: ProductCost };
 
 export default function Products() {
   const [isFormOpen, setIsFormOpen] = useState(false);
+
+  // Marcar navegação quando entrar na página
+  useEffect(() => {
+    // Limpar marcação de atualizações ao entrar na página
+    sessionStorage.removeItem('hasRecentUpdates');
+
+    return () => {
+      sessionStorage.setItem('lastPageNavigation', 'products');
+    };
+  }, []);
   const [editingProduct, setEditingProduct] = useState<ProductWithCost | undefined>();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -76,15 +86,29 @@ export default function Products() {
     try {
       console.log("Editando produto:", product);
       const response = await apiRequest("GET", `/api/products/${product.id}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const productWithRecipes = await response.json();
       console.log("Produto carregado do servidor:", productWithRecipes);
-      setEditingProduct(productWithRecipes);
+
+      // Ensure the product has the required structure
+      const sanitizedProduct = {
+        ...productWithRecipes,
+        marginPercentage: productWithRecipes.marginPercentage || "60",
+        preparationTimeMinutes: productWithRecipes.preparationTimeMinutes || 60,
+        recipes: productWithRecipes.recipes || []
+      };
+
+      setEditingProduct(sanitizedProduct);
       setIsFormOpen(true);
     } catch (error) {
       console.error("Erro ao carregar produto:", error);
       toast({
         title: "Erro",
-        description: "Erro ao carregar dados do produto.",
+        description: "Erro ao carregar dados do produto. Tente novamente.",
         variant: "destructive",
       });
     }
@@ -247,10 +271,6 @@ export default function Products() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {paginatedProducts.map((product) => (
           <Card key={product.id} className="overflow-hidden">
-            <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-              <ChefHat className="w-16 h-16 text-gray-400" />
-            </div>
-
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
@@ -271,11 +291,26 @@ export default function Products() {
 
               {product.cost ? (
                 <div className="space-y-3 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Custo de Produção:</span>
-                    <span className="font-semibold text-gray-900">
-                      {formatCurrency(product.cost.totalCost)}
-                    </span>
+                  <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+                    <h4 className="text-sm font-medium text-gray-700">Composição do Custo:</h4>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">• Ingredientes:</span>
+                      <span className="font-semibold text-gray-900">
+                        {formatCurrency(product.cost.ingredientsCost)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">• Custo fixo ({product.cost.preparationTimeMinutes}min):</span>
+                      <span className="font-semibold text-gray-900">
+                        {formatCurrency(product.cost.fixedCostPerProduct)}
+                      </span>
+                    </div>
+                    <div className="border-t pt-2 flex justify-between text-sm font-medium">
+                      <span className="text-gray-900">Custo Total:</span>
+                      <span className="font-semibold text-gray-900">
+                        {formatCurrency(product.cost.totalCost)}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Preço Sugerido ({product.marginPercentage}%):</span>

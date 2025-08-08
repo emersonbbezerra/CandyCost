@@ -25,6 +25,7 @@ const productSchema = insertProductSchema.extend({
       productIngredientId: z.number().nullable(),
     })
   ).optional(),
+  preparationTimeMinutes: z.number().min(1, "Tempo de preparo deve ser maior que 0").default(60),
 });
 
 interface ProductFormProps {
@@ -55,6 +56,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
       description: product?.description || "",
       isAlsoIngredient: product?.isAlsoIngredient || false,
       marginPercentage: product?.marginPercentage || "60",
+      preparationTimeMinutes: product?.preparationTimeMinutes || 60,
       recipes: product?.recipes?.map((r) => ({
         ingredientId: r.ingredientId,
         productIngredientId: r.productIngredientId,
@@ -76,15 +78,17 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
         name: product.name || "",
         category: product.category || "",
         description: product.description || "",
-        isAlsoIngredient: product.isAlsoIngredient || false,
-        marginPercentage: product.marginPercentage || "60",
-        recipes: product.recipes?.map((r) => ({
-          ingredientId: r.ingredientId,
-          productIngredientId: r.productIngredientId,
-          quantity: r.quantity || "",
-          unit: r.unit || "",
-        })) || [],
+        isAlsoIngredient: Boolean(product.isAlsoIngredient),
+        marginPercentage: String(product.marginPercentage || "60"),
+        preparationTimeMinutes: Number(product.preparationTimeMinutes) || 60,
+        recipes: Array.isArray(product.recipes) ? product.recipes.map((r) => ({
+          ingredientId: r.ingredientId || null,
+          productIngredientId: r.productIngredientId || null,
+          quantity: String(r.quantity || ""),
+          unit: String(r.unit || "kg"),
+        })) : [],
       };
+      console.log("Resetando formulário com dados:", formData);
       form.reset(formData);
     } else {
       form.reset({
@@ -93,6 +97,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
         description: "",
         isAlsoIngredient: false,
         marginPercentage: "60",
+        preparationTimeMinutes: 60,
         recipes: [],
       });
     }
@@ -103,17 +108,19 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
       const { recipes, ...productData } = data;
       const response = await apiRequest("POST", "/api/products", productData);
       const newProduct = await response.json();
-      
+
       if (recipes && recipes.length > 0) {
         await apiRequest("POST", `/api/products/${newProduct.id}/recipes`, recipes);
       }
-      
+
       return newProduct;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/ingredients"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
       toast({
         title: "Sucesso",
         description: "Produto criado com sucesso!",
@@ -135,17 +142,19 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
       const { recipes, ...productData } = data;
       const response = await apiRequest("PUT", `/api/products/${product?.id}`, productData);
       const updatedProduct = await response.json();
-      
+
       if (recipes) {
         await apiRequest("POST", `/api/products/${product?.id}/recipes`, recipes);
       }
-      
+
       return updatedProduct;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/ingredients"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
       toast({
         title: "Sucesso",
         description: "Produto atualizado com sucesso!",
@@ -206,8 +215,8 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Categoria</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
+                    <Select
+                      onValueChange={field.onChange}
                       value={field.value || ""}
                     >
                       <FormControl>
@@ -236,11 +245,11 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                 <FormItem>
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Descrição do produto..." 
-                      {...field} 
+                    <Textarea
+                      placeholder="Descrição do produto..."
+                      {...field}
                       onChange={field.onChange}
-                      value={field.value || ""} 
+                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -256,7 +265,34 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                   <FormItem>
                     <FormLabel>Margem de Lucro (%)</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" placeholder="60" {...field} />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="60"
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="preparationTimeMinutes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tempo de Preparo (minutos)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="1"
+                        placeholder="60"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 60)}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -312,7 +348,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Ingrediente</FormLabel>
-                            <Select 
+                            <Select
                               onValueChange={(value) => {
                                 if (value === "null") {
                                   field.onChange(null);
@@ -328,7 +364,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                                   field.onChange(parseInt(value));
                                   form.setValue(`recipes.${index}.productIngredientId`, null);
                                 }
-                              }} 
+                              }}
                               value={(() => {
                                 const recipe = form.watch(`recipes.${index}`);
                                 if (recipe?.productIngredientId) {
@@ -341,7 +377,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue 
+                                  <SelectValue
                                     placeholder="Selecione um ingrediente"
                                   >
                                     {(() => {
@@ -401,8 +437,8 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Unidade</FormLabel>
-                            <Select 
-                              onValueChange={field.onChange} 
+                            <Select
+                              onValueChange={field.onChange}
                               value={field.value || ""}
                             >
                               <FormControl>

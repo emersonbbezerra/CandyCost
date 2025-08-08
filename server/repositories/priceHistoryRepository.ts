@@ -1,40 +1,63 @@
-import { priceHistory } from "@shared/schema";
-import { and, eq } from "drizzle-orm";
-import { db } from "../db";
+
+import { prisma } from "../db";
+import type { PriceHistory, InsertPriceHistory } from "@shared/schema";
 
 export const priceHistoryRepository = {
-  async getPriceHistory(ingredientId?: number, productId?: number) {
-    const conditions = [];
-
-    if (ingredientId !== undefined) {
-      conditions.push(eq(priceHistory.ingredientId, ingredientId));
-    }
-
-    if (productId !== undefined) {
-      conditions.push(eq(priceHistory.productId, productId));
-    }
-
-    const query = conditions.length > 0
-      ? db.select().from(priceHistory).where(and(...conditions))
-      : db.select().from(priceHistory);
-
-    const result = await query;
-    if (Array.isArray(result)) {
-      return result;
-    } else {
-      return [];
-    }
+  async findAll(): Promise<PriceHistory[]> {
+    return await prisma.priceHistory.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
   },
 
-  async createPriceHistory(data: {
-    ingredientId?: number;
-    productId?: number;
-    oldPrice: string;
-    newPrice: string;
-    changeReason?: string | null;
-    createdAt?: Date;
-  }) {
-    const [newPriceHistory] = await db.insert(priceHistory).values(data).returning();
-    return newPriceHistory;
+  async findById(id: string): Promise<PriceHistory | null> {
+    return await prisma.priceHistory.findUnique({
+      where: { id }
+    });
+  },
+
+  async create(data: InsertPriceHistory): Promise<PriceHistory> {
+    return await prisma.priceHistory.create({
+      data
+    });
+  },
+
+  async findRecent(limit: number = 20): Promise<PriceHistory[]> {
+    return await prisma.priceHistory.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: limit
+    });
+  },
+
+  async findByItemType(itemType: string): Promise<PriceHistory[]> {
+    return await prisma.priceHistory.findMany({
+      where: { itemType },
+      orderBy: { createdAt: 'desc' }
+    });
+  },
+
+  async findByIngredientId(ingredientId: string): Promise<PriceHistory[]> {
+    return await prisma.priceHistory.findMany({
+      where: { ingredientId },
+      orderBy: { createdAt: 'desc' }
+    });
+  },
+
+  async findByProductId(productId: string): Promise<PriceHistory[]> {
+    return await prisma.priceHistory.findMany({
+      where: { productId },
+      orderBy: { createdAt: 'desc' }
+    });
+  },
+
+  async findByDateRange(startDate: Date, endDate: Date): Promise<PriceHistory[]> {
+    return await prisma.priceHistory.findMany({
+      where: {
+        createdAt: {
+          gte: startDate,
+          lte: endDate
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
   }
 };

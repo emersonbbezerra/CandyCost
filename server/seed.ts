@@ -1,15 +1,61 @@
+
 import dotenv from "dotenv";
 dotenv.config();
 
-import { ingredients as ingredientsTable, products as productsTable, recipes as recipesTable } from "@shared/schema";
-import { db } from "./db";
-
-dotenv.config();
-
+import { prisma } from "./db";
 import { userService } from "./services/userService";
+
+async function setupSessionsTable() {
+  try {
+    // Drop existing sessions table if it exists
+    await prisma.$executeRaw`DROP TABLE IF EXISTS sessions CASCADE`;
+    
+    // Create sessions table with correct structure for connect-pg-simple
+    await prisma.$executeRaw`
+      CREATE TABLE sessions (
+        sid VARCHAR NOT NULL COLLATE "default",
+        sess JSON NOT NULL,
+        expire TIMESTAMP(6) NOT NULL
+      )
+      WITH (OIDS=FALSE);
+    `;
+    
+    await prisma.$executeRaw`
+      ALTER TABLE sessions ADD CONSTRAINT session_pkey PRIMARY KEY (sid) NOT DEFERRABLE INITIALLY IMMEDIATE;
+    `;
+    
+    await prisma.$executeRaw`
+      CREATE INDEX IDX_session_expire ON sessions (expire);
+    `;
+    
+    console.log("✓ Sessions table configured successfully!");
+  } catch (error) {
+    console.error("Error setting up sessions table:", error);
+    throw error;
+  }
+}
 
 async function seed() {
   try {
+    // Setup sessions table first
+    await setupSessionsTable();
+    
+    // Check if data already exists
+    const existingIngredients = await prisma.ingredient.count();
+    const existingProducts = await prisma.product.count();
+    const existingFixedCosts = await prisma.fixedCost.count();
+    
+    if (existingIngredients > 0 || existingProducts > 0 || existingFixedCosts > 0) {
+      console.log("✓ Dados já existem no banco - pulando inserção de dados de exemplo");
+      
+      // Ainda assim, vamos garantir que o usuário admin existe
+      await userService.createAdminUser();
+      console.log("✓ Verificação de usuário admin concluída");
+      return;
+    }
+    
+    console.log("📝 Inserindo dados de exemplo...");
+    
     // Sample ingredients
     const sampleIngredients = [
       { name: "Farinha de Trigo", category: "Farinhas", quantity: "5", unit: "kg", price: "12.50", brand: "Marca Premium" },
@@ -30,52 +76,53 @@ async function seed() {
       { name: "Granola", category: "Cereais", quantity: "0.5", unit: "kg", price: "12.00", brand: "Mãe Terra" },
     ];
 
-    // Inserir ingredientes e capturar ids
+    // Inserir ingredientes
     const insertedIngredients = [];
     for (const ingredient of sampleIngredients) {
-      const [inserted] = await db.insert(ingredientsTable).values({
-        name: ingredient.name,
-        category: ingredient.category,
-        quantity: ingredient.quantity,
-        unit: ingredient.unit,
-        price: ingredient.price,
-        brand: ingredient.brand,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }).returning();
+      const inserted = await prisma.ingredient.create({
+        data: {
+          name: ingredient.name,
+          category: ingredient.category,
+          quantity: parseFloat(ingredient.quantity),
+          unit: ingredient.unit,
+          price: parseFloat(ingredient.price),
+          brand: ingredient.brand,
+        }
+      });
       insertedIngredients.push(inserted);
     }
 
     // Sample products
     const sampleProducts = [
-      { name: "Brigadeiro Gourmet", category: "Doces", description: "Brigadeiro cremoso de chocolate", isAlsoIngredient: true, marginPercentage: "70" },
-      { name: "Cupcake de Baunilha", category: "Cupcakes", description: "Cupcake com cobertura de baunilha", isAlsoIngredient: false, marginPercentage: "60" },
-      { name: "Trufa de Chocolate Branco", category: "Doces", description: "Trufa artesanal de chocolate branco", isAlsoIngredient: false, marginPercentage: "65" },
-      { name: "Torta de Chocolate", category: "Tortas", description: "Torta de chocolate com cobertura", isAlsoIngredient: false, marginPercentage: "35" },
-      { name: "Bolo de Morango", category: "Bolos", description: "Bolo com recheio de morango e chantilly", isAlsoIngredient: false, marginPercentage: "40" },
-      { name: "Cheesecake de Frutas Vermelhas", category: "Tortas", description: "Cheesecake cremoso com frutas", isAlsoIngredient: false, marginPercentage: "45" },
-      { name: "Açaí na Tigela Premium", category: "Gelados", description: "Açaí com granola, frutas e mel", isAlsoIngredient: false, marginPercentage: "25" },
-      { name: "Brownie com Nozes", category: "Doces", description: "Brownie denso com nozes caramelizadas", isAlsoIngredient: false, marginPercentage: "20" },
-      { name: "Torta Holandesa", category: "Tortas", description: "Torta com creme e chocolate premium", isAlsoIngredient: false, marginPercentage: "15" },
-      { name: "Beijinho Gourmet", category: "Doces", description: "Beijinho artesanal com coco premium", isAlsoIngredient: false, marginPercentage: "200" },
+      { name: "Brigadeiro Gourmet", category: "Doces", description: "Brigadeiro cremoso de chocolate", isAlsoIngredient: true, marginPercentage: "70", preparationTimeMinutes: 30 },
+      { name: "Cupcake de Baunilha", category: "Cupcakes", description: "Cupcake com cobertura de baunilha", isAlsoIngredient: false, marginPercentage: "60", preparationTimeMinutes: 45 },
+      { name: "Trufa de Chocolate Branco", category: "Doces", description: "Trufa artesanal de chocolate branco", isAlsoIngredient: false, marginPercentage: "65", preparationTimeMinutes: 60 },
+      { name: "Torta de Chocolate", category: "Tortas", description: "Torta de chocolate com cobertura", isAlsoIngredient: false, marginPercentage: "35", preparationTimeMinutes: 120 },
+      { name: "Bolo de Morango", category: "Bolos", description: "Bolo com recheio de morango e chantilly", isAlsoIngredient: false, marginPercentage: "40", preparationTimeMinutes: 90 },
+      { name: "Cheesecake de Frutas Vermelhas", category: "Tortas", description: "Cheesecake cremoso com frutas", isAlsoIngredient: false, marginPercentage: "45", preparationTimeMinutes: 180 },
+      { name: "Açaí na Tigela Premium", category: "Gelados", description: "Açaí com granola, frutas e mel", isAlsoIngredient: false, marginPercentage: "25", preparationTimeMinutes: 10 },
+      { name: "Brownie com Nozes", category: "Doces", description: "Brownie denso com nozes caramelizadas", isAlsoIngredient: false, marginPercentage: "20", preparationTimeMinutes: 50 },
+      { name: "Torta Holandesa", category: "Tortas", description: "Torta com creme e chocolate premium", isAlsoIngredient: false, marginPercentage: "15", preparationTimeMinutes: 150 },
+      { name: "Beijinho Gourmet", category: "Doces", description: "Beijinho artesanal com coco premium", isAlsoIngredient: false, marginPercentage: "200", preparationTimeMinutes: 25 },
     ];
 
-    // Inserir produtos e capturar ids
+    // Inserir produtos
     const insertedProducts = [];
     for (const product of sampleProducts) {
-      const [inserted] = await db.insert(productsTable).values({
-        name: product.name,
-        category: product.category,
-        description: product.description,
-        isAlsoIngredient: product.isAlsoIngredient,
-        marginPercentage: product.marginPercentage,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }).returning();
+      const inserted = await prisma.product.create({
+        data: {
+          name: product.name,
+          category: product.category,
+          description: product.description,
+          isAlsoIngredient: product.isAlsoIngredient,
+          marginPercentage: parseFloat(product.marginPercentage),
+          preparationTimeMinutes: product.preparationTimeMinutes,
+        }
+      });
       insertedProducts.push(inserted);
     }
 
-    // Mapear sampleRecipes para usar ids reais
+    // Sample recipes
     const sampleRecipes = [
       { productIndex: 0, ingredientIndex: 1, productIngredientIndex: null, quantity: "0.395", unit: "kg" },
       { productIndex: 0, ingredientIndex: 2, productIngredientIndex: null, quantity: "0.2", unit: "kg" },
@@ -118,23 +165,49 @@ async function seed() {
       { productIndex: 9, ingredientIndex: 3, productIngredientIndex: null, quantity: "0.03", unit: "kg" },
     ];
 
-    // Inserir receitas usando ids reais
+    // Inserir receitas
     for (const recipe of sampleRecipes) {
-      await db.insert(recipesTable).values({
-        productId: insertedProducts[recipe.productIndex].id,
-        ingredientId: recipe.ingredientIndex !== null ? insertedIngredients[recipe.ingredientIndex].id : null,
-        productIngredientId: recipe.productIngredientIndex !== null ? insertedProducts[recipe.productIngredientIndex].id : null,
-        quantity: recipe.quantity,
-        unit: recipe.unit,
+      await prisma.recipe.create({
+        data: {
+          productId: insertedProducts[recipe.productIndex].id,
+          ingredientId: recipe.ingredientIndex !== null ? insertedIngredients[recipe.ingredientIndex].id : null,
+          productIngredientId: recipe.productIngredientIndex !== null ? insertedProducts[recipe.productIngredientIndex].id : null,
+          quantity: parseFloat(recipe.quantity),
+          unit: recipe.unit,
+        }
+      });
+    }
+
+    // Inserir custos fixos
+    const sampleFixedCosts = [
+      { name: "Aluguel da Cozinha", category: "Imóvel", value: "1500.00", recurrence: "monthly", description: "Aluguel mensal do espaço de produção", isActive: true },
+      { name: "Energia Elétrica", category: "Utilidades", value: "300.00", recurrence: "monthly", description: "Conta de luz mensal", isActive: true },
+      { name: "Gás de Cozinha", category: "Utilidades", value: "150.00", recurrence: "monthly", description: "Gás para fogão e forno", isActive: true },
+      { name: "Seguro Empresarial", category: "Seguros", value: "800.00", recurrence: "yearly", description: "Seguro anual da empresa", isActive: true },
+      { name: "Contador", category: "Serviços", value: "400.00", recurrence: "monthly", description: "Serviços contábeis mensais", isActive: true },
+    ];
+
+    for (const fixedCost of sampleFixedCosts) {
+      await prisma.fixedCost.create({
+        data: {
+          name: fixedCost.name,
+          category: fixedCost.category,
+          value: parseFloat(fixedCost.value),
+          recurrence: fixedCost.recurrence,
+          description: fixedCost.description,
+          isActive: fixedCost.isActive,
+        }
       });
     }
 
     // Criar usuário admin padrão
     await userService.createAdminUser();
 
-    console.log("Banco de dados populado com sucesso!");
+    console.log("✓ Banco de dados populado com sucesso!");
   } catch (error) {
     console.error("Erro ao popular o banco de dados:", error);
+  } finally {
+    await prisma.$disconnect();
   }
 }
 

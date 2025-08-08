@@ -11,6 +11,7 @@ import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { ChefHat, LogIn, UserPlus } from "lucide-react";
 
+import { passwordErrorMessage, passwordRegex } from "../../../shared/passwordValidation";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -21,12 +22,13 @@ const registerSchema = z.object({
   email: z.string().email("Email inválido"),
   password: z.string()
     .min(8, "Senha deve ter pelo menos 8 caracteres")
-    .regex(/^(?=.*[a-z])/, "Senha deve conter pelo menos uma letra minúscula")
-    .regex(/^(?=.*[A-Z])/, "Senha deve conter pelo menos uma letra maiúscula") 
-    .regex(/^(?=.*\d)/, "Senha deve conter pelo menos um número")
-    .regex(/^(?=.*[@$!%*?&])/, "Senha deve conter pelo menos um caractere especial (@$!%*?&)"),
+    .regex(passwordRegex, passwordErrorMessage),
+  confirmPassword: z.string(),
   firstName: z.string().min(1, "Nome é obrigatório"),
-  lastName: z.string().optional(),
+  lastName: z.string().optional()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Senhas não coincidem",
+  path: ["confirmPassword"],
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -49,6 +51,7 @@ export default function Login() {
     defaultValues: {
       email: "",
       password: "",
+      confirmPassword: "",
       firstName: "",
       lastName: "",
     },
@@ -63,14 +66,14 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50 p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <ChefHat className="h-12 w-12 text-pink-600 dark:text-pink-400" />
+            <ChefHat className="h-12 w-12 text-pink-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">CandyCost</h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-2">
+          <h1 className="text-3xl font-bold text-gray-900">CandyCost</h1>
+          <p className="text-gray-600 mt-2">
             Sistema de Gestão de Custos para Confeitaria
           </p>
         </div>
@@ -109,6 +112,11 @@ export default function Login() {
                               type="email"
                               placeholder="seu@email.com"
                               {...field}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                // Trigger validation immediately
+                                loginForm.trigger("email");
+                              }}
                             />
                           </FormControl>
                           <FormMessage />
@@ -142,11 +150,11 @@ export default function Login() {
                   </form>
                 </Form>
 
-                <div className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                    <p className="font-medium text-blue-800 dark:text-blue-200">Conta de Administrador:</p>
-                    <p className="text-blue-600 dark:text-blue-300">Email: admin@confeitaria.com</p>
-                    <p className="text-blue-600 dark:text-blue-300">Senha: admin123!</p>
+                <div className="text-center text-sm text-gray-600 mt-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="font-medium text-blue-800">Conta de Administrador:</p>
+                    <p className="text-blue-600">Email: admin@confeitaria.com</p>
+                    <p className="text-blue-600">Senha: admin123!</p>
                   </div>
                 </div>
               </TabsContent>
@@ -197,6 +205,11 @@ export default function Login() {
                               type="email"
                               placeholder="seu@email.com"
                               {...field}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                // Trigger validation immediately
+                                registerForm.trigger("email");
+                              }}
                             />
                           </FormControl>
                           <FormMessage />
@@ -221,8 +234,30 @@ export default function Login() {
                             <p>✓ Pelo menos 1 maiúscula (A-Z)</p>
                             <p>✓ Pelo menos 1 minúscula (a-z)</p>
                             <p>✓ Pelo menos 1 número (0-9)</p>
-                            <p>✓ Pelo menos 1 símbolo (@$!%*?&)</p>
+                            <p>✓ Pelo menos 1 símbolo (@$!%*?&#+\-_.=)</p>
                           </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={registerForm.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirmar Senha</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="password"
+                              placeholder="Digite a senha novamente"
+                              {...field}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                // Trigger validation immediately
+                                registerForm.trigger("confirmPassword");
+                              }}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -241,7 +276,7 @@ export default function Login() {
           </CardContent>
         </Card>
 
-        <div className="text-center mt-6 text-sm text-gray-600 dark:text-gray-400">
+        <div className="text-center mt-6 text-sm text-gray-600">
           <p>Sistema profissional para gestão de custos</p>
           <p>Controle total dos seus insumos e produtos</p>
         </div>

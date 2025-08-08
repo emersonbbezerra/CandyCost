@@ -13,18 +13,30 @@ export const INGREDIENT_CATEGORIES = [
 
 // Categorias de produtos
 export const PRODUCT_CATEGORIES = [
-  { value: "Doces", label: "Doces" },
-  { value: "Tortas", label: "Tortas" },
-  { value: "Bolos", label: "Bolos" },
-  { value: "Cupcakes", label: "Cupcakes" },
-  { value: "Biscoitos", label: "Biscoitos" },
-  { value: "Brigadeiros", label: "Brigadeiros" },
-  { value: "Trufas", label: "Trufas" },
-  { value: "Bem-casados", label: "Bem-casados" },
-  { value: "Pães Doces", label: "Pães Doces" },
-  { value: "Sobremesas", label: "Sobremesas" },
-  { value: "Outros", label: "Outros" },
-];
+  "Bebidas",
+  "Doces",
+  "Salgados",
+  "Pratos Principais",
+  "Sobremesas",
+  "Ingredientes",
+  "Outros"
+] as const;
+
+export const FIXED_COST_CATEGORIES = [
+  "Aluguel",
+  "Energia elétrica",
+  "Internet",
+  "Funcionários",
+  "Gás, água",
+  "Embalagens gerais",
+  "Despesas administrativas"
+] as const;
+
+export const RECURRENCE_TYPES = [
+  { value: "monthly", label: "Mensal" },
+  { value: "quarterly", label: "Trimestral" },
+  { value: "yearly", label: "Anual" }
+] as const;
 
 // Unidades de medida
 export const UNITS = [

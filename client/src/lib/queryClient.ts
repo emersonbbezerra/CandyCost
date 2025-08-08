@@ -23,8 +23,22 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  // Debug: verificar se o método é válido
+  if (typeof method !== 'string') {
+    console.error('Invalid method type:', typeof method, method);
+    throw new Error(`Invalid HTTP method: expected string, got ${typeof method}`);
+  }
+  
+  const validMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+  const upperMethod = method.toUpperCase();
+  
+  if (!validMethods.includes(upperMethod)) {
+    console.error('Invalid method value:', method);
+    throw new Error(`Invalid HTTP method: ${method}`);
+  }
+  
   const res = await fetch(url, {
-    method,
+    method: upperMethod,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",

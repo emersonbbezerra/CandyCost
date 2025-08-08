@@ -8,6 +8,12 @@ import productRoutes from "./productRoutes";
 import recipeRoutes from "./recipeRoutes";
 import reportRoutes from "./reportRoutes";
 import userRoutes from "./userRoutes";
+import fixedCostRoutes from "./fixedCostRoutes";
+import dashboardRoutes from "./dashboardRoutes";
+import settingsRoutes from "./settingsRoutes";
+import { Router } from "express";
+import { FixedCostController } from "../controllers/fixedCostController";
+import { isAuthenticated } from "../middlewares/authMiddleware";
 
 export async function registerRoutes(app: Express) {
   app.use(authRoutes);
@@ -18,4 +24,17 @@ export async function registerRoutes(app: Express) {
   app.use(recipeRoutes);
   app.use(reportRoutes);
   app.use(userRoutes);
+  app.use("/api/fixed-costs", fixedCostRoutes);
+  app.use("/api/dashboard", dashboardRoutes);
+  app.use("/api/settings", settingsRoutes);
+
+  // Work configuration routes
+  const workConfigRouter = Router();
+  const fixedCostController = new FixedCostController();
+
+  workConfigRouter.use(isAuthenticated);
+  workConfigRouter.get("/work-configuration", fixedCostController.getWorkConfiguration.bind(fixedCostController));
+  workConfigRouter.put("/work-configuration", fixedCostController.updateWorkConfiguration.bind(fixedCostController));
+
+  app.use("/api/work-config", workConfigRouter);
 }

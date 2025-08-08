@@ -17,11 +17,11 @@ author = 43871407
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run dev"
+args = "npm run dev:backend"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run dev-frontend"
+args = "npm run dev:frontend"
 
 [[ports]]
 localPort = 3000

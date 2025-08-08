@@ -3,17 +3,19 @@ import { CostEvolutionChart } from "@/components/cost-evolution-chart";
 import { RecentUpdatesCard } from "@/components/recent-updates";
 import { StatsCards } from "@/components/stats-cards";
 import type { Product } from "@shared/schema";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BarChart3 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function Dashboard() {
-  const { data: stats, isLoading: statsLoading } = useQuery<{
-    totalIngredients: number;
-    totalProducts: number;
-    avgCost: string;
-    todayChanges: number;
-  }>({
-    queryKey: ["/api/dashboard/stats"],
+  const queryClient = useQueryClient();
+  const [selectedProduct, setSelectedProduct] = useState<string>("general");
+  const [profitType, setProfitType] = useState<string>("product");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
+    queryKey: ["/api/dashboard/stats", profitType, selectedCategory],
+    queryFn: () => fetch(`/api/dashboard/stats?type=${profitType}&category=${selectedCategory}`).then(res => res.json()),
     refetchOnMount: "always",
     staleTime: 0,
   });
@@ -21,6 +23,35 @@ export default function Dashboard() {
   const { data: products = [] } = useQuery<Product[]>({
     queryKey: ["/api/products"],
   });
+
+  // Invalidate recent updates when dashboard is focused or visibility changes
+  useEffect(() => {
+    const handleFocus = () => {
+      // Only invalidate if there might be changes from other pages
+      const lastNavigation = sessionStorage.getItem('lastPageNavigation');
+      const wasOnProductsOrIngredients = lastNavigation === 'products' || lastNavigation === 'ingredients';
+
+      if (wasOnProductsOrIngredients) {
+        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
+        sessionStorage.removeItem('lastPageNavigation');
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // When the tab becomes visible, check for updates
+        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [queryClient]);
 
   if (statsLoading) {
     return (
@@ -54,8 +85,22 @@ export default function Dashboard() {
       <StatsCards
         totalIngredients={stats?.totalIngredients || 0}
         totalProducts={stats?.totalProducts || 0}
-        avgCost={stats?.avgCost || "0"}
+        avgProfitMargin={stats?.avgProfitMargin || "0"}
+        profitType={profitType}
+        selectedCategory={selectedCategory}
+        availableCategories={stats?.availableCategories || []}
         todayChanges={stats?.todayChanges || 0}
+        onProfitTypeChange={(type) => {
+          setProfitType(type);
+          if (type === 'product') {
+            setSelectedCategory('all');
+          }
+          refetchStats();
+        }}
+        onCategoryChange={(category) => {
+          setSelectedCategory(category);
+          refetchStats();
+        }}
       />
 
       {/* Charts Section */}

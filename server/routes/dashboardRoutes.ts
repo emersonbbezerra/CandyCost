@@ -1,10 +1,10 @@
 import { Router } from "express";
-import * as dashboardController from "../controllers/dashboardController";
+import { getDashboardStats, getRecentUpdates, getCostEvolution } from "../controllers/dashboardController";
 
 const router = Router();
 
+router.get("/stats", getDashboardStats);
+router.get("/recent-updates", getRecentUpdates);
+router.get("/cost-evolution", getCostEvolution);
+
 export default router;
-
-router.get("/api/dashboard/stats", dashboardController.getDashboardStats);
-router.get("/api/dashboard/recent-updates", dashboardController.getRecentUpdates);
-

@@ -1,120 +1,186 @@
-import { pgTable, text, serial, integer, boolean, decimal, timestamp, varchar, jsonb, index } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { relations } from "drizzle-orm";
 
-export const ingredients = pgTable("ingredients", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  category: text("category").notNull(),
-  quantity: decimal("quantity", { precision: 10, scale: 3 }).notNull(),
-  unit: text("unit").notNull(),
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
-  brand: text("brand"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+// User schemas
+export const userSchema = z.object({
+  id: z.string(),
+  email: z.string().email(),
+  password: z.string(),
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  profileImageUrl: z.string().nullable(),
+  role: z.string().default("user"),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
-export const products = pgTable("products", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  category: text("category").notNull(),
-  description: text("description"),
-  isAlsoIngredient: boolean("is_also_ingredient").notNull().default(false),
-  marginPercentage: decimal("margin_percentage", { precision: 5, scale: 2 }).notNull().default("60"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+export const insertUserSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  role: z.string().optional(),
 });
 
-export const recipes = pgTable("recipes", {
-  id: serial("id").primaryKey(),
-  productId: integer("product_id").notNull().references(() => products.id),
-  ingredientId: integer("ingredient_id").references(() => ingredients.id),
-  productIngredientId: integer("product_ingredient_id").references(() => products.id),
-  quantity: decimal("quantity", { precision: 10, scale: 3 }).notNull(),
-  unit: text("unit").notNull(),
+export const selectUserSchema = userSchema.omit({ password: true });
+
+export type User = z.infer<typeof userSchema>;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type SelectUser = z.infer<typeof selectUserSchema>;
+export type UpsertUser = Partial<InsertUser> & { id?: string };
+
+// Ingredient schemas
+export const ingredientSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  category: z.string(),
+  quantity: z.number(),
+  unit: z.string(),
+  price: z.number(),
+  brand: z.string().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
-export const priceHistory = pgTable("price_history", {
-  id: serial("id").primaryKey(),
-  ingredientId: integer("ingredient_id").references(() => ingredients.id),
-  productId: integer("product_id").references(() => products.id),
-  oldPrice: decimal("old_price", { precision: 10, scale: 2 }).notNull(),
-  newPrice: decimal("new_price", { precision: 10, scale: 2 }).notNull(),
-  changeReason: text("change_reason"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+export const insertIngredientSchema = z.object({
+  name: z.string().min(1),
+  category: z.string().min(1),
+  quantity: z.number().positive(),
+  unit: z.string().min(1),
+  price: z.number().positive(),
+  brand: z.string().optional(),
 });
 
-export const insertIngredientSchema = createInsertSchema(ingredients).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertProductSchema = createInsertSchema(products).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertRecipeSchema = createInsertSchema(recipes).omit({
-  id: true,
-}).extend({
-  ingredientId: z.number().nullable(),
-  productIngredientId: z.number().nullable(),
-});
-
-export const insertPriceHistorySchema = createInsertSchema(priceHistory).omit({
-  id: true,
-  createdAt: true,
-});
-
-export type Ingredient = typeof ingredients.$inferSelect;
+export type Ingredient = z.infer<typeof ingredientSchema>;
 export type InsertIngredient = z.infer<typeof insertIngredientSchema>;
-export type Product = typeof products.$inferSelect;
+
+// Product schemas
+export const productSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  category: z.string(),
+  description: z.string().nullable(),
+  isAlsoIngredient: z.boolean(),
+  marginPercentage: z.number(),
+  preparationTimeMinutes: z.number().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+export const insertProductSchema = z.object({
+  name: z.string().min(1),
+  category: z.string().min(1),
+  description: z.string().optional(),
+  isAlsoIngredient: z.boolean().default(false),
+  marginPercentage: z.number().min(0),
+  preparationTimeMinutes: z.number().optional(),
+});
+
+export type Product = z.infer<typeof productSchema>;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
-export type Recipe = typeof recipes.$inferSelect;
+
+// Recipe schemas
+export const recipeSchema = z.object({
+  id: z.string(),
+  productId: z.string(),
+  ingredientId: z.string().nullable(),
+  productIngredientId: z.string().nullable(),
+  quantity: z.number(),
+  unit: z.string(),
+});
+
+export const insertRecipeSchema = z.object({
+  productId: z.string(),
+  ingredientId: z.string().optional(),
+  productIngredientId: z.string().optional(),
+  quantity: z.number().positive(),
+  unit: z.string().min(1),
+});
+
+export type Recipe = z.infer<typeof recipeSchema>;
 export type InsertRecipe = z.infer<typeof insertRecipeSchema>;
-export type PriceHistory = typeof priceHistory.$inferSelect;
+
+// Fixed Cost schemas
+export const fixedCostSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  category: z.string(),
+  value: z.number(),
+  recurrence: z.string(),
+  description: z.string().nullable(),
+  isActive: z.boolean(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+export const insertFixedCostSchema = z.object({
+  name: z.string().min(1),
+  category: z.string().min(1),
+  value: z.number().positive(),
+  recurrence: z.string().min(1),
+  description: z.string().optional(),
+  isActive: z.boolean().default(true),
+});
+
+export type FixedCost = z.infer<typeof fixedCostSchema>;
+export type InsertFixedCost = z.infer<typeof insertFixedCostSchema>;
+
+// Price History schemas
+export const priceHistorySchema = z.object({
+  id: z.string(),
+  itemType: z.string(),
+  itemName: z.string(),
+  oldPrice: z.number(),
+  newPrice: z.number(),
+  changeType: z.string(),
+  description: z.string().nullable(),
+  ingredientId: z.string().nullable(),
+  productId: z.string().nullable(),
+  createdAt: z.date(),
+});
+
+export const insertPriceHistorySchema = z.object({
+  itemType: z.string(),
+  itemName: z.string(),
+  oldPrice: z.number(),
+  newPrice: z.number(),
+  changeType: z.string(),
+  description: z.string().optional(),
+  ingredientId: z.string().optional(),
+  productId: z.string().optional(),
+});
+
+export type PriceHistory = z.infer<typeof priceHistorySchema>;
 export type InsertPriceHistory = z.infer<typeof insertPriceHistorySchema>;
 
-export type ProductWithRecipes = Product & {
-  recipes: (Recipe & {
-    ingredient?: Ingredient;
-    productIngredient?: Product;
-  })[];
-};
-
-export type ProductCost = {
-  productId: number;
-  totalCost: number;
-  suggestedPrice: number;
-  margin: number;
-};
-
-// Session storage table for authentication
-export const sessions = pgTable(
-  "sessions",
-  {
-    sid: varchar("sid").primaryKey(),
-    sess: jsonb("sess").notNull(),
-    expire: timestamp("expire").notNull(),
-  },
-  (table) => [index("IDX_session_expire").on(table.expire)],
-);
-
-// Users table for authentication and authorization
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().notNull(),
-  email: varchar("email").unique(),
-  firstName: varchar("first_name"),
-  lastName: varchar("last_name"),
-  password: varchar("password").notNull(),
-  profileImageUrl: varchar("profile_image_url"),
-  role: varchar("role").notNull().default("user"), // 'admin' or 'user'
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+// Work Configuration schemas
+export const workConfigurationSchema = z.object({
+  id: z.string(),
+  hoursPerDay: z.number(),
+  daysPerMonth: z.number(),
+  hourlyRate: z.number(),
+  highCostAlertThreshold: z.number(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
-export type UpsertUser = typeof users.$inferInsert;
-export type User = typeof users.$inferSelect;
+export const insertWorkConfigurationSchema = z.object({
+  hoursPerDay: z.number().positive().default(8.0),
+  daysPerMonth: z.number().positive().default(22.0),
+  hourlyRate: z.number().positive().default(25.0),
+  highCostAlertThreshold: z.number().positive().default(50.0),
+});
+
+export type WorkConfiguration = z.infer<typeof workConfigurationSchema>;
+export type InsertWorkConfiguration = z.infer<typeof insertWorkConfigurationSchema>;
+
+export interface ProductCost {
+  productId: string;
+  totalCost: number;
+  ingredientsCost: number;
+  fixedCostPerProduct: number;
+  fixedCostPerUnit: number;
+  suggestedPrice: number;
+  margin: number;
+  marginPercentage: number;
+  preparationTimeMinutes: number;
+}

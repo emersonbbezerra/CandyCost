@@ -1,3 +1,13 @@
+import dotenv from 'dotenv';
+import readline from 'readline';
+import { userService } from './services/userService';
+import { prisma } from "./db";
+
+dotenv.config();
+
+const command = process.argv[2];
+const args = process.argv.slice(3);
+
 // Função para promover usuário via CLI interativo
 async function promoteUserCli(email: string) {
   if (!email) {
@@ -16,16 +26,6 @@ async function promoteUserCli(email: string) {
     process.exit(1);
   }
 }
-import { users } from '@shared/schema';
-import dotenv from 'dotenv';
-import readline from 'readline';
-import { userService } from './auth';
-import { db } from './db';
-
-dotenv.config();
-
-const command = process.argv[2];
-const args = process.argv.slice(3);
 
 async function createFirstAdmin() {
   let email, password, firstName, lastName;
@@ -130,7 +130,6 @@ async function executeCreateAdmin(
     console.error(`❌ Erro: ${error.message}`);
     process.exit(1);
   }
-  // ...existing code...
 }
 
 async function promoteUser() {
@@ -157,16 +156,16 @@ async function promoteUser() {
 
 async function listUsers() {
   try {
-    const allUsers = await db
-      .select({
-        id: users.id,
-        email: users.email,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        role: users.role,
-        createdAt: users.createdAt,
-      })
-      .from(users);
+    const allUsers = await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        createdAt: true,
+      },
+    });
 
     console.log('📋 Usuários do sistema:');
     console.log('');
@@ -186,7 +185,7 @@ async function listUsers() {
     });
 
     const adminCount = allUsers.filter((u) => u.role === 'admin').length;
-    const userCount = allUsers.filter((u) => u.role === 'user').length;
+    const userCount = allUsers.filter((u) => u.role !== 'admin').length;
 
     console.log(
       `📊 Resumo: ${adminCount} admin(s), ${userCount} usuário(s) comum(ns)`

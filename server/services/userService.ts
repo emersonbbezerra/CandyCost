@@ -1,10 +1,9 @@
-import { users, type UpsertUser, type User } from "@shared/schema";
 
-import { eq } from "drizzle-orm";
+import { type UpsertUser, type User } from "@shared/schema";
 import type { RequestHandler } from "express";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { db } from "../db";
+import { prisma } from "../db";
 import { auditLog } from "../utils/auditLogger";
 import { findUserByEmail, hashPassword, verifyPassword } from "../utils/authUtils";
 
@@ -85,33 +84,29 @@ export const userService = {
     // Hash password
     const hashedPassword = await hashPassword(userData.password);
     
-    // Generate unique ID
-    // Prefer using crypto.randomUUID() for unique IDs if available
-    const userId = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-      ? crypto.randomUUID()
-      : Date.now().toString() + Math.random().toString(36).substring(2, 11);
-    
-    const newUser: UpsertUser = {
-      id: userId,
-      email: userData.email,
-      password: hashedPassword,
-      firstName: userData.firstName || null,
-      lastName: userData.lastName || null,
-      role: userData.role || 'user',
-    };
+    const newUser = await prisma.user.create({
+      data: {
+        email: userData.email,
+        password: hashedPassword,
+        firstName: userData.firstName || null,
+        lastName: userData.lastName || null,
+        role: userData.role || 'user',
+      }
+    });
 
-    const [user] = await db.insert(users).values(newUser).returning();
-    return user;
+    return newUser;
   },
 
   async getUserByEmail(email: string): Promise<User | null> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user || null;
+    return await prisma.user.findUnique({
+      where: { email }
+    });
   },
 
   async getUserById(id: string): Promise<User | null> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || null;
+    return await prisma.user.findUnique({
+      where: { id }
+    });
   },
 
   async createAdminUser(): Promise<User> {
@@ -152,11 +147,10 @@ export const userService = {
       throw new Error('Usuário já é administrador');
     }
 
-    const [updatedUser] = await db
-      .update(users)
-      .set({ role: 'admin', updatedAt: new Date() })
-      .where(eq(users.id, user.id))
-      .returning();
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: { role: 'admin' }
+    });
 
     auditLog('ADMIN_PROMOTION', `Usuário promovido a administrador: ${userEmail}`, {
       userId: updatedUser.id,
@@ -170,11 +164,9 @@ export const userService = {
   // Create first admin via command line (production strategy)
   async initializeFirstAdmin(email: string, password: string, firstName: string, lastName?: string): Promise<User> {
     // Check if any admin exists
-    const [existingAdmin] = await db
-      .select()
-      .from(users)
-      .where(eq(users.role, 'admin'))
-      .limit(1);
+    const existingAdmin = await prisma.user.findFirst({
+      where: { role: 'admin' }
+    });
 
     if (existingAdmin) {
       throw new Error('Sistema já possui um administrador. Use a função de promoção.');
@@ -199,14 +191,10 @@ export const userService = {
   },
 
   async updateUser(userId: string, userData: { firstName?: string; lastName?: string; email?: string; role?: string }): Promise<User> {
-    const [updatedUser] = await db
-      .update(users)
-      .set({
-        ...userData,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, userId))
-      .returning();
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: userData
+    });
 
     if (!updatedUser) {
       throw new Error('Usuário não encontrado');
@@ -216,35 +204,36 @@ export const userService = {
   },
 
   async updateUserPassword(userId: string, hashedPassword: string): Promise<void> {
-    await db
-      .update(users)
-      .set({
-        password: hashedPassword,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, userId));
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword }
+    });
   },
 
   async deleteUser(userId: string): Promise<void> {
-    await db.delete(users).where(eq(users.id, userId));
+    await prisma.user.delete({
+      where: { id: userId }
+    });
   },
 
   async getAllUsers(): Promise<Omit<User, 'password'>[]> {
-    return await db.select({
-      id: users.id,
-      email: users.email,
-      firstName: users.firstName,
-      lastName: users.lastName,
-      profileImageUrl: users.profileImageUrl,
-      role: users.role,
-      createdAt: users.createdAt,
-      updatedAt: users.updatedAt
-    }).from(users);
+    return await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        profileImageUrl: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
   },
 
   async getUserWithPassword(userId: string): Promise<User | null> {
-    const [user] = await db.select().from(users).where(eq(users.id, userId));
-    return user || null;
+    return await prisma.user.findUnique({
+      where: { id: userId }
+    });
   },
-
 };

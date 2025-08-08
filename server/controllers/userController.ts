@@ -1,8 +1,6 @@
-import { users } from "@shared/schema";
-import { eq } from "drizzle-orm";
 import { Request, Response } from "express";
 import { z } from "zod";
-import { db } from "../db";
+import { prisma } from "../db";
 import { userService } from "../services/userService";
 import { hashPassword, verifyPassword } from "../utils/authUtils";
 
@@ -28,14 +26,17 @@ export const promoteUser = async (req: Request, res: Response) => {
 export const getUserProfile = async (req: Request, res: Response) => {
   try {
     const userId = (req.user as any).id;
-    const [user] = await db.select({
-      id: users.id,
-      email: users.email,
-      firstName: users.firstName,
-      lastName: users.lastName,
-      role: users.role,
-      createdAt: users.createdAt
-    }).from(users).where(eq(users.id, userId));
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        createdAt: true
+      }
+    });
     
     if (!user) {
       return res.status(404).json({ message: "Usuário não encontrado" });
@@ -59,17 +60,22 @@ export const updateUserProfile = async (req: Request, res: Response) => {
     const validated = updateSchema.parse(req.body);
     
     // Check if email is already taken by another user
-    const [existingUser] = await db.select().from(users).where(eq(users.email, validated.email));
+    const existingUser = await prisma.user.findFirst({
+      where: { email: validated.email }
+    });
     if (existingUser && existingUser.id !== userId) {
       return res.status(400).json({ message: "Este email já está sendo usado por outro usuário" });
     }
 
-    await db.update(users).set({
-      firstName: validated.firstName,
-      lastName: validated.lastName || null,
-      email: validated.email,
-      updatedAt: new Date()
-    }).where(eq(users.id, userId));
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        firstName: validated.firstName,
+        lastName: validated.lastName || null,
+        email: validated.email,
+        updatedAt: new Date()
+      }
+    });
     
     res.json({ message: "Perfil atualizado com sucesso" });
   } catch (error) {
@@ -95,10 +101,13 @@ export const changeUserPassword = async (req: Request, res: Response) => {
     const { currentPassword, newPassword } = passwordSchema.parse(req.body);
     
     // Verify current password
-    const [user] = await db.select({
-      id: users.id,
-      password: users.password
-    }).from(users).where(eq(users.id, userId));
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        password: true
+      }
+    });
     
     if (!user) {
       return res.status(404).json({ message: "Usuário não encontrado" });
