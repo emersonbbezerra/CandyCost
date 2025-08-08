@@ -217,53 +217,60 @@ export default function FixedCosts() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-100 rounded-full">
-                <DollarSign className="w-6 h-6 text-blue-600" />
-              </div>
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Mensal</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-gray-600">Total Mensal</p>
+                <p className="text-3xl font-bold text-gray-900">
                   {formatCurrency(monthlyTotal?.monthlyTotal || 0)}
                 </p>
               </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <DollarSign className="text-blue-600 w-6 h-6" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <span className="text-gray-500">custos fixos</span>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-100 rounded-full">
-                <Calculator className="w-6 h-6 text-green-600" />
-              </div>
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Custo por Hora</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-gray-600">Custo por Hora</p>
+                <p className="text-3xl font-bold text-gray-900">
                   {formatCurrency(costPerHourData?.costPerHour || 0)}
                 </p>
               </div>
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Calculator className="text-purple-600 w-6 h-6" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <span className="text-gray-500">por hora trabalhada</span>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-purple-100 rounded-full">
-                <TrendingUp className="w-6 h-6 text-purple-600" />
-              </div>
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Horas/Mês</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {workConfig ? (
-                    (workConfig.daysPerMonth * workConfig.hoursPerDay)
-                  ).toFixed(0) : "0"}
+                <p className="text-sm font-medium text-gray-600">Custos Ativos</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {filteredFixedCosts.filter(cost => cost.isActive).length}
                 </p>
               </div>
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <ToggleRight className="text-orange-600 w-6 h-6" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center text-sm">
+              <span className="text-gray-500">de {filteredFixedCosts.length} total</span>
             </div>
           </CardContent>
         </Card>
