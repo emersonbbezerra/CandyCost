@@ -6,7 +6,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { errorToast, successToast, useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PRODUCT_CATEGORIES, UNITS } from "@shared/constants";
@@ -138,19 +138,12 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
-      toast({
-        title: "Sucesso",
-        description: "Produto criado com sucesso!",
-      });
+      successToast("Sucesso", "Produto criado com sucesso!");
       onOpenChange(false);
       form.reset();
     },
     onError: () => {
-      toast({
-        title: "Erro",
-        description: "Erro ao criar produto. Tente novamente.",
-        variant: "destructive",
-      });
+      errorToast("Erro", "Erro ao criar produto. Tente novamente.");
     },
   });
 
@@ -171,18 +164,11 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
-      toast({
-        title: "Sucesso",
-        description: "Produto atualizado com sucesso!",
-      });
+      successToast("Sucesso", "Produto atualizado com sucesso!");
       onOpenChange(false);
     },
     onError: () => {
-      toast({
-        title: "Erro",
-        description: "Erro ao atualizar produto. Tente novamente.",
-        variant: "destructive",
-      });
+      errorToast("Erro", "Erro ao atualizar produto. Tente novamente.");
     },
   });
 

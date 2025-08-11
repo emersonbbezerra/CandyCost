@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
+import { errorToast, successToast, useToast } from "@/hooks/use-toast";
 import { useFormatCurrency } from "@/hooks/useFormatCurrency";
 import { apiRequest } from "@/lib/queryClient";
 import { formatRelativeTime } from "@/lib/utils";
@@ -69,17 +69,10 @@ export default function Ingredients() {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
-      toast({
-        title: "Sucesso",
-        description: "Ingrediente excluído com sucesso!",
-      });
+      successToast("Sucesso", "Ingrediente excluído com sucesso!");
     },
     onError: () => {
-      toast({
-        title: "Erro",
-        description: "Erro ao excluir ingrediente. Tente novamente.",
-        variant: "destructive",
-      });
+      errorToast("Erro", "Erro ao excluir ingrediente. Tente novamente.");
     },
   });
 

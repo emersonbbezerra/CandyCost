@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { errorToast, successToast, useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
 import { PRODUCT_CATEGORIES } from "@shared/constants";
@@ -73,17 +73,10 @@ export default function Products() {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
-      toast({
-        title: "Sucesso",
-        description: "Produto excluído com sucesso!",
-      });
+      successToast("Sucesso", "Produto excluído com sucesso!");
     },
     onError: () => {
-      toast({
-        title: "Erro",
-        description: "Erro ao excluir produto. Tente novamente.",
-        variant: "destructive",
-      });
+      errorToast("Erro", "Erro ao excluir produto. Tente novamente.");
     },
   });
 
@@ -111,11 +104,7 @@ export default function Products() {
       setIsFormOpen(true);
     } catch (error) {
       console.error("Erro ao carregar produto:", error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar dados do produto. Tente novamente.",
-        variant: "destructive",
-      });
+      errorToast("Erro", "Erro ao carregar dados do produto. Tente novamente.");
     }
   };
 

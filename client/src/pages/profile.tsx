@@ -1,17 +1,17 @@
-import React, { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { User, Settings, Lock, CheckCircle } from "lucide-react";
+import { errorToast, successToast, useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { CheckCircle, Lock, Settings, User } from "lucide-react";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "Nome é obrigatório"),
@@ -96,17 +96,10 @@ export default function Profile() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      toast({
-        title: "Perfil atualizado!",
-        description: "Suas informações foram atualizadas com sucesso.",
-      });
+      successToast("Perfil atualizado!", "Suas informações foram atualizadas com sucesso.");
     },
     onError: (error: Error) => {
-      toast({
-        title: "Erro ao atualizar perfil",
-        description: error.message,
-        variant: "destructive",
-      });
+      errorToast("Erro ao atualizar perfil", error.message);
     },
   });
 
@@ -121,17 +114,10 @@ export default function Profile() {
     },
     onSuccess: () => {
       passwordForm.reset();
-      toast({
-        title: "Senha alterada!",
-        description: "Sua senha foi alterada com sucesso.",
-      });
+      successToast("Senha alterada!", "Sua senha foi alterada com sucesso.");
     },
     onError: (error: Error) => {
-      toast({
-        title: "Erro ao alterar senha",
-        description: error.message,
-        variant: "destructive",
-      });
+      errorToast("Erro ao alterar senha", error.message);
     },
   });
 
@@ -225,7 +211,7 @@ export default function Profile() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={profileForm.control}
                       name="lastName"
@@ -260,9 +246,9 @@ export default function Profile() {
                       <CheckCircle className="h-4 w-4 text-green-500" />
                       <span>Papel: {user?.role === 'admin' ? 'Administrador' : 'Usuário'}</span>
                     </div>
-                    
-                    <Button 
-                      type="submit" 
+
+                    <Button
+                      type="submit"
                       disabled={updateProfileMutation.isPending}
                     >
                       {updateProfileMutation.isPending ? "Salvando..." : "Salvar Alterações"}
@@ -335,8 +321,8 @@ export default function Profile() {
                   />
 
                   <div className="pt-4">
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       disabled={changePasswordMutation.isPending}
                       className="w-full md:w-auto"
                     >

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { errorToast, successToast, useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
 import { FIXED_COST_CATEGORIES, RECURRENCE_TYPES } from "@shared/constants";
@@ -65,11 +65,11 @@ export default function FixedCosts() {
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/cost-per-hour"] });
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/active"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      toast({ title: "Custo fixo criado com sucesso!" });
+      successToast("Sucesso", "Custo fixo criado com sucesso!");
       setShowForm(false);
     },
     onError: () => {
-      toast({ title: "Erro ao criar custo fixo", variant: "destructive" });
+      errorToast("Erro", "Erro ao criar custo fixo");
     },
   });
 
@@ -83,12 +83,12 @@ export default function FixedCosts() {
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/cost-per-hour"] });
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/active"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      toast({ title: "Custo fixo atualizado com sucesso!" });
+      successToast("Sucesso", "Custo fixo atualizado com sucesso!");
       setShowForm(false);
       setSelectedFixedCost(null);
     },
     onError: () => {
-      toast({ title: "Erro ao atualizar custo fixo", variant: "destructive" });
+      errorToast("Erro", "Erro ao atualizar custo fixo");
     },
   });
 
@@ -101,17 +101,10 @@ export default function FixedCosts() {
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/active"] });
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/monthly-total"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      toast({
-        title: "Sucesso",
-        description: "Custo fixo excluído com sucesso!",
-      });
+      successToast("Sucesso", "Custo fixo excluído com sucesso!");
     },
     onError: (error: Error) => {
-      toast({
-        title: "Erro",
-        description: error.message,
-        variant: "destructive",
-      });
+      errorToast("Erro", error.message);
     },
   });
 
@@ -125,17 +118,10 @@ export default function FixedCosts() {
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/active"] });
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/monthly-total"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      toast({
-        title: "Sucesso",
-        description: "Status do custo fixo alterado com sucesso!",
-      });
+      successToast("Sucesso", "Status do custo fixo alterado com sucesso!");
     },
     onError: (error: Error) => {
-      toast({
-        title: "Erro",
-        description: error.message,
-        variant: "destructive",
-      });
+      errorToast("Erro", error.message);
     },
   });
 

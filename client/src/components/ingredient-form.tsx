@@ -4,7 +4,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCurrencySymbol } from "@/contexts/SettingsContext";
-import { useToast } from "@/hooks/use-toast";
+import { errorToast, successToast, useToast } from "@/hooks/use-toast";
 import { useFormatCurrency } from "@/hooks/useFormatCurrency";
 import { apiRequest } from "@/lib/queryClient";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -71,19 +71,12 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
       queryClient.invalidateQueries({ queryKey: ["/api/ingredients"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
-      toast({
-        title: "Sucesso",
-        description: "Ingrediente criado com sucesso!",
-      });
+      successToast("Sucesso", "Ingrediente criado com sucesso!");
       onOpenChange(false);
       form.reset();
     },
     onError: () => {
-      toast({
-        title: "Erro",
-        description: "Erro ao criar ingrediente. Tente novamente.",
-        variant: "destructive",
-      });
+      errorToast("Erro", "Erro ao criar ingrediente. Tente novamente.");
     },
   });
 
@@ -100,21 +93,14 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
 
       const affectedCount = result.affectedProducts?.length || 0;
-      toast({
-        title: "Sucesso",
-        description: `Ingrediente atualizado! ${affectedCount > 0 ? `${affectedCount} produtos foram afetados.` : ''}`,
-      });
+      successToast("Sucesso", `Ingrediente atualizado! ${affectedCount > 0 ? `${affectedCount} produtos foram afetados.` : ''}`);
       onOpenChange(false);
       // Marcar que houve navegação da página de ingredientes E que há atualizações
       sessionStorage.setItem('lastPageNavigation', 'ingredients');
       sessionStorage.setItem('hasRecentUpdates', 'true');
     },
     onError: () => {
-      toast({
-        title: "Erro",
-        description: "Erro ao atualizar ingrediente. Tente novamente.",
-        variant: "destructive",
-      });
+      errorToast("Erro", "Erro ao atualizar ingrediente. Tente novamente.");
     },
   });
 

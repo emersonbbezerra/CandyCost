@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { errorToast, successToast, useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -85,17 +85,10 @@ export default function UserManagementAdmin() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       setEditDialogOpen(false);
       setSelectedUser(null);
-      toast({
-        title: "Usuário atualizado!",
-        description: "As informações do usuário foram atualizadas com sucesso.",
-      });
+      successToast("Usuário atualizado!", "As informações do usuário foram atualizadas com sucesso.");
     },
     onError: (error: Error) => {
-      toast({
-        title: "Erro ao atualizar usuário",
-        description: error.message,
-        variant: "destructive",
-      });
+      errorToast("Erro ao atualizar usuário", error.message);
     },
   });
 
@@ -111,17 +104,10 @@ export default function UserManagementAdmin() {
       setPasswordDialogOpen(false);
       setSelectedUser(null);
       passwordForm.reset();
-      toast({
-        title: "Senha resetada!",
-        description: "A senha do usuário foi alterada com sucesso.",
-      });
+      successToast("Senha resetada!", "A senha do usuário foi alterada com sucesso.");
     },
     onError: (error: Error) => {
-      toast({
-        title: "Erro ao resetar senha",
-        description: error.message,
-        variant: "destructive",
-      });
+      errorToast("Erro ao resetar senha", error.message);
     },
   });
 
@@ -135,17 +121,10 @@ export default function UserManagementAdmin() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       setDeleteDialogOpen(false);
       setSelectedUser(null);
-      toast({
-        title: "Usuário excluído!",
-        description: "O usuário foi removido do sistema.",
-      });
+      successToast("Usuário excluído!", "O usuário foi removido do sistema.");
     },
     onError: (error: Error) => {
-      toast({
-        title: "Erro ao excluir usuário",
-        description: error.message,
-        variant: "destructive",
-      });
+      errorToast("Erro ao excluir usuário", error.message);
     },
   });
 

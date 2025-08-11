@@ -1,14 +1,14 @@
-import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { errorToast, successToast, useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Users, Crown, UserPlus, Mail, Calendar, Shield } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Calendar, Crown, Mail, Shield, UserPlus, Users } from "lucide-react";
+import { useState } from "react";
 
 interface User {
   id: string;
@@ -37,30 +37,19 @@ export default function UserManagement() {
       return response.json();
     },
     onSuccess: (data) => {
-      toast({
-        title: "Usuário promovido com sucesso!",
-        description: `${data.user.firstName} agora é administrador.`,
-      });
+      successToast("Usuário promovido com sucesso!", `${data.user.firstName} agora é administrador.`);
       setPromoteEmail("");
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
     },
     onError: (error: any) => {
-      toast({
-        title: "Erro ao promover usuário",
-        description: error.message || "Ocorreu um erro inesperado",
-        variant: "destructive",
-      });
+      errorToast("Erro ao promover usuário", error.message || "Ocorreu um erro inesperado");
     },
   });
 
   const handlePromote = (e: React.FormEvent) => {
     e.preventDefault();
     if (!promoteEmail.trim()) {
-      toast({
-        title: "Email obrigatório",
-        description: "Digite o email do usuário para promover.",
-        variant: "destructive",
-      });
+      errorToast("Email obrigatório", "Digite o email do usuário para promover.");
       return;
     }
     promoteMutation.mutate(promoteEmail.trim());
@@ -104,7 +93,7 @@ export default function UserManagement() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -116,7 +105,7 @@ export default function UserManagement() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -152,8 +141,8 @@ export default function UserManagement() {
                 disabled={promoteMutation.isPending}
               />
             </div>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={promoteMutation.isPending || !promoteEmail.trim()}
             >
               {promoteMutation.isPending ? "Promovendo..." : "Promover"}
@@ -183,8 +172,8 @@ export default function UserManagement() {
           ) : (
             <div className="space-y-4">
               {adminUsers.map((user) => (
-                <div 
-                  key={user.id} 
+                <div
+                  key={user.id}
                   className="flex items-center justify-between p-4 border rounded-lg"
                 >
                   <div className="flex items-center space-x-4">
@@ -236,8 +225,8 @@ export default function UserManagement() {
           ) : (
             <div className="space-y-4">
               {regularUsers.map((user) => (
-                <div 
-                  key={user.id} 
+                <div
+                  key={user.id}
                   className="flex items-center justify-between p-4 border rounded-lg"
                 >
                   <div className="flex items-center space-x-4">

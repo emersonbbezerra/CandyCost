@@ -1,4 +1,4 @@
-import { useToast } from "@/hooks/use-toast";
+import { errorToast, useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
 import type { PriceHistory } from "@shared/schema";
@@ -76,11 +76,7 @@ export function RecentUpdatesCard() {
             setIsProductFormOpen(true);
         } catch (error) {
             console.error("Erro ao carregar produto:", error);
-            toast({
-                title: "Erro",
-                description: "Erro ao carregar dados do produto. Tente novamente.",
-                variant: "destructive",
-            });
+            errorToast("Erro", "Erro ao carregar dados do produto. Tente novamente.");
         }
     };
 

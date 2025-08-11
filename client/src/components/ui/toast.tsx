@@ -1,10 +1,9 @@
-import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
 import { X } from "lucide-react"
+import * as React from "react"
 
 import { cn } from "@/lib/utils"
-import { buttonVariants } from "@/components/ui/button"
 
 const ToastProvider = ToastPrimitives.Provider
 
@@ -29,8 +28,9 @@ const toastVariants = cva(
     variants: {
       variant: {
         default: "border bg-background text-foreground",
+        success: "group border-emerald-300 bg-gradient-to-r from-emerald-50 via-emerald-100 to-emerald-50 text-emerald-800 shadow-sm [&>svg]:text-emerald-600",
         destructive:
-          "destructive group border-destructive bg-destructive text-destructive-foreground",
+          "destructive group border-red-300 bg-gradient-to-r from-red-50 via-rose-50 to-red-50 text-red-800 shadow-sm [&>svg]:text-red-600",
       },
     },
     defaultVariants: {
@@ -42,7 +42,7 @@ const toastVariants = cva(
 const Toast = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
-    VariantProps<typeof toastVariants>
+  VariantProps<typeof toastVariants>
 >(({ className, variant, ...props }, ref) => {
   return (
     <ToastPrimitives.Root
@@ -116,13 +116,6 @@ type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>
 type ToastActionElement = React.ReactElement<typeof ToastAction>
 
 export {
-  type ToastProps,
-  type ToastActionElement,
-  ToastProvider,
-  ToastViewport,
-  Toast,
-  ToastTitle,
-  ToastDescription,
-  ToastClose,
-  ToastAction,
+  Toast, ToastAction, ToastClose, ToastDescription, ToastProvider, ToastTitle, ToastViewport, type ToastActionElement, type ToastProps
 }
+

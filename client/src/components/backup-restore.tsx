@@ -1,14 +1,14 @@
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Download, Upload, Database, AlertTriangle, CheckCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { errorToast, successToast, useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { ConfirmationDialog } from "@/components/confirmation-dialog";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { AlertTriangle, CheckCircle, Database, Download, Upload } from "lucide-react";
+import { useState } from "react";
 
 export function BackupRestore() {
   const [isBackingUp, setIsBackingUp] = useState(false);
@@ -74,18 +74,11 @@ export function BackupRestore() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      toast({
-        title: "Backup Criado",
-        description: "Backup completo dos dados foi baixado com sucesso!",
-      });
+      successToast("Backup Criado", "Backup completo dos dados foi baixado com sucesso!");
 
     } catch (error) {
       console.error("Erro ao criar backup:", error);
-      toast({
-        title: "Erro no Backup",
-        description: "Não foi possível criar o backup. Tente novamente.",
-        variant: "destructive",
-      });
+      errorToast("Erro no Backup", "Não foi possível criar o backup. Tente novamente.");
     } finally {
       setIsBackingUp(false);
     }
@@ -96,11 +89,7 @@ export function BackupRestore() {
     if (file && file.type === "application/json") {
       setSelectedFile(file);
     } else {
-      toast({
-        title: "Arquivo Inválido",
-        description: "Selecione um arquivo JSON válido de backup.",
-        variant: "destructive",
-      });
+      errorToast("Arquivo Inválido", "Selecione um arquivo JSON válido de backup.");
     }
   };
 
@@ -118,33 +107,22 @@ export function BackupRestore() {
       queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/reports"] });
-      
-      toast({
-        title: "Restauração Concluída",
-        description: `Backup restaurado com sucesso! ${data.restored.ingredients} ingredientes, ${data.restored.products} produtos e ${data.restored.priceHistory} registros de histórico foram restaurados.`,
-      });
-      
+
+      successToast("Restauração Concluída", `Backup restaurado com sucesso! ${data.restored.ingredients} ingredientes, ${data.restored.products} produtos e ${data.restored.priceHistory} registros de histórico foram restaurados.`);
+
       // Limpar estados
       setSelectedFile(null);
       setBackupDataToRestore(null);
       setIsRestoring(false);
     },
     onError: (error: any) => {
-      toast({
-        title: "Erro na Restauração",
-        description: error.message || "Não foi possível restaurar os dados. Verifique o arquivo.",
-        variant: "destructive",
-      });
+      errorToast("Erro na Restauração", error.message || "Não foi possível restaurar os dados. Verifique o arquivo.");
     },
   });
 
   const handleRestore = async () => {
     if (!selectedFile) {
-      toast({
-        title: "Erro",
-        description: "Selecione um arquivo de backup para restaurar",
-        variant: "destructive",
-      });
+      errorToast("Erro", "Selecione um arquivo de backup para restaurar");
       return;
     }
 
@@ -166,11 +144,7 @@ export function BackupRestore() {
       setShowConfirmDialog(true);
 
     } catch (error: any) {
-      toast({
-        title: "Erro ao Ler Backup",
-        description: error.message || "Arquivo de backup inválido ou corrompido.",
-        variant: "destructive",
-      });
+      errorToast("Erro ao Ler Backup", error.message || "Arquivo de backup inválido ou corrompido.");
     }
   };
 
@@ -194,11 +168,11 @@ export function BackupRestore() {
           <p className="text-sm text-gray-600">
             Faça backup de todos os ingredientes, produtos, receitas e histórico de preços.
           </p>
-          
+
           <Alert>
             <Database className="w-4 h-4" />
             <AlertDescription>
-              O backup inclui todos os dados do sistema em formato JSON, 
+              O backup inclui todos os dados do sistema em formato JSON,
               permitindo restauração completa em caso de necessidade.
             </AlertDescription>
           </Alert>
@@ -213,7 +187,7 @@ export function BackupRestore() {
             </ul>
           </div>
 
-          <Button 
+          <Button
             onClick={handleBackup}
             disabled={isBackingUp}
             className="w-full"
@@ -239,7 +213,7 @@ export function BackupRestore() {
           <Alert>
             <AlertTriangle className="w-4 h-4" />
             <AlertDescription>
-              <strong>Atenção:</strong> A restauração substituirá todos os dados atuais. 
+              <strong>Atenção:</strong> A restauração substituirá todos os dados atuais.
               Faça um backup antes de prosseguir.
             </AlertDescription>
           </Alert>
@@ -266,7 +240,7 @@ export function BackupRestore() {
             </Alert>
           )}
 
-          <Button 
+          <Button
             onClick={handleRestore}
             disabled={!selectedFile || isRestoring}
             variant="destructive"

@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
+import { errorToast, successToast, useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Lock, Settings, Shield, User } from "lucide-react";
@@ -100,18 +100,11 @@ export default function ProfileSimple() {
       return response.json();
     },
     onSuccess: () => {
-      toast({
-        title: "Sucesso",
-        description: "Perfil atualizado com sucesso!",
-      });
+      successToast("Sucesso", "Perfil atualizado com sucesso!");
       queryClient.invalidateQueries({ queryKey: ["/api/user/profile"] });
     },
     onError: (error: any) => {
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao atualizar perfil",
-        variant: "destructive",
-      });
+      errorToast("Erro", error.message || "Erro ao atualizar perfil");
     },
   });
 
@@ -132,18 +125,11 @@ export default function ProfileSimple() {
       return response.json();
     },
     onSuccess: () => {
-      toast({
-        title: "Sucesso",
-        description: "Senha alterada com sucesso!",
-      });
+      successToast("Sucesso", "Senha alterada com sucesso!");
       passwordForm.reset();
     },
     onError: (error: any) => {
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao alterar senha",
-        variant: "destructive",
-      });
+      errorToast("Erro", error.message || "Erro ao alterar senha");
     },
   });
 
