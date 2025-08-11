@@ -27,6 +27,9 @@ const productFormSchema = z.object({
   isAlsoIngredient: z.boolean(),
   marginPercentage: z.number().min(0),
   preparationTimeMinutes: z.number().optional(),
+  salePrice: z.number().min(0.01, 'Informe o preço de venda'),
+  yield: z.number().min(0.01, 'Informe o rendimento'),
+  yieldUnit: z.string().min(1, 'Informe a unidade de rendimento'),
   recipes: z.array(z.object({
     ingredientId: z.string().optional(),
     productIngredientId: z.string().optional(),
@@ -66,11 +69,14 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
       isAlsoIngredient: product?.isAlsoIngredient ?? false,
       marginPercentage: typeof product?.marginPercentage === "number" ? product.marginPercentage : 60,
       preparationTimeMinutes: typeof product?.preparationTimeMinutes === "number" ? product.preparationTimeMinutes : 60,
+      salePrice: typeof product?.salePrice === "number" ? product.salePrice : 0,
+      yield: typeof product?.yield === "number" ? product.yield : 1,
+      yieldUnit: product?.yieldUnit || "un",
       recipes: product?.recipes?.map((r) => ({
         ingredientId: r.ingredientId ? String(r.ingredientId) : undefined,
         productIngredientId: r.productIngredientId ? String(r.productIngredientId) : undefined,
         quantity: typeof r.quantity === "number" ? r.quantity : 0,
-        unit: r.unit ?? "kg",
+        unit: (r.unit === 'unidade' ? 'un' : r.unit) ?? "kg",
       })) || [],
     },
   });
@@ -89,11 +95,14 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
         isAlsoIngredient: Boolean(product.isAlsoIngredient),
         marginPercentage: typeof product.marginPercentage === "number" ? product.marginPercentage : 60,
         preparationTimeMinutes: typeof product.preparationTimeMinutes === "number" ? product.preparationTimeMinutes : 60,
+        salePrice: typeof product.salePrice === "number" ? product.salePrice : 0,
+        yield: typeof product.yield === "number" ? product.yield : 1,
+        yieldUnit: product.yieldUnit || "un",
         recipes: Array.isArray(product.recipes) ? product.recipes.map((r) => ({
           ingredientId: r.ingredientId ? String(r.ingredientId) : undefined,
           productIngredientId: r.productIngredientId ? String(r.productIngredientId) : undefined,
           quantity: typeof r.quantity === "number" ? r.quantity : 0,
-          unit: r.unit ?? "kg",
+          unit: (r.unit === 'unidade' ? 'un' : r.unit) ?? "kg",
         })) : [],
       });
     } else {
@@ -104,6 +113,9 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
         isAlsoIngredient: false,
         marginPercentage: 60,
         preparationTimeMinutes: 60,
+        salePrice: 0,
+        yield: 1,
+        yieldUnit: "un",
         recipes: [],
       });
     }
@@ -112,6 +124,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
   const createMutation = useMutation({
     mutationFn: async (data: ProductFormValues) => {
       const { recipes, ...productData } = data;
+      // Envia salePrice, yield, yieldUnit junto com os dados do produto
       const response = await apiRequest("POST", "/api/products", productData);
       const newProduct = await response.json();
       if (recipes && recipes.length > 0) {
@@ -144,6 +157,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
   const updateMutation = useMutation({
     mutationFn: async (data: ProductFormValues) => {
       const { recipes, ...productData } = data;
+      // Envia salePrice, yield, yieldUnit junto com os dados do produto
       const response = await apiRequest("PUT", `/api/products/${product?.id}`, productData);
       const updatedProduct = await response.json();
       if (recipes) {
@@ -173,10 +187,18 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
   });
 
   const onSubmit = (data: ProductFormValues) => {
+    // Normaliza unidades legadas em receitas
+    const normalized: ProductFormValues = {
+      ...data,
+      recipes: (data.recipes || []).map(r => ({
+        ...r,
+        unit: r.unit === 'unidade' ? 'un' : r.unit,
+      })),
+    };
     if (product) {
-      updateMutation.mutate(data);
+      updateMutation.mutate(normalized);
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(normalized);
     }
   };
 
@@ -234,6 +256,78 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="salePrice"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Preço de Venda</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        placeholder="Ex: 49.90"
+                        {...field}
+                        onChange={e => field.onChange(Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="yield"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Rendimento</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        placeholder="Ex: 12"
+                        {...field}
+                        onChange={e => field.onChange(Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="yieldUnit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Unidade de Rendimento</FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Unidade" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="max-h-[200px] overflow-y-auto">
+                          <SelectItem value="un">Unidade</SelectItem>
+                          <SelectItem value="kg">kg</SelectItem>
+                          <SelectItem value="g">g</SelectItem>
+                          <SelectItem value="fatia">Fatia</SelectItem>
+                          <SelectItem value="porção">Porção</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -64,28 +64,30 @@ export const updateIngredient = async (req: Request, res: Response) => {
 
     const result = await productService.updateIngredient(id, ingredientData);
 
-    // Se o preço mudou, registrar histórico do ingrediente e rastrear produtos afetados
+    // Se o preço mudou, registrar histórico do ingrediente (por unidade) e rastrear produtos afetados
     if (
       oldIngredient &&
       ingredientData.price &&
       oldIngredient.price !== ingredientData.price
     ) {
       console.log('Price changed, tracking affected products...');
-      // Registrar histórico do próprio ingrediente
+      // Registrar histórico do próprio ingrediente usando preço por unidade
+      const oldUnitPrice = oldIngredient.price / oldIngredient.quantity;
+      const newUnitPrice = ingredientData.price / ingredientData.quantity;
       await priceHistoryService.createPriceHistory({
         itemType: 'ingredient',
         itemName: oldIngredient.name,
-        oldPrice: oldIngredient.price,
-        newPrice: ingredientData.price,
+        oldPrice: oldUnitPrice,
+        newPrice: newUnitPrice,
         changeType: 'manual',
-        changeReason: 'Alteração manual de preço',
+        changeReason: 'Alteração manual de preço por unidade',
         ingredientId: id,
       });
-      // Rastrear produtos afetados
+      // Rastrear produtos afetados (passando preços por unidade)
       await productService.trackCostChangesForAffectedProducts(
         id,
-        oldIngredient.price,
-        ingredientData.price
+        oldUnitPrice,
+        newUnitPrice
       );
     }
 

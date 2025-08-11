@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // User schemas
 export const userSchema = z.object({
@@ -8,7 +8,7 @@ export const userSchema = z.object({
   firstName: z.string().nullable(),
   lastName: z.string().nullable(),
   profileImageUrl: z.string().nullable(),
-  role: z.string().default("user"),
+  role: z.string().default('user'),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -62,6 +62,9 @@ export const productSchema = z.object({
   isAlsoIngredient: z.boolean(),
   marginPercentage: z.number(),
   preparationTimeMinutes: z.number().nullable(),
+  salePrice: z.number().min(0),
+  yield: z.number().min(1),
+  yieldUnit: z.string().min(1),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -73,6 +76,9 @@ export const insertProductSchema = z.object({
   isAlsoIngredient: z.boolean().default(false),
   marginPercentage: z.number().min(0),
   preparationTimeMinutes: z.number().optional(),
+  salePrice: z.number().min(0),
+  yield: z.number().min(1),
+  yieldUnit: z.string().min(1),
 });
 
 export type Product = z.infer<typeof productSchema>;
@@ -169,11 +175,13 @@ export const insertWorkConfigurationSchema = z.object({
   daysPerMonth: z.number().positive().default(22.0),
   hourlyRate: z.number().positive().default(25.0),
   highCostAlertThreshold: z.number().positive().default(50.0),
-  currencySymbol: z.string().default("R$"),
+  currencySymbol: z.string().default('R$'),
 });
 
 export type WorkConfiguration = z.infer<typeof workConfigurationSchema>;
-export type InsertWorkConfiguration = z.infer<typeof insertWorkConfigurationSchema>;
+export type InsertWorkConfiguration = z.infer<
+  typeof insertWorkConfigurationSchema
+>;
 
 export interface ProductCost {
   productId: string;
@@ -185,4 +193,10 @@ export interface ProductCost {
   margin: number;
   marginPercentage: number;
   preparationTimeMinutes: number;
+  costPerYieldUnit: number;
+  salePricePerUnit: number;
+  marginReal: number;
+  yield: number;
+  yieldUnit: string;
+  salePrice: number;
 }

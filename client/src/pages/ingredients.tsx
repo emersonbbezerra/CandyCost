@@ -90,9 +90,9 @@ export default function Ingredients() {
   };
 
   const formatUnit = (unit: string) => {
-    if (unit === "unidade") {
-      return "und";
-    }
+    // Normaliza unidade canônica e dá suporte a dados legados
+    if (unit === "unidade") return "un";
+    if (unit === "un") return "un";
     return unit;
   };
 
@@ -533,7 +533,7 @@ export default function Ingredients() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Embalagem:</span>
-                      <span className="text-sm font-medium">{ingredient.quantity} {ingredient.unit}</span>
+                      <span className="text-sm font-medium">{ingredient.quantity} {formatUnit(ingredient.unit)}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Preço:</span>

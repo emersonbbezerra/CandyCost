@@ -10,9 +10,10 @@ export const reportService = {
     return await productService.getProducts();
   },
 
-  async getRecipesByProduct(productId: number) {
+  // Use string IDs to avoid NaN issues from Number(uuid)
+  async getRecipesByProduct(productId: string) {
     const recipes = await prisma.recipe.findMany({
-      where: { productId: String(productId) },
+      where: { productId },
     });
 
     return recipes.map((recipe) => ({
@@ -21,7 +22,7 @@ export const reportService = {
     }));
   },
 
-  async calculateProductCost(productId: number) {
-    return await productService.calculateProductCost(String(productId));
+  async calculateProductCost(productId: string) {
+    return await productService.calculateProductCost(productId);
   },
 };

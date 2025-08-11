@@ -62,9 +62,14 @@ export default function History() {
   // Buscar nome do ingrediente
   const getIngredientName = (id: string | number | null) => {
     if (!id) return "Ingrediente desconhecido";
-    const numId = typeof id === 'string' ? parseInt(id) : id;
-    const ingredient = ingredients.find(i => Number(i.id) === Number(numId));
+    const ingredient = ingredients.find(i => String(i.id) === String(id));
     return ingredient?.name || "Ingrediente não encontrado";
+  };
+
+  const getIngredientUnit = (id: string | number | null) => {
+    if (!id) return "";
+    const ingredient = ingredients.find(i => String(i.id) === String(id));
+    return ingredient?.unit ? ` / ${ingredient.unit}` : "";
   };
 
   return (
@@ -146,7 +151,14 @@ export default function History() {
                         )}
                       </p>
                       <p className="text-gray-600 text-sm">
-                        Preço alterado de {formatCurrency(typeof change.oldPrice === 'string' ? parseFloat(change.oldPrice) : change.oldPrice)} para {formatCurrency(typeof change.newPrice === 'string' ? parseFloat(change.newPrice) : change.newPrice)}
+                        Preço por unidade alterado de {formatCurrency(typeof change.oldPrice === 'string' ? parseFloat(change.oldPrice) : change.oldPrice)} para {formatCurrency(typeof change.newPrice === 'string' ? parseFloat(change.newPrice) : change.newPrice)}
+                        {getIngredientUnit(
+                          typeof change.ingredientId === 'string'
+                            ? change.ingredientId
+                            : typeof change.ingredientId === 'number'
+                              ? change.ingredientId
+                              : null
+                        )}
                       </p>
                       <p className="text-xs text-gray-400 mt-1">
                         {formatDate(new Date(change.createdAt))}

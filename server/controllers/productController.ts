@@ -65,6 +65,9 @@ export const createProduct = async (req: Request, res: Response) => {
         isAlsoIngredient: z.boolean().optional(),
         marginPercentage: z.string().optional(),
         preparationTimeMinutes: z.number().optional(),
+        salePrice: z.number(),
+        yield: z.number(),
+        yieldUnit: z.string(),
       })
       .parse(req.body);
 
@@ -78,6 +81,9 @@ export const createProduct = async (req: Request, res: Response) => {
         ? parseFloat(data.marginPercentage)
         : 0,
       preparationTimeMinutes: data.preparationTimeMinutes,
+      salePrice: data.salePrice,
+      yield: data.yield,
+      yieldUnit: data.yieldUnit,
     };
     const product = await productService.createProduct(productData);
     res.status(201).json(product);
@@ -102,6 +108,9 @@ export const updateProduct = async (req: Request, res: Response) => {
         isAlsoIngredient: z.boolean().optional(),
         marginPercentage: z.string().optional(),
         preparationTimeMinutes: z.number().optional(),
+        salePrice: z.number().min(0).optional(),
+        yield: z.number().min(1).optional(),
+        yieldUnit: z.string().min(1).optional(),
       })
       .partial()
       .parse(req.body);
@@ -119,7 +128,18 @@ export const updateProduct = async (req: Request, res: Response) => {
         ? parseFloat(data.marginPercentage)
         : undefined,
       preparationTimeMinutes: data.preparationTimeMinutes,
+      salePrice:
+        typeof data.salePrice === 'number' ? data.salePrice : undefined,
+      yield: typeof data.yield === 'number' ? data.yield : undefined,
+      yieldUnit:
+        typeof data.yieldUnit === 'string' ? data.yieldUnit : undefined,
     };
+    // Remover campos undefined para evitar erro do Prisma
+    Object.keys(updateData).forEach((key) => {
+      if (updateData[key as keyof typeof updateData] === undefined) {
+        delete updateData[key as keyof typeof updateData];
+      }
+    });
     const product = await productService.updateProduct(id, updateData);
     res.json(product);
   } catch (error) {

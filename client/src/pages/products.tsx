@@ -14,7 +14,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChefHat, Edit, Filter, Layers, Plus, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
-type ProductWithCost = Product & { cost?: ProductCost };
+type ProductWithCost = Product & {
+  salePrice: number;
+  yield: number;
+  yieldUnit: string;
+  cost?: ProductCost;
+};
 
 export default function Products() {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -311,6 +316,26 @@ export default function Products() {
                       <span className="text-gray-900">Custo Total:</span>
                       <span className="font-semibold text-gray-900">
                         {formatCurrency(product.cost.totalCost)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Preço de Venda:</span>
+                      <span className="font-semibold text-blue-700">
+                        {formatCurrency(product.salePrice)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Rendimento:</span>
+                      <span className="font-semibold text-gray-900">
+                        {product.yield} {product.yieldUnit}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Preço por unidade:</span>
+                      <span className="font-semibold text-blue-700">
+                        {product.yield > 0 ? formatCurrency(product.salePrice / product.yield) : '-'} / {product.yieldUnit}
                       </span>
                     </div>
                   </div>

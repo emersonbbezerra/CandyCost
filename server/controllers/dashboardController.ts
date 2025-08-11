@@ -206,6 +206,7 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
       itemId: update.ingredientId,
       oldPrice: update.oldPrice,
       newPrice: update.newPrice,
+      unit: update.ingredient?.unit || undefined,
       changeType: update.changeType,
       createdAt: update.createdAt,
     }));
@@ -218,6 +219,7 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
       itemId: update.productId,
       oldPrice: update.oldPrice,
       newPrice: update.newPrice,
+      unit: update.product?.yieldUnit || undefined,
       changeType: update.changeType,
       createdAt: update.createdAt,
     }));

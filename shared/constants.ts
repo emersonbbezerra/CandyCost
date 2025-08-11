@@ -51,7 +51,7 @@ export const UNITS = [
   { value: 'g', label: 'g' },
   { value: 'l', label: 'L' },
   { value: 'ml', label: 'mL' },
-  { value: 'unidade', label: 'Unidade' },
+  { value: 'un', label: 'Unidade' },
   { value: 'dúzia', label: 'Dúzia' },
   { value: 'xícara', label: 'Xícara' },
   { value: 'colher_sopa', label: 'Colher de Sopa' },

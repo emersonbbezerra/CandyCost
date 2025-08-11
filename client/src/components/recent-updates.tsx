@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 interface PriceHistoryWithName extends PriceHistory {
     name: string;
     productId: string | null;
+    unit?: string;
 }
 
 interface RecentUpdates {
@@ -130,7 +131,7 @@ export function RecentUpdatesCard() {
                                     </div>
                                     <div className="flex-1">
                                         <p className="text-gray-900">
-                                            Custo atualizado de {formatCurrency(update.oldPrice ?? 0)} para {formatCurrency(update.newPrice ?? 0)} - <strong>{update.name}</strong>
+                                            Custo atualizado de {formatCurrency(update.oldPrice ?? 0)} para {formatCurrency(update.newPrice ?? 0)}{update.unit ? ` / ${update.unit}` : ''} - <strong>{update.name}</strong>
                                         </p>
                                         <p className="text-sm text-gray-500 mt-1">
                                             {update.description || "Atualização manual"}
@@ -185,7 +186,7 @@ export function RecentUpdatesCard() {
                                     </div>
                                     <div className="flex-1">
                                         <p className="text-gray-900">
-                                            Custo atualizado de {formatCurrency(update.oldPrice ?? 0)} para {formatCurrency(update.newPrice ?? 0)} - <strong>{update.name}</strong>
+                                            Custo atualizado de {formatCurrency(update.oldPrice ?? 0)} para {formatCurrency(update.newPrice ?? 0)}{update.unit ? ` / ${update.unit}` : ''} - <strong>{update.name}</strong>
                                         </p>
                                         <p className="text-sm text-gray-500 mt-1">
                                             {update.description || "Atualização automática"}

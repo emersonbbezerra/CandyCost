@@ -17,7 +17,7 @@ export const saveRecipes = async (req: Request, res: Response) => {
           ingredientId: recipe.ingredientId || null,
           productIngredientId: recipe.productIngredientId || null,
           quantity: recipe.quantity,
-          unit: recipe.unit || 'unidade',
+          unit: recipe.unit || 'un',
         })
       )
     );

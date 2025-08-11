@@ -107,7 +107,7 @@ async function seed() {
         name: 'Ovos',
         category: 'Outros',
         quantity: 30,
-        unit: 'unidade',
+        unit: 'un',
         price: 18.0,
         brand: 'Caipira',
       },
@@ -147,7 +147,7 @@ async function seed() {
         name: 'Leite Integral',
         category: 'Laticínios',
         quantity: 1,
-        unit: 'litro',
+        unit: 'l',
         price: 5.5,
         brand: 'Itambé',
       },
@@ -218,6 +218,9 @@ async function seed() {
         isAlsoIngredient: true,
         marginPercentage: 70,
         preparationTimeMinutes: 30,
+        salePrice: 2.5,
+        yield: 30,
+        yieldUnit: 'un',
       },
       {
         name: 'Cupcake de Baunilha',
@@ -226,6 +229,9 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 60,
         preparationTimeMinutes: 45,
+        salePrice: 5.0,
+        yield: 12,
+        yieldUnit: 'un',
       },
       {
         name: 'Trufa de Chocolate Branco',
@@ -234,6 +240,9 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 65,
         preparationTimeMinutes: 60,
+        salePrice: 3.5,
+        yield: 20,
+        yieldUnit: 'un',
       },
       {
         name: 'Torta de Chocolate',
@@ -242,6 +251,9 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 35,
         preparationTimeMinutes: 120,
+        salePrice: 80.0,
+        yield: 12,
+        yieldUnit: 'fatia',
       },
       {
         name: 'Bolo de Morango',
@@ -250,6 +262,9 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 40,
         preparationTimeMinutes: 90,
+        salePrice: 75.0,
+        yield: 12,
+        yieldUnit: 'fatia',
       },
       {
         name: 'Cheesecake de Frutas Vermelhas',
@@ -258,6 +273,9 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 45,
         preparationTimeMinutes: 180,
+        salePrice: 90.0,
+        yield: 14,
+        yieldUnit: 'fatia',
       },
       {
         name: 'Açaí na Tigela Premium',
@@ -266,6 +284,9 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 25,
         preparationTimeMinutes: 10,
+        salePrice: 18.0,
+        yield: 1,
+        yieldUnit: 'porção',
       },
       {
         name: 'Brownie com Nozes',
@@ -274,6 +295,9 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 20,
         preparationTimeMinutes: 50,
+        salePrice: 6.0,
+        yield: 10,
+        yieldUnit: 'un',
       },
       {
         name: 'Torta Holandesa',
@@ -282,6 +306,9 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 15,
         preparationTimeMinutes: 150,
+        salePrice: 95.0,
+        yield: 14,
+        yieldUnit: 'fatia',
       },
       {
         name: 'Beijinho Gourmet',
@@ -290,6 +317,9 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 200,
         preparationTimeMinutes: 25,
+        salePrice: 2.5,
+        yield: 30,
+        yieldUnit: 'un',
       },
       {
         name: 'Fatia de Bolo Red Velvet',
@@ -298,6 +328,9 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 80,
         preparationTimeMinutes: 5,
+        salePrice: 9.0,
+        yield: 1,
+        yieldUnit: 'fatia',
       },
       {
         name: 'Calda de Chocolate',
@@ -306,6 +339,9 @@ async function seed() {
         isAlsoIngredient: true,
         marginPercentage: 100,
         preparationTimeMinutes: 15,
+        salePrice: 35.0,
+        yield: 1,
+        yieldUnit: 'kg',
       },
       {
         name: 'Recheio de Brigadeiro',
@@ -314,6 +350,9 @@ async function seed() {
         isAlsoIngredient: true,
         marginPercentage: 120,
         preparationTimeMinutes: 20,
+        salePrice: 30.0,
+        yield: 1,
+        yieldUnit: 'kg',
       },
       {
         name: 'Cobertura de Ganache',
@@ -322,6 +361,9 @@ async function seed() {
         isAlsoIngredient: true,
         marginPercentage: 90,
         preparationTimeMinutes: 25,
+        salePrice: 40.0,
+        yield: 1,
+        yieldUnit: 'kg',
       },
       {
         name: 'Caseirinho de Chocolate',
@@ -330,6 +372,9 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 150,
         preparationTimeMinutes: 40,
+        salePrice: 3.0,
+        yield: 10,
+        yieldUnit: 'un',
       },
     ];
 
@@ -344,6 +389,9 @@ async function seed() {
           isAlsoIngredient: product.isAlsoIngredient,
           marginPercentage: product.marginPercentage,
           preparationTimeMinutes: product.preparationTimeMinutes,
+          salePrice: product.salePrice,
+          yield: product.yield,
+          yieldUnit: product.yieldUnit,
         },
       });
       insertedProducts.push(inserted);
@@ -391,7 +439,7 @@ async function seed() {
         ingredientIndex: 5,
         productIngredientIndex: null,
         quantity: '2',
-        unit: 'unidade',
+        unit: 'un',
       },
       {
         productIndex: 1,
@@ -468,14 +516,14 @@ async function seed() {
         ingredientIndex: 5,
         productIngredientIndex: null,
         quantity: '6',
-        unit: 'unidade',
+        unit: 'un',
       },
       {
         productIndex: 4,
         ingredientIndex: 10,
         productIngredientIndex: null,
         quantity: '0.3',
-        unit: 'litro',
+        unit: 'l',
       },
       {
         productIndex: 4,
@@ -503,7 +551,7 @@ async function seed() {
         ingredientIndex: 5,
         productIngredientIndex: null,
         quantity: '4',
-        unit: 'unidade',
+        unit: 'un',
       },
       {
         productIndex: 5,
@@ -566,7 +614,7 @@ async function seed() {
         ingredientIndex: 5,
         productIngredientIndex: null,
         quantity: '4',
-        unit: 'unidade',
+        unit: 'un',
       },
       {
         productIndex: 8,
@@ -601,7 +649,7 @@ async function seed() {
         ingredientIndex: 5,
         productIngredientIndex: null,
         quantity: '6',
-        unit: 'unidade',
+        unit: 'un',
       },
       {
         productIndex: 9,
@@ -650,19 +698,22 @@ async function seed() {
       {
         itemType: 'ingredient',
         itemName: 'Farinha de Trigo',
-        oldPrice: 10.0,
-        newPrice: 12.5,
+        // valores por unidade (preço por kg)
+        oldPrice: 2.0,
+        newPrice: 2.5,
         changeType: 'manual',
-        description: 'Ajuste de preço por fornecedor',
+        description: 'Ajuste de preço por unidade (kg)',
         ingredientId: insertedIngredients[0].id,
       },
       {
         itemType: 'product',
         itemName: 'Brigadeiro Gourmet',
+        // valores por unidade (custo por unidade de rendimento)
         oldPrice: 2.0,
         newPrice: 2.5,
         changeType: 'ingredient_update',
-        description: 'Atualização após mudança no preço do chocolate',
+        description:
+          'Atualização de custo por unidade após mudança no preço do chocolate',
         productId: insertedProducts[0].id,
       },
     ];

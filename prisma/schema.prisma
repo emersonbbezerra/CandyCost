@@ -1,4 +1,3 @@
-
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -12,73 +11,76 @@ datasource db {
 }
 
 model User {
-  id               String   @id @default(cuid())
-  email            String   @unique
-  password         String
-  firstName        String?
-  lastName         String?
-  profileImageUrl  String?
-  role             String   @default("user")
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id              String   @id @default(cuid())
+  email           String   @unique
+  password        String
+  firstName       String?
+  lastName        String?
+  profileImageUrl String?
+  role            String   @default("user")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@map("users")
 }
 
 model Session {
-  sid     String @id
-  sess    String
-  expire  DateTime
+  sid    String   @id
+  sess   String
+  expire DateTime
 
   @@index([expire])
   @@map("sessions")
 }
 
 model Ingredient {
-  id          String   @id @default(cuid())
-  name        String
-  category    String
-  quantity    Float
-  unit        String
-  price       Float
-  brand       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  name      String
+  category  String
+  quantity  Float
+  unit      String
+  price     Float
+  brand     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  recipes     Recipe[] @relation("IngredientRecipes")
+  recipes      Recipe[]       @relation("IngredientRecipes")
   priceHistory PriceHistory[]
 
   @@map("ingredients")
 }
 
 model Product {
-  id                      String   @id @default(cuid())
-  name                    String
-  category                String
-  description             String?
-  isAlsoIngredient        Boolean  @default(false)
-  marginPercentage        Float
-  preparationTimeMinutes  Int?
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
+  id                     String   @id @default(cuid())
+  name                   String
+  category               String
+  description            String?
+  isAlsoIngredient       Boolean  @default(false)
+  marginPercentage       Float
+  preparationTimeMinutes Int?
+  salePrice              Float // Preço de venda total do produto
+  yield                  Float // Rendimento total do produto
+  yieldUnit              String // Unidade do rendimento (ex: unidade, kg, fatia)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
-  recipes                 Recipe[] @relation("ProductRecipes")
-  productIngredientRecipes Recipe[] @relation("ProductIngredientRecipes")
-  priceHistory            PriceHistory[]
+  recipes                  Recipe[]       @relation("ProductRecipes")
+  productIngredientRecipes Recipe[]       @relation("ProductIngredientRecipes")
+  priceHistory             PriceHistory[]
 
   @@map("products")
 }
 
 model Recipe {
-  id                  String  @id @default(cuid())
-  quantity            Float
-  unit                String
+  id       String @id @default(cuid())
+  quantity Float
+  unit     String
 
-  productId           String
-  product             Product @relation("ProductRecipes", fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation("ProductRecipes", fields: [productId], references: [id], onDelete: Cascade)
 
-  ingredientId        String?
-  ingredient          Ingredient? @relation("IngredientRecipes", fields: [ingredientId], references: [id], onDelete: Cascade)
+  ingredientId String?
+  ingredient   Ingredient? @relation("IngredientRecipes", fields: [ingredientId], references: [id], onDelete: Cascade)
 
   productIngredientId String?
   productIngredient   Product? @relation("ProductIngredientRecipes", fields: [productIngredientId], references: [id], onDelete: Cascade)
@@ -91,7 +93,7 @@ model FixedCost {
   name        String
   category    String
   value       Float
-  recurrence  String   // 'monthly', 'yearly', 'weekly', 'daily'
+  recurrence  String // 'monthly', 'yearly', 'weekly', 'daily'
   description String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -102,19 +104,19 @@ model FixedCost {
 
 model PriceHistory {
   id          String   @id @default(cuid())
-  itemType    String   // 'ingredient' or 'product'
+  itemType    String // 'ingredient' or 'product'
   itemName    String
   oldPrice    Float
   newPrice    Float
-  changeType  String   // 'manual', 'ingredient_update'
+  changeType  String // 'manual', 'ingredient_update'
   description String?
   createdAt   DateTime @default(now())
 
   ingredientId String?
   ingredient   Ingredient? @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
 
-  productId    String?
-  product      Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@map("price_history")
 }

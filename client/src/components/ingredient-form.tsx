@@ -46,7 +46,7 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
         name: ingredient.name || "",
         category: ingredient.category || "",
         quantity: ingredient.quantity ?? 0,
-        unit: ingredient.unit || "",
+        unit: ingredient.unit === 'unidade' ? 'un' : (ingredient.unit || ""),
         price: ingredient.price ?? 0,
         brand: ingredient.brand || "",
       });
@@ -119,10 +119,15 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
   });
 
   const onSubmit = (data: z.infer<typeof insertIngredientSchema>) => {
+    // Normaliza unidade canônica
+    const normalized = {
+      ...data,
+      unit: data.unit === 'unidade' ? 'un' : data.unit,
+    };
     if (ingredient) {
-      updateMutation.mutate(data);
+      updateMutation.mutate(normalized);
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(normalized);
     }
   };
 

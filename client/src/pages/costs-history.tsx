@@ -68,6 +68,12 @@ export default function CostsHistory() {
     return product?.name || "Produto não encontrado";
   };
 
+  const getProductUnit = (id: string | number | null) => {
+    if (!id) return "";
+    const product = products.find(p => String(p.id) === String(id));
+    return product?.yieldUnit ? ` / ${product.yieldUnit}` : "";
+  };
+
   return (
     <div className="p-4 lg:p-8">
       <div className="mb-8">
@@ -206,7 +212,8 @@ export default function CostsHistory() {
                       {change.itemName || "Produto desconhecido"}
                     </p>
                     <p className="text-gray-600 text-sm">
-                      Custo alterado de {formatCurrency(typeof change.oldPrice === 'string' ? parseFloat(change.oldPrice) : change.oldPrice)} para {formatCurrency(typeof change.newPrice === 'string' ? parseFloat(change.newPrice) : change.newPrice)}
+                      Custo por unidade alterado de {formatCurrency(typeof change.oldPrice === 'string' ? parseFloat(change.oldPrice) : change.oldPrice)} para {formatCurrency(typeof change.newPrice === 'string' ? parseFloat(change.newPrice) : change.newPrice)}
+                      {getProductUnit(change.productId ?? null)}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
                       Motivo: {change.description ? change.description : "Alteração automática"}
@@ -224,7 +231,7 @@ export default function CostsHistory() {
                       {(((typeof change.newPrice === 'string' ? parseFloat(change.newPrice) : change.newPrice) - (typeof change.oldPrice === 'string' ? parseFloat(change.oldPrice) : change.oldPrice)) / (typeof change.oldPrice === 'string' ? parseFloat(change.oldPrice) : change.oldPrice) * 100).toFixed(1)}%
                     </span>
                     <p className="text-xs text-gray-500 mt-1">
-                      {(typeof change.newPrice === 'string' ? parseFloat(change.newPrice) : change.newPrice) > (typeof change.oldPrice === 'string' ? parseFloat(change.oldPrice) : change.oldPrice) ? "Aumento" : "Redução"}
+                      {(typeof change.newPrice === 'string' ? parseFloat(change.newPrice) : change.newPrice) > (typeof change.oldPrice === 'string' ? parseFloat(change.oldPrice) : change.oldPrice) ? "Aumento por unidade" : "Redução por unidade"}
                     </p>
                   </div>
                 </div>

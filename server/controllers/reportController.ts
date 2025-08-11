@@ -9,18 +9,28 @@ export const getReports = async (_req: Request, res: Response) => {
     // Calculate product costs
     const costsPromises = products.map(async (product) => {
       try {
-        const cost = await reportService.calculateProductCost(
-          Number(product.id)
-        );
+        const cost = await reportService.calculateProductCost(product.id);
         return { product, cost };
       } catch {
+        // Fallback: todos os campos do tipo ProductCost
         return {
           product,
           cost: {
             productId: product.id,
             totalCost: 0,
+            ingredientsCost: 0,
+            fixedCostPerProduct: 0,
+            fixedCostPerUnit: 0,
             suggestedPrice: 0,
             margin: 0,
+            marginPercentage: 0,
+            preparationTimeMinutes: 0,
+            costPerYieldUnit: 0,
+            salePricePerUnit: 0,
+            marginReal: 0,
+            yield: 1,
+            yieldUnit: '',
+            salePrice: 0,
           },
         };
       }
@@ -31,14 +41,16 @@ export const getReports = async (_req: Request, res: Response) => {
     // Lucratividade analysis
     const profitabilityAnalysis = productCosts
       .map(({ product, cost }) => {
-        const profitMargin =
-          typeof (cost as any).suggestedPrice === 'number' &&
-          (cost as any).suggestedPrice > 0
-            ? (((cost as any).suggestedPrice - cost.totalCost) /
-                (cost as any).suggestedPrice) *
-              100
-            : 0;
-        return { product, cost, profitMargin };
+        // Usar marginReal e salePricePerUnit do cálculo atualizado
+        return {
+          product,
+          cost,
+          profitMargin: cost.marginReal ?? 0,
+          salePricePerUnit: cost.salePricePerUnit ?? 0,
+          costPerYieldUnit: cost.costPerYieldUnit ?? 0,
+          yield: cost.yield ?? 1,
+          yieldUnit: cost.yieldUnit ?? '',
+        };
       })
       .sort((a, b) => b.profitMargin - a.profitMargin);
 
@@ -46,9 +58,7 @@ export const getReports = async (_req: Request, res: Response) => {
     const ingredientUsage = new Map<string, number>();
     const recipesPromises = products.map(async (product) => {
       try {
-        const recipes = await reportService.getRecipesByProduct(
-          Number(product.id)
-        );
+        const recipes = await reportService.getRecipesByProduct(product.id);
         recipes.forEach((recipe) => {
           if (recipe.ingredientId) {
             ingredientUsage.set(
@@ -101,9 +111,7 @@ export const getReports = async (_req: Request, res: Response) => {
     // Complex recipes analysis
     const complexRecipesPromises = products.map(async (product) => {
       try {
-        const recipes = await reportService.getRecipesByProduct(
-          Number(product.id)
-        );
+        const recipes = await reportService.getRecipesByProduct(product.id);
         const hasProductIngredients = recipes.some(
           (recipe) => recipe.productIngredientId
         );

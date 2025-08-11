@@ -310,7 +310,12 @@ export default function Reports() {
                 <div key={product.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-gray-50 rounded-lg space-y-2 sm:space-y-0">
                   <div className="min-w-0 flex-1">
                     <p className="font-medium truncate">{product.name}</p>
-                    <p className="text-sm text-gray-600">{formatCurrency(cost.totalCost)} → {formatCurrency(cost.suggestedPrice)}</p>
+                    <div className="text-xs text-gray-600">
+                      <span>Custo por unidade: <b>{product.yield > 0 ? formatCurrency(cost.costPerYieldUnit ?? (cost.totalCost / product.yield)) : '-'}</b> / {product.yieldUnit}</span> <br />
+                      <span>Preço de venda por unidade: <b>{product.yield > 0 ? formatCurrency(cost.salePricePerUnit ?? (product.salePrice / product.yield)) : '-'}</b> / {product.yieldUnit}</span> <br />
+                      <span>Margem real: <b>{product.yield > 0 ? formatCurrency((cost.salePricePerUnit ?? (product.salePrice / product.yield)) - (cost.costPerYieldUnit ?? (cost.totalCost / product.yield))) : '-'}</b></span> <br />
+                      <span>Rendimento: <b>{product.yield} {product.yieldUnit}</b></span>
+                    </div>
                   </div>
                   <div className="flex items-center justify-end sm:justify-start space-x-2 flex-shrink-0">
                     <Badge
