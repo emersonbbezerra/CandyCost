@@ -15,6 +15,7 @@ import type { Ingredient } from "@shared/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronUp, Edit, Filter, Package, Plus, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 
 const categoryColors = {
   "Laticínios": "bg-green-100 text-green-800",
@@ -26,6 +27,7 @@ const categoryColors = {
 };
 
 export default function Ingredients() {
+  const [location, setLocation] = useLocation();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const formatCurrencyWithSymbol = useFormatCurrency();
 
@@ -38,6 +40,8 @@ export default function Ingredients() {
       sessionStorage.setItem('lastPageNavigation', 'ingredients');
     };
   }, []);
+
+  // (Mantido placeholder temporário; efeito real movido para depois de useQuery)
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | undefined>();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -59,6 +63,23 @@ export default function Ingredients() {
   const { data: ingredients = [], isLoading } = useQuery<Ingredient[]>({
     queryKey: ["/api/ingredients"],
   });
+
+  // Abrir edição automática via query param ?edit=ID (depois que ingredientes carregam)
+  useEffect(() => {
+    try {
+      const url = new URL(window.location.href);
+      const editId = url.searchParams.get('edit');
+      if (editId && ingredients.length > 0) {
+        const ing = ingredients.find(i => i.id === editId);
+        if (ing) {
+          setEditingIngredient(ing);
+          setIsFormOpen(true);
+          url.searchParams.delete('edit');
+          window.history.replaceState({}, '', url.pathname + (url.search ? '?' + url.searchParams.toString() : ''));
+        }
+      }
+    } catch { /* ignore */ }
+  }, [ingredients]);
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {

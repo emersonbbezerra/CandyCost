@@ -1,7 +1,7 @@
 import { errorToast, useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
-import type { PriceHistory } from "@shared/schema";
+// A API /api/dashboard/recent-updates retorna objetos simplificados (não todo PriceHistory)
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ExternalLink, Package, RefreshCw, Sprout } from "lucide-react";
 import { useState } from "react";
@@ -10,15 +10,21 @@ import { ProductForm } from "./product-form";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
-interface PriceHistoryWithName extends PriceHistory {
+interface SimplifiedUpdate {
+    id: string;
+    type: 'ingredient' | 'product';
     name: string;
-    productId: string | null;
+    itemId: string | null; // id do ingrediente ou produto
+    oldPrice: number;
+    newPrice: number;
     unit?: string;
+    changeType: string;
+    createdAt: string;
 }
 
 interface RecentUpdates {
-    ingredientUpdates: PriceHistoryWithName[];
-    productUpdates: PriceHistoryWithName[];
+    ingredientUpdates: SimplifiedUpdate[];
+    productUpdates: SimplifiedUpdate[];
 }
 
 // Helper function to format date, assuming it's available or can be defined
@@ -54,7 +60,7 @@ export function RecentUpdatesCard() {
         refetchIntervalInBackground: false,
     });
 
-    const handleEditProduct = async (productId: number) => {
+    const handleEditProduct = async (productId: string) => {
         try {
             const response = await apiRequest("GET", `/api/products/${productId}`);
 
@@ -130,7 +136,8 @@ export function RecentUpdatesCard() {
                                             Custo atualizado de {formatCurrency(update.oldPrice ?? 0)} para {formatCurrency(update.newPrice ?? 0)}{update.unit ? ` / ${update.unit}` : ''} - <strong>{update.name}</strong>
                                         </p>
                                         <p className="text-sm text-gray-500 mt-1">
-                                            {update.description || "Atualização manual"}
+                                            {/* descrição não vem do endpoint simplificado; usa changeType como fallback */}
+                                            {update.changeType === 'auto' ? 'Atualização automática' : 'Atualização manual'}
                                         </p>
                                         <p className="text-xs text-gray-400 mt-1">
                                             {formatRelativeTime(new Date(update.createdAt))}
@@ -156,7 +163,14 @@ export function RecentUpdatesCard() {
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => setLocation("/ingredients")}
+                                            onClick={() => {
+                                                // Navega para a página de ingredientes com query param que indica edição
+                                                if (update.itemId) {
+                                                    setLocation(`/ingredients?edit=${update.itemId}`);
+                                                } else {
+                                                    setLocation("/ingredients");
+                                                }
+                                            }}
                                             className="px-2 py-1 h-8"
                                         >
                                             <ExternalLink className="w-3 h-3" />
@@ -185,7 +199,7 @@ export function RecentUpdatesCard() {
                                             Custo atualizado de {formatCurrency(update.oldPrice ?? 0)} para {formatCurrency(update.newPrice ?? 0)}{update.unit ? ` / ${update.unit}` : ''} - <strong>{update.name}</strong>
                                         </p>
                                         <p className="text-sm text-gray-500 mt-1">
-                                            {update.description || "Atualização automática"}
+                                            {update.changeType === 'auto' ? 'Atualização automática' : 'Atualização manual'}
                                         </p>
                                         <p className="text-xs text-gray-400 mt-1">
                                             {formatRelativeTime(new Date(update.createdAt))}
@@ -211,7 +225,14 @@ export function RecentUpdatesCard() {
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => setLocation("/products")}
+                                            onClick={() => {
+                                                // Abre modal de edição de produto diretamente
+                                                if (update.itemId) {
+                                                    handleEditProduct(update.itemId);
+                                                } else {
+                                                    setLocation("/products");
+                                                }
+                                            }}
                                             className="px-2 py-1 h-8"
                                         >
                                             <ExternalLink className="w-3 h-3" />
