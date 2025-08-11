@@ -1,9 +1,9 @@
-import { prisma } from "../db";
-import { productRepository } from "../repositories/productRepository";
-import { fixedCostRepository } from "../repositories/fixedCostRepository";
-import { priceHistoryRepository } from "../repositories/priceHistoryRepository";
-import type { ProductCost, InsertProduct, Ingredient } from "@shared/schema";
-import { priceHistoryService } from "./priceHistoryService"; // Importar o serviço de histórico de preços
+import type { Ingredient, InsertProduct, ProductCost } from '@shared/schema';
+import { prisma } from '../db';
+import { fixedCostRepository } from '../repositories/fixedCostRepository';
+import { priceHistoryRepository } from '../repositories/priceHistoryRepository';
+import { productRepository } from '../repositories/productRepository';
+import { priceHistoryService } from './priceHistoryService'; // Importar o serviço de histórico de preços
 
 export const productService = {
   async getProducts() {
@@ -41,17 +41,21 @@ export const productService = {
     // Calculate cost from recipe ingredients
     for (const recipe of product.recipes) {
       if (recipe.ingredient) {
-        const ingredientPrice = parseFloat(recipe.ingredient.price);
-        const ingredientQuantity = parseFloat(recipe.ingredient.quantity);
-        const recipeQuantity = parseFloat(recipe.quantity);
+        const ingredientPrice = parseFloat(String(recipe.ingredient.price));
+        const ingredientQuantity = parseFloat(
+          String(recipe.ingredient.quantity)
+        );
+        const recipeQuantity = parseFloat(String(recipe.quantity));
 
         const costPerUnit = ingredientPrice / ingredientQuantity;
         const recipeCost = costPerUnit * recipeQuantity;
         totalCost += recipeCost;
       } else if (recipe.productIngredient) {
         // Recursive calculation for product ingredients
-        const subProductCost = await this.calculateProductCost(recipe.productIngredient.id);
-        const recipeQuantity = parseFloat(recipe.quantity);
+        const subProductCost = await this.calculateProductCost(
+          String(recipe.productIngredient.id)
+        );
+        const recipeQuantity = parseFloat(String(recipe.quantity));
         totalCost += subProductCost.totalCost * recipeQuantity;
       }
     }
@@ -68,7 +72,7 @@ export const productService = {
     let totalMonthlyFixedCosts = 0;
 
     for (const fixedCost of fixedCosts) {
-      const value = parseFloat(fixedCost.value);
+      const value = fixedCost.value;
       switch (fixedCost.recurrence) {
         case 'monthly':
           totalMonthlyFixedCosts += value;
@@ -83,13 +87,18 @@ export const productService = {
     }
 
     // Calculate fixed cost per minute
-    const fixedCostPerMinute = totalMonthlyFixedCosts / (totalWorkHoursPerMonth * 60);
+    const fixedCostPerMinute =
+      totalMonthlyFixedCosts / (totalWorkHoursPerMonth * 60);
 
     // Calculate fixed cost for this product based on preparation time
-    const fixedCostPerUnit = fixedCostPerMinute * product.preparationTimeMinutes;
+    const fixedCostPerUnit =
+      fixedCostPerMinute * (product.preparationTimeMinutes ?? 0);
 
     // Calculate suggested price with margin
-    const marginPercentage = parseFloat(product.marginPercentage);
+    const marginPercentage =
+      typeof product.marginPercentage === 'string'
+        ? parseFloat(product.marginPercentage)
+        : product.marginPercentage;
     const totalProductCost = totalCost + fixedCostPerUnit;
     const suggestedPrice = totalProductCost * (1 + marginPercentage / 100);
 
@@ -102,15 +111,19 @@ export const productService = {
       suggestedPrice,
       margin: totalProductCost * (marginPercentage / 100),
       marginPercentage: marginPercentage,
-      preparationTimeMinutes: product.preparationTimeMinutes
+      preparationTimeMinutes: product.preparationTimeMinutes ?? 0,
     };
   },
 
-  async updateProductsCostByIngredient(ingredientId: string, oldPrice: string, newPrice: string) {
+  async updateProductsCostByIngredient(
+    ingredientId: string,
+    oldPrice: number,
+    newPrice: number
+  ) {
     // Find products that use this ingredient
     const recipes = await prisma.recipe.findMany({
       where: { ingredientId },
-      include: { product: true }
+      include: { product: true },
     });
 
     const updatedProducts = [];
@@ -118,33 +131,49 @@ export const productService = {
     for (const recipe of recipes) {
       try {
         // Calculate old cost
-        const oldCost = await this.calculateProductCostAtPrice(recipe.product.id, ingredientId, oldPrice);
+        const oldCost = await this.calculateProductCostAtPrice(
+          String(recipe.product.id),
+          ingredientId,
+          String(oldPrice)
+        );
 
         // Calculate new cost
-        const newCost = await this.calculateProductCost(recipe.product.id);
+        const newCost = await this.calculateProductCost(
+          String(recipe.product.id)
+        );
 
         // Create price history entry for the product
         await priceHistoryRepository.create({
-          productId: recipe.product.id,
-          oldPrice: oldCost.totalCost.toFixed(2),
-          newPrice: newCost.totalCost.toFixed(2),
-          changeReason: `Alteração no ingrediente (preço mudou de ${oldPrice} para ${newPrice})`
+          itemType: 'product',
+          itemName: recipe.product.name,
+          productId: String(recipe.product.id),
+          oldPrice: oldCost.totalCost,
+          newPrice: newCost.totalCost,
+          changeType: 'ingredient_update',
+          description: `Alteração no ingrediente (preço mudou de ${oldPrice} para ${newPrice})`,
         });
 
         updatedProducts.push({
           product: recipe.product,
           oldCost: oldCost.totalCost,
-          newCost: newCost.totalCost
+          newCost: newCost.totalCost,
         });
       } catch (error) {
-        console.error(`Erro ao atualizar custo do produto ${recipe.product.name}:`, error);
+        console.error(
+          `Erro ao atualizar custo do produto ${recipe.product.name}:`,
+          error
+        );
       }
     }
 
     return updatedProducts;
   },
 
-  async calculateProductCostAtPrice(productId: string, ingredientId: string, priceOverride: string): Promise<ProductCost> {
+  async calculateProductCostAtPrice(
+    productId: string,
+    ingredientId: string,
+    priceOverride: string
+  ): Promise<ProductCost> {
     const product = await productRepository.findWithRecipes(productId);
     if (!product) {
       throw new Error('Produto não encontrado');
@@ -155,23 +184,27 @@ export const productService = {
     // Calculate cost from recipe ingredients
     for (const recipe of product.recipes) {
       if (recipe.ingredient) {
-        let ingredientPrice = parseFloat(recipe.ingredient.price);
+        let ingredientPrice = recipe.ingredient.price;
 
         // Use override price if this is the ingredient being updated
         if (recipe.ingredient.id === ingredientId) {
           ingredientPrice = parseFloat(priceOverride);
         }
 
-        const ingredientQuantity = parseFloat(recipe.ingredient.quantity);
-        const recipeQuantity = parseFloat(recipe.quantity);
+        const ingredientQuantity = recipe.ingredient.quantity;
+        const recipeQuantity = recipe.quantity;
 
         const costPerUnit = ingredientPrice / ingredientQuantity;
         const recipeCost = costPerUnit * recipeQuantity;
         totalCost += recipeCost;
       } else if (recipe.productIngredient) {
         // Recursive calculation for product ingredients
-        const subProductCost = await this.calculateProductCostAtPrice(recipe.productIngredient.id, ingredientId, priceOverride);
-        const recipeQuantity = parseFloat(recipe.quantity);
+        const subProductCost = await this.calculateProductCostAtPrice(
+          recipe.productIngredient.id,
+          ingredientId,
+          priceOverride
+        );
+        const recipeQuantity = recipe.quantity;
         totalCost += subProductCost.totalCost * recipeQuantity;
       }
     }
@@ -188,7 +221,7 @@ export const productService = {
     let totalMonthlyFixedCosts = 0;
 
     for (const fixedCost of fixedCosts) {
-      const value = parseFloat(fixedCost.value);
+      const value = fixedCost.value;
       switch (fixedCost.recurrence) {
         case 'monthly':
           totalMonthlyFixedCosts += value;
@@ -203,13 +236,15 @@ export const productService = {
     }
 
     // Calculate fixed cost per minute
-    const fixedCostPerMinute = totalMonthlyFixedCosts / (totalWorkHoursPerMonth * 60);
+    const fixedCostPerMinute =
+      totalMonthlyFixedCosts / (totalWorkHoursPerMonth * 60);
 
     // Calculate fixed cost for this product based on preparation time
-    const fixedCostPerUnit = fixedCostPerMinute * product.preparationTimeMinutes;
+    const fixedCostPerUnit =
+      fixedCostPerMinute * (product.preparationTimeMinutes ?? 0);
 
     // Calculate suggested price with margin
-    const marginPercentage = parseFloat(product.marginPercentage);
+    const marginPercentage = product.marginPercentage;
     const totalProductCost = totalCost + fixedCostPerUnit;
     const suggestedPrice = totalProductCost * (1 + marginPercentage / 100);
 
@@ -222,20 +257,20 @@ export const productService = {
       suggestedPrice,
       margin: totalProductCost * (marginPercentage / 100),
       marginPercentage: marginPercentage,
-      preparationTimeMinutes: product.preparationTimeMinutes
+      preparationTimeMinutes: product.preparationTimeMinutes ?? 0,
     };
   },
 
   // --- Ingredient Methods ---
   async getIngredients() {
     return await prisma.ingredient.findMany({
-      orderBy: { name: 'asc' }
+      orderBy: { name: 'asc' },
     });
   },
 
   async getIngredient(id: string) {
     return await prisma.ingredient.findUnique({
-      where: { id }
+      where: { id },
     });
   },
 
@@ -272,37 +307,47 @@ export const productService = {
 
   async deleteIngredient(id: string): Promise<void> {
     await prisma.ingredient.delete({
-      where: { id }
+      where: { id },
     });
   },
 
-  async trackCostChangesForAffectedProducts(ingredientId: string, oldPrice: number, newPrice: number): Promise<void> {
+  async trackCostChangesForAffectedProducts(
+    ingredientId: string,
+    oldPrice: number,
+    newPrice: number
+  ): Promise<void> {
     try {
-      console.log(`Tracking cost changes for ingredient ${ingredientId}: ${oldPrice} -> ${newPrice}`);
+      console.log(
+        `Tracking cost changes for ingredient ${ingredientId}: ${oldPrice} -> ${newPrice}`
+      );
 
       // Buscar todas as receitas que usam este ingrediente
       const recipesWithIngredient = await prisma.recipe.findMany({
         where: { ingredientId },
-        include: { 
+        include: {
           product: true,
-          ingredient: true 
-        }
+          ingredient: true,
+        },
       });
 
-      console.log(`Found ${recipesWithIngredient.length} recipes using this ingredient`);
+      console.log(
+        `Found ${recipesWithIngredient.length} recipes using this ingredient`
+      );
 
       for (const recipe of recipesWithIngredient) {
-        const ingredientCostDifference = (newPrice - oldPrice) * recipe.quantity;
-        console.log(`Product ${recipe.product.name} cost change: ${ingredientCostDifference}`);
+        const ingredientCostDifference =
+          (newPrice - oldPrice) * recipe.quantity;
+        console.log(
+          `Product ${recipe.product.name} cost change: ${ingredientCostDifference}`
+        );
 
         // Criar entrada no histórico de preços para o produto
         await priceHistoryService.createPriceHistory({
-          itemType: 'product',
-          itemName: recipe.product.name,
-          oldPrice: 0, // Não temos o custo total anterior facilmente disponível
-          newPrice: ingredientCostDifference, // Registrar a diferença de custo
-          changeType: 'ingredient_update',
-          description: `Alteração de preço do ingrediente: ${recipe.ingredient?.name || 'desconhecido'}`,
+          oldPrice: String(0), // Não temos o custo total anterior facilmente disponível
+          newPrice: String(ingredientCostDifference), // Registrar a diferença de custo
+          changeReason: `Alteração de preço do ingrediente: ${
+            recipe.ingredient?.name || 'desconhecido'
+          }`,
           productId: recipe.productId,
         });
       }

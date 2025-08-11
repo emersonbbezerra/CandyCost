@@ -1,19 +1,19 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { insertIngredientSchema, type Ingredient } from "@shared/schema";
-import { INGREDIENT_CATEGORIES, UNITS } from "@shared/constants";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCurrencySymbol } from "@/contexts/SettingsContext";
 import { useToast } from "@/hooks/use-toast";
-import { formatCurrency } from "@/lib/utils";
+import { useFormatCurrency } from "@/hooks/useFormatCurrency";
+import { apiRequest } from "@/lib/queryClient";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { INGREDIENT_CATEGORIES, UNITS } from "@shared/constants";
+import { insertIngredientSchema, type Ingredient } from "@shared/schema";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 interface IngredientFormProps {
   open: boolean;
@@ -24,15 +24,17 @@ interface IngredientFormProps {
 export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFormProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const currencySymbol = useCurrencySymbol();
+  const formatCurrencyWithSymbol = useFormatCurrency();
 
   const form = useForm<z.infer<typeof insertIngredientSchema>>({
     resolver: zodResolver(insertIngredientSchema),
     defaultValues: {
       name: "",
       category: "",
-      quantity: "",
+      quantity: 0,
       unit: "",
-      price: "",
+      price: 0,
       brand: "",
     },
   });
@@ -43,18 +45,18 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
       form.reset({
         name: ingredient.name || "",
         category: ingredient.category || "",
-        quantity: ingredient.quantity || "",
+        quantity: ingredient.quantity ?? 0,
         unit: ingredient.unit || "",
-        price: ingredient.price || "",
+        price: ingredient.price ?? 0,
         brand: ingredient.brand || "",
       });
     } else {
       form.reset({
         name: "",
         category: "",
-        quantity: "",
+        quantity: 0,
         unit: "",
-        price: "",
+        price: 0,
         brand: "",
       });
     }
@@ -187,7 +189,7 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
                   <FormItem>
                     <FormLabel>Quantidade</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.001" placeholder="5" {...field} />
+                      <Input type="number" step="0.001" placeholder="5" {...field} onChange={e => field.onChange(Number(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -227,9 +229,9 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
                 name="price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Preço de Compra (R$)</FormLabel>
+                    <FormLabel>Preço de Compra ({currencySymbol})</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" placeholder="12.50" {...field} />
+                      <Input type="number" step="0.01" placeholder="12.50" {...field} onChange={e => field.onChange(Number(e.target.value))} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -242,7 +244,10 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Custo por unidade:</span>
                     <span className="font-semibold text-blue-600">
-                      {formatCurrency(parseFloat(form.watch("price") || "0") / parseFloat(form.watch("quantity") || "1"))}
+                      {formatCurrencyWithSymbol(
+                        parseFloat(String(form.watch("price") ?? "0")) /
+                        parseFloat(String(form.watch("quantity") ?? "1"))
+                      )}
                       {form.watch("unit") && ` por ${UNITS.find(u => u.value === form.watch("unit"))?.label}`}
                     </span>
                   </div>
@@ -257,11 +262,11 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
                 <FormItem>
                   <FormLabel>Marca/Fornecedor</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="Ex: Marca Premium" 
-                      {...field} 
+                    <Input
+                      placeholder="Ex: Marca Premium"
+                      {...field}
                       onChange={field.onChange}
-                      value={field.value || ""} 
+                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormMessage />

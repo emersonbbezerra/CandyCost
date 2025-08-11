@@ -7,13 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
+import { useFormatCurrency } from "@/hooks/useFormatCurrency";
 import { apiRequest } from "@/lib/queryClient";
-import { formatCurrency, formatRelativeTime } from "@/lib/utils";
+import { formatRelativeTime } from "@/lib/utils";
 import { INGREDIENT_CATEGORIES } from "@shared/constants";
 import type { Ingredient } from "@shared/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronUp, Edit, Filter, Package, Plus, Search, Trash2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const categoryColors = {
   "Laticínios": "bg-green-100 text-green-800",
@@ -26,6 +27,7 @@ const categoryColors = {
 
 export default function Ingredients() {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const formatCurrencyWithSymbol = useFormatCurrency();
 
   // Mark navigation and updates for dashboard refresh control
   useEffect(() => {
@@ -82,8 +84,8 @@ export default function Ingredients() {
   });
 
   const calculateUnitCost = (ingredient: Ingredient) => {
-    const price = parseFloat(ingredient.price);
-    const quantity = parseFloat(ingredient.quantity);
+    const price = typeof ingredient.price === 'string' ? parseFloat(ingredient.price) : ingredient.price;
+    const quantity = typeof ingredient.quantity === 'string' ? parseFloat(ingredient.quantity) : ingredient.quantity;
     return price / quantity;
   };
 
@@ -100,7 +102,7 @@ export default function Ingredients() {
       ingredient.brand?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === "all" || ingredient.category === categoryFilter;
 
-    const price = parseFloat(ingredient.price);
+    const price = typeof ingredient.price === 'string' ? parseFloat(ingredient.price) : ingredient.price;
     const unitCost = calculateUnitCost(ingredient);
 
     const matchesPriceMin = priceMinFilter === "" || price >= parseFloat(priceMinFilter);
@@ -143,8 +145,8 @@ export default function Ingredients() {
         bValue = b.category.toLowerCase();
         break;
       case "price":
-        aValue = parseFloat(a.price);
-        bValue = parseFloat(b.price);
+        aValue = typeof a.price === 'string' ? parseFloat(a.price) : a.price;
+        bValue = typeof b.price === 'string' ? parseFloat(b.price) : b.price;
         break;
       case "unitCost":
         aValue = calculateUnitCost(a);
@@ -449,10 +451,10 @@ export default function Ingredients() {
                     </TableCell>
                     <TableCell>{ingredient.quantity} {ingredient.unit}</TableCell>
                     <TableCell className="font-medium">
-                      {formatCurrency(parseFloat(ingredient.price))}
+                      {formatCurrencyWithSymbol(typeof ingredient.price === 'string' ? parseFloat(ingredient.price) : ingredient.price)}
                     </TableCell>
                     <TableCell className="text-gray-500">
-                      {formatCurrency(calculateUnitCost(ingredient))} / {formatUnit(ingredient.unit)}
+                      {formatCurrencyWithSymbol(calculateUnitCost(ingredient))} / {formatUnit(ingredient.unit)}
                     </TableCell>
                     <TableCell className="text-gray-500">
                       {formatRelativeTime(new Date(ingredient.updatedAt))}
@@ -536,13 +538,13 @@ export default function Ingredients() {
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Preço:</span>
                       <span className="text-sm font-bold text-green-600">
-                        {formatCurrency(parseFloat(ingredient.price))}
+                        {formatCurrencyWithSymbol(typeof ingredient.price === 'string' ? parseFloat(ingredient.price) : ingredient.price)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Custo/Unidade:</span>
                       <span className="text-sm text-gray-600">
-                        {formatCurrency(calculateUnitCost(ingredient))} / {formatUnit(ingredient.unit)}
+                        {formatCurrencyWithSymbol(calculateUnitCost(ingredient))} / {formatUnit(ingredient.unit)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between border-t pt-2 mt-2">

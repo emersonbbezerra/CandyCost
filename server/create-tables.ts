@@ -22,6 +22,7 @@ async function createTables() {
           daysPerMonth: 22.0,
           hourlyRate: 25.0,
           highCostAlertThreshold: 50.0,
+          currencySymbol: "R$",
         }
       });
       console.log("✓ Configuração padrão de trabalho inserida");

@@ -92,18 +92,23 @@ async function seed() {
       insertedIngredients.push(inserted);
     }
 
-    // Sample products
+    // Sample products usando as novas categorias
     const sampleProducts = [
       { name: "Brigadeiro Gourmet", category: "Doces", description: "Brigadeiro cremoso de chocolate", isAlsoIngredient: true, marginPercentage: "70", preparationTimeMinutes: 30 },
-      { name: "Cupcake de Baunilha", category: "Cupcakes", description: "Cupcake com cobertura de baunilha", isAlsoIngredient: false, marginPercentage: "60", preparationTimeMinutes: 45 },
+      { name: "Cupcake de Baunilha", category: "Bolos", description: "Cupcake com cobertura de baunilha", isAlsoIngredient: false, marginPercentage: "60", preparationTimeMinutes: 45 },
       { name: "Trufa de Chocolate Branco", category: "Doces", description: "Trufa artesanal de chocolate branco", isAlsoIngredient: false, marginPercentage: "65", preparationTimeMinutes: 60 },
-      { name: "Torta de Chocolate", category: "Tortas", description: "Torta de chocolate com cobertura", isAlsoIngredient: false, marginPercentage: "35", preparationTimeMinutes: 120 },
+      { name: "Torta de Chocolate", category: "Tortas Tradicionais", description: "Torta de chocolate com cobertura", isAlsoIngredient: false, marginPercentage: "35", preparationTimeMinutes: 120 },
       { name: "Bolo de Morango", category: "Bolos", description: "Bolo com recheio de morango e chantilly", isAlsoIngredient: false, marginPercentage: "40", preparationTimeMinutes: 90 },
-      { name: "Cheesecake de Frutas Vermelhas", category: "Tortas", description: "Cheesecake cremoso com frutas", isAlsoIngredient: false, marginPercentage: "45", preparationTimeMinutes: 180 },
-      { name: "Açaí na Tigela Premium", category: "Gelados", description: "Açaí com granola, frutas e mel", isAlsoIngredient: false, marginPercentage: "25", preparationTimeMinutes: 10 },
+      { name: "Cheesecake de Frutas Vermelhas", category: "Tortas Especiais", description: "Cheesecake cremoso com frutas", isAlsoIngredient: false, marginPercentage: "45", preparationTimeMinutes: 180 },
+      { name: "Açaí na Tigela Premium", category: "Sobremesas", description: "Açaí com granola, frutas e mel", isAlsoIngredient: false, marginPercentage: "25", preparationTimeMinutes: 10 },
       { name: "Brownie com Nozes", category: "Doces", description: "Brownie denso com nozes caramelizadas", isAlsoIngredient: false, marginPercentage: "20", preparationTimeMinutes: 50 },
-      { name: "Torta Holandesa", category: "Tortas", description: "Torta com creme e chocolate premium", isAlsoIngredient: false, marginPercentage: "15", preparationTimeMinutes: 150 },
+      { name: "Torta Holandesa", category: "Tortas Especiais", description: "Torta com creme e chocolate premium", isAlsoIngredient: false, marginPercentage: "15", preparationTimeMinutes: 150 },
       { name: "Beijinho Gourmet", category: "Doces", description: "Beijinho artesanal com coco premium", isAlsoIngredient: false, marginPercentage: "200", preparationTimeMinutes: 25 },
+      { name: "Fatia de Bolo Red Velvet", category: "Fatias", description: "Fatia individual de bolo red velvet", isAlsoIngredient: false, marginPercentage: "80", preparationTimeMinutes: 5 },
+      { name: "Calda de Chocolate", category: "Caldas", description: "Calda de chocolate cremosa", isAlsoIngredient: true, marginPercentage: "100", preparationTimeMinutes: 15 },
+      { name: "Recheio de Brigadeiro", category: "Recheios", description: "Recheio cremoso de brigadeiro", isAlsoIngredient: true, marginPercentage: "120", preparationTimeMinutes: 20 },
+      { name: "Cobertura de Ganache", category: "Coberturas", description: "Cobertura de ganache premium", isAlsoIngredient: true, marginPercentage: "90", preparationTimeMinutes: 25 },
+      { name: "Caseirinho de Chocolate", category: "Caseirinhos", description: "Doce caseiro de chocolate", isAlsoIngredient: false, marginPercentage: "150", preparationTimeMinutes: 40 },
     ];
 
     // Inserir produtos

@@ -1,6 +1,7 @@
 
-import { formatCurrency } from "@/lib/utils";
-import type { Product, PriceHistory } from "@shared/schema";
+import { useCurrencySymbol } from "@/contexts/SettingsContext";
+import { useFormatCurrency } from "@/hooks/useFormatCurrency";
+import type { Product } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -19,6 +20,8 @@ interface CostEvolutionData {
 
 export function CostEvolutionChart({ products }: CostEvolutionChartProps) {
     const [selectedProduct, setSelectedProduct] = useState<string>("general");
+    const currencySymbol = useCurrencySymbol();
+    const formatCurrencyWithSymbol = useFormatCurrency();
 
     // Buscar dados de evolução de custos usando o novo endpoint
     const { data: chartData = [] } = useQuery<CostEvolutionData[]>({
@@ -27,25 +30,25 @@ export function CostEvolutionChart({ products }: CostEvolutionChartProps) {
             const params = new URLSearchParams({
                 months: "6"
             });
-            
+
             if (selectedProduct !== "general") {
                 params.set("productId", selectedProduct);
             }
-            
+
             const response = await fetch(`/api/dashboard/cost-evolution?${params}`);
             const data = await response.json();
-            
+
             // Para produtos específicos, adicionar preços sugeridos
             if (selectedProduct !== "general") {
                 const selectedProductData = products.find(p => p.id.toString() === selectedProduct);
                 return data.map((item: any) => ({
                     ...item,
-                    suggestedPrice: selectedProductData ? 
-                        item.cost * (1 + parseFloat(selectedProductData.marginPercentage || "60") / 100) 
+                    suggestedPrice: selectedProductData ?
+                        item.cost * (1 + parseFloat(String(selectedProductData.marginPercentage ?? "60")) / 100)
                         : item.cost * 1.6
                 }));
             }
-            
+
             return data;
         }
     });
@@ -85,14 +88,14 @@ export function CostEvolutionChart({ products }: CostEvolutionChartProps) {
                                     tick={{ fill: '#6b7280' }}
                                 />
                                 <YAxis
-                                    tickFormatter={(value) => formatCurrency(value)}
+                                    tickFormatter={(value) => formatCurrencyWithSymbol(value)}
                                     fontSize={12}
                                     tick={{ fill: '#6b7280' }}
-                                    label={{ value: 'Valor (R$)', angle: -90, position: 'insideLeft' }}
+                                    label={{ value: `Valor (${currencySymbol})`, angle: -90, position: 'insideLeft' }}
                                 />
                                 <Tooltip
                                     formatter={(value, name) => [
-                                        formatCurrency(Number(value)),
+                                        formatCurrencyWithSymbol(Number(value)),
                                         name === 'cost' ? 'Custo de Produção' : 'Preço Sugerido'
                                     ]}
                                     labelFormatter={(label) => `Mês: ${label}`}
@@ -137,7 +140,7 @@ export function CostEvolutionChart({ products }: CostEvolutionChartProps) {
                             </div>
                             <p className="text-lg font-medium mb-2">Sem dados de evolução</p>
                             <p className="text-sm">
-                                {selectedProduct === "general" 
+                                {selectedProduct === "general"
                                     ? "Faça algumas alterações nos custos dos produtos para ver a evolução aqui."
                                     : "Este produto ainda não possui histórico de mudanças de custo."
                                 }
@@ -145,7 +148,7 @@ export function CostEvolutionChart({ products }: CostEvolutionChartProps) {
                         </div>
                     </div>
                 )}
-                
+
                 {selectedProduct && selectedProduct !== "general" && hasData && (
                     <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
                         <div className="flex items-center text-sm text-green-700">

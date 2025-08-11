@@ -1,39 +1,44 @@
-
-import { type UpsertUser, type User } from "@shared/schema";
-import type { RequestHandler } from "express";
-import passport from "passport";
-import { Strategy as LocalStrategy } from "passport-local";
-import { prisma } from "../db";
-import { auditLog } from "../utils/auditLogger";
-import { findUserByEmail, hashPassword, verifyPassword } from "../utils/authUtils";
+import { type User } from '@shared/schema';
+import type { RequestHandler } from 'express';
+import passport from 'passport';
+import { Strategy as LocalStrategy } from 'passport-local';
+import { prisma } from '../db';
+import { auditLog } from '../utils/auditLogger';
+import {
+  findUserByEmail,
+  hashPassword,
+  verifyPassword,
+} from '../utils/authUtils';
 
 // Configure Passport Local Strategy
-passport.use(new LocalStrategy(
-  {
-    usernameField: 'email',
-    passwordField: 'password'
-  },
-  async (email, password, done) => {
-    try {
-      const user = await findUserByEmail(email);
-      
-      if (!user) {
-        return done(null, false, { message: 'Email ou senha inválidos.' });
-      }
+passport.use(
+  new LocalStrategy(
+    {
+      usernameField: 'email',
+      passwordField: 'password',
+    },
+    async (email, password, done) => {
+      try {
+        const user = await findUserByEmail(email);
 
-      // Check password
-      const isValidPassword = await verifyPassword(password, user.password);
-      
-      if (!isValidPassword) {
-        return done(null, false, { message: 'Email ou senha inválidos.' });
-      }
+        if (!user) {
+          return done(null, false, { message: 'Email ou senha inválidos.' });
+        }
 
-      return done(null, user);
-    } catch (error) {
-      return done(error);
+        // Check password
+        const isValidPassword = await verifyPassword(password, user.password);
+
+        if (!isValidPassword) {
+          return done(null, false, { message: 'Email ou senha inválidos.' });
+        }
+
+        return done(null, user);
+      } catch (error) {
+        return done(error);
+      }
     }
-  }
-));
+  )
+);
 
 // Serialize user for session
 passport.serializeUser((user: any, done) => {
@@ -60,7 +65,11 @@ export const isAuthenticated: RequestHandler = (req, res, next) => {
     path: req.originalUrl,
     method: req.method,
   });
-  res.status(401).json({ message: "Você precisa estar logado para acessar esta funcionalidade." });
+  res
+    .status(401)
+    .json({
+      message: 'Você precisa estar logado para acessar esta funcionalidade.',
+    });
 };
 
 // Admin authorization middleware
@@ -68,22 +77,43 @@ export const isAdmin: RequestHandler = (req, res, next) => {
   if (req.isAuthenticated() && (req.user as User)?.role === 'admin') {
     return next();
   }
-  auditLog('ACCESS_DENIED', 'Acesso negado: usuário sem permissão de administrador', {
-    userId: (req.user as User)?.id,
-    email: (req.user as User)?.email,
-    ip: req.ip,
-    path: req.originalUrl,
-    method: req.method,
-  });
-  res.status(403).json({ message: "Esta funcionalidade é exclusiva para administradores. Entre em contato com o responsável pelo sistema." });
+  auditLog(
+    'ACCESS_DENIED',
+    'Acesso negado: usuário sem permissão de administrador',
+    {
+      userId: (req.user as User)?.id,
+      email: (req.user as User)?.email,
+      ip: req.ip,
+      path: req.originalUrl,
+      method: req.method,
+    }
+  );
+  res
+    .status(403)
+    .json({
+      message:
+        'Esta funcionalidade é exclusiva para administradores. Entre em contato com o responsável pelo sistema.',
+    });
 };
 
 // User service functions
 export const userService = {
-  async createUser(userData: { email: string; password: string; firstName?: string; lastName?: string; role?: string }): Promise<User> {
+  async hasAdmin(): Promise<boolean> {
+    const admin = await prisma.user.findFirst({
+      where: { role: 'admin' },
+    });
+    return !!admin;
+  },
+  async createUser(userData: {
+    email: string;
+    password: string;
+    firstName?: string;
+    lastName?: string;
+    role?: string;
+  }): Promise<User> {
     // Hash password
     const hashedPassword = await hashPassword(userData.password);
-    
+
     const newUser = await prisma.user.create({
       data: {
         email: userData.email,
@@ -91,7 +121,7 @@ export const userService = {
         firstName: userData.firstName || null,
         lastName: userData.lastName || null,
         role: userData.role || 'user',
-      }
+      },
     });
 
     return newUser;
@@ -99,21 +129,22 @@ export const userService = {
 
   async getUserByEmail(email: string): Promise<User | null> {
     return await prisma.user.findUnique({
-      where: { email }
+      where: { email },
     });
   },
 
   async getUserById(id: string): Promise<User | null> {
     return await prisma.user.findUnique({
-      where: { id }
+      where: { id },
     });
   },
 
   async createAdminUser(): Promise<User> {
     // In production, use environment variables for initial admin
-    const adminEmail = process.env.INITIAL_ADMIN_EMAIL || "admin@confeitaria.com";
-    const adminPassword = process.env.INITIAL_ADMIN_PASSWORD || "admin123!";
-    
+    const adminEmail =
+      process.env.INITIAL_ADMIN_EMAIL || 'admin@confeitaria.com';
+    const adminPassword = process.env.INITIAL_ADMIN_PASSWORD || 'admin123!';
+
     // Check if admin already exists
     const existingAdmin = await this.getUserByEmail(adminEmail);
     if (existingAdmin) {
@@ -123,9 +154,9 @@ export const userService = {
     const adminUser = await this.createUser({
       email: adminEmail,
       password: adminPassword,
-      firstName: "Administrador",
-      lastName: "Sistema",
-      role: "admin"
+      firstName: 'Administrador',
+      lastName: 'Sistema',
+      role: 'admin',
     });
 
     auditLog('ADMIN_CREATION', `Administrador inicial criado: ${adminEmail}`, {
@@ -149,27 +180,38 @@ export const userService = {
 
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
-      data: { role: 'admin' }
+      data: { role: 'admin' },
     });
 
-    auditLog('ADMIN_PROMOTION', `Usuário promovido a administrador: ${userEmail}`, {
-      userId: updatedUser.id,
-      email: updatedUser.email,
-    });
+    auditLog(
+      'ADMIN_PROMOTION',
+      `Usuário promovido a administrador: ${userEmail}`,
+      {
+        userId: updatedUser.id,
+        email: updatedUser.email,
+      }
+    );
 
     console.log(`✓ User ${userEmail} promoted to admin`);
     return updatedUser;
   },
 
   // Create first admin via command line (production strategy)
-  async initializeFirstAdmin(email: string, password: string, firstName: string, lastName?: string): Promise<User> {
+  async initializeFirstAdmin(
+    email: string,
+    password: string,
+    firstName: string,
+    lastName?: string
+  ): Promise<User> {
     // Check if any admin exists
     const existingAdmin = await prisma.user.findFirst({
-      where: { role: 'admin' }
+      where: { role: 'admin' },
     });
 
     if (existingAdmin) {
-      throw new Error('Sistema já possui um administrador. Use a função de promoção.');
+      throw new Error(
+        'Sistema já possui um administrador. Use a função de promoção.'
+      );
     }
 
     // Create the first admin
@@ -178,22 +220,34 @@ export const userService = {
       password,
       firstName,
       lastName: lastName,
-      role: "admin"
+      role: 'admin',
     });
 
-    auditLog('ADMIN_CREATION', `Primeiro administrador criado via CLI: ${email}`, {
-      userId: adminUser.id,
-      email: adminUser.email,
-    });
+    auditLog(
+      'ADMIN_CREATION',
+      `Primeiro administrador criado via CLI: ${email}`,
+      {
+        userId: adminUser.id,
+        email: adminUser.email,
+      }
+    );
 
     console.log(`✓ First admin created: ${email}`);
     return adminUser;
   },
 
-  async updateUser(userId: string, userData: { firstName?: string; lastName?: string; email?: string; role?: string }): Promise<User> {
+  async updateUser(
+    userId: string,
+    userData: {
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+      role?: string;
+    }
+  ): Promise<User> {
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: userData
+      data: userData,
     });
 
     if (!updatedUser) {
@@ -203,16 +257,19 @@ export const userService = {
     return updatedUser;
   },
 
-  async updateUserPassword(userId: string, hashedPassword: string): Promise<void> {
+  async updateUserPassword(
+    userId: string,
+    hashedPassword: string
+  ): Promise<void> {
     await prisma.user.update({
       where: { id: userId },
-      data: { password: hashedPassword }
+      data: { password: hashedPassword },
     });
   },
 
   async deleteUser(userId: string): Promise<void> {
     await prisma.user.delete({
-      where: { id: userId }
+      where: { id: userId },
     });
   },
 
@@ -226,14 +283,14 @@ export const userService = {
         profileImageUrl: true,
         role: true,
         createdAt: true,
-        updatedAt: true
-      }
+        updatedAt: true,
+      },
     });
   },
 
   async getUserWithPassword(userId: string): Promise<User | null> {
     return await prisma.user.findUnique({
-      where: { id: userId }
+      where: { id: userId },
     });
   },
 };

@@ -159,6 +159,7 @@ export const workConfigurationSchema = z.object({
   daysPerMonth: z.number(),
   hourlyRate: z.number(),
   highCostAlertThreshold: z.number(),
+  currencySymbol: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -168,6 +169,7 @@ export const insertWorkConfigurationSchema = z.object({
   daysPerMonth: z.number().positive().default(22.0),
   hourlyRate: z.number().positive().default(25.0),
   highCostAlertThreshold: z.number().positive().default(50.0),
+  currencySymbol: z.string().default("R$"),
 });
 
 export type WorkConfiguration = z.infer<typeof workConfigurationSchema>;

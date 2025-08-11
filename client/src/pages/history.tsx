@@ -43,7 +43,9 @@ export default function History() {
       };
     }
 
-    const increase = ((parseFloat(item.newPrice) - parseFloat(item.oldPrice)) / parseFloat(item.oldPrice)) * 100;
+    const oldPrice = typeof item.oldPrice === 'string' ? parseFloat(item.oldPrice) : item.oldPrice;
+    const newPrice = typeof item.newPrice === 'string' ? parseFloat(item.newPrice) : item.newPrice;
+    const increase = ((newPrice - oldPrice) / oldPrice) * 100;
     acc[month].changes += 1;
     acc[month].totalIncrease += increase;
     acc[month].avgIncrease = acc[month].totalIncrease / acc[month].changes;
@@ -58,9 +60,10 @@ export default function History() {
     .slice(0, 5);
 
   // Buscar nome do ingrediente
-  const getIngredientName = (id: number | null) => {
+  const getIngredientName = (id: string | number | null) => {
     if (!id) return "Ingrediente desconhecido";
-    const ingredient = ingredients.find(i => i.id === id);
+    const numId = typeof id === 'string' ? parseInt(id) : id;
+    const ingredient = ingredients.find(i => Number(i.id) === Number(numId));
     return ingredient?.name || "Ingrediente não encontrado";
   };
 
@@ -134,21 +137,27 @@ export default function History() {
                     </div>
                     <div className="flex-1">
                       <p className="text-gray-900 font-medium">
-                        {getIngredientName(change.ingredientId)}
+                        {getIngredientName(
+                          typeof change.ingredientId === 'string'
+                            ? change.ingredientId
+                            : typeof change.ingredientId === 'number'
+                              ? change.ingredientId
+                              : null
+                        )}
                       </p>
                       <p className="text-gray-600 text-sm">
-                        Preço alterado de {formatCurrency(parseFloat(change.oldPrice))} para {formatCurrency(parseFloat(change.newPrice))}
+                        Preço alterado de {formatCurrency(typeof change.oldPrice === 'string' ? parseFloat(change.oldPrice) : change.oldPrice)} para {formatCurrency(typeof change.newPrice === 'string' ? parseFloat(change.newPrice) : change.newPrice)}
                       </p>
                       <p className="text-xs text-gray-400 mt-1">
                         {formatDate(new Date(change.createdAt))}
                       </p>
                     </div>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${parseFloat(change.newPrice) > parseFloat(change.oldPrice)
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${(typeof change.newPrice === 'string' ? parseFloat(change.newPrice) : change.newPrice) > (typeof change.oldPrice === 'string' ? parseFloat(change.oldPrice) : change.oldPrice)
                       ? "bg-red-100 text-red-700"
                       : "bg-green-100 text-green-700"
                       }`}>
-                      {parseFloat(change.newPrice) > parseFloat(change.oldPrice) ? "+" : ""}
-                      {(((parseFloat(change.newPrice) - parseFloat(change.oldPrice)) / parseFloat(change.oldPrice)) * 100).toFixed(1)}%
+                      {(typeof change.newPrice === 'string' ? parseFloat(change.newPrice) : change.newPrice) > (typeof change.oldPrice === 'string' ? parseFloat(change.oldPrice) : change.oldPrice) ? "+" : ""}
+                      {(((typeof change.newPrice === 'string' ? parseFloat(change.newPrice) : change.newPrice) - (typeof change.oldPrice === 'string' ? parseFloat(change.oldPrice) : change.oldPrice)) / (typeof change.oldPrice === 'string' ? parseFloat(change.oldPrice) : change.oldPrice) * 100).toFixed(1)}%
                     </span>
                   </div>
                 ))}

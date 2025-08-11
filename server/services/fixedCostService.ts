@@ -1,7 +1,7 @@
-import { fixedCostRepository } from "../repositories/fixedCostRepository";
-import { productRepository } from "../repositories/productRepository";
-import { prisma } from "../db";
-import type { FixedCost, WorkConfiguration } from "../../shared/schema";
+import type { FixedCost, WorkConfiguration } from '../../shared/schema';
+import { prisma } from '../db';
+import { fixedCostRepository } from '../repositories/fixedCostRepository';
+import { productRepository } from '../repositories/productRepository';
 
 export class FixedCostService {
   private fixedCostRepository = fixedCostRepository;
@@ -19,22 +19,24 @@ export class FixedCostService {
     const activeCosts = await this.getActiveFixedCosts();
 
     return activeCosts.reduce((total, cost) => {
-      const value = parseFloat(cost.value);
+      const value = parseFloat(String(cost.value));
 
       switch (cost.recurrence) {
-        case "monthly":
+        case 'monthly':
           return total + value;
-        case "quarterly":
-          return total + (value / 3);
-        case "yearly":
-          return total + (value / 12);
+        case 'quarterly':
+          return total + value / 3;
+        case 'yearly':
+          return total + value / 12;
         default:
           return total;
       }
     }, 0);
   }
 
-  async calculateFixedCostPerUnit(estimatedMonthlyProduction: number): Promise<number> {
+  async calculateFixedCostPerUnit(
+    estimatedMonthlyProduction: number
+  ): Promise<number> {
     const monthlyFixedCosts = await this.calculateMonthlyFixedCosts();
 
     if (estimatedMonthlyProduction <= 0) {
@@ -55,7 +57,8 @@ export class FixedCostService {
           daysPerMonth: 22.0,
           hourlyRate: 25.0,
           highCostAlertThreshold: 50.0,
-        }
+          currencySymbol: 'R$',
+        },
       });
       return defaultConfig;
     }
@@ -63,7 +66,9 @@ export class FixedCostService {
     return result;
   }
 
-  async updateWorkConfiguration(data: Partial<WorkConfiguration>): Promise<WorkConfiguration> {
+  async updateWorkConfiguration(
+    data: Partial<WorkConfiguration>
+  ): Promise<WorkConfiguration> {
     const config = await this.getWorkConfiguration();
 
     // Remove all timestamp and ID fields to avoid conflicts
@@ -74,7 +79,7 @@ export class FixedCostService {
       data: {
         ...cleanData,
         updatedAt: new Date(),
-      }
+      },
     });
 
     return updated;
@@ -92,29 +97,34 @@ export class FixedCostService {
     return monthlyFixedCosts / totalWorkHoursPerMonth;
   }
 
-  async calculateProductFixedCost(preparationTimeMinutes: number): Promise<number> {
+  async calculateProductFixedCost(
+    preparationTimeMinutes: number
+  ): Promise<number> {
     const fixedCostPerHour = await this.calculateFixedCostPerHour();
     const preparationTimeHours = preparationTimeMinutes / 60;
 
     return fixedCostPerHour * preparationTimeHours;
   }
 
-  async getFixedCostsByCategory(): Promise<Record<string, { total: number; costs: FixedCost[] }>> {
+  async getFixedCostsByCategory(): Promise<
+    Record<string, { total: number; costs: FixedCost[] }>
+  > {
     const activeCosts = await this.getActiveFixedCosts();
-    const categorized: Record<string, { total: number; costs: FixedCost[] }> = {};
+    const categorized: Record<string, { total: number; costs: FixedCost[] }> =
+      {};
 
-    activeCosts.forEach(cost => {
-      const value = parseFloat(cost.value);
+    activeCosts.forEach((cost) => {
+      const value = parseFloat(String(cost.value));
       let monthlyValue = 0;
 
       switch (cost.recurrence) {
-        case "monthly":
+        case 'monthly':
           monthlyValue = value;
           break;
-        case "quarterly":
+        case 'quarterly':
           monthlyValue = value / 3;
           break;
-        case "yearly":
+        case 'yearly':
           monthlyValue = value / 12;
           break;
       }

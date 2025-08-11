@@ -1,7 +1,6 @@
-import { Request, Response } from "express";
-import { prisma } from "../db";
-import { priceHistoryService } from "../services/priceHistoryService";
-import { productService } from "../services/productService";
+import { Request, Response } from 'express';
+import { prisma } from '../db';
+import { priceHistoryService } from '../services/priceHistoryService';
 
 export const getCostEvolution = async (req: Request, res: Response) => {
   try {
@@ -9,25 +8,30 @@ export const getCostEvolution = async (req: Request, res: Response) => {
 
     let history: any[] = [];
 
-    if (productId && productId !== "general") {
+    if (productId && productId !== 'general') {
       // Dados específicos do produto
-      history = await priceHistoryService.getPriceHistory(undefined, parseInt(productId as string));
+      history = await priceHistoryService.getPriceHistory(
+        undefined,
+        productId as string
+      );
     } else {
       // Dados gerais (todos os produtos)
       history = await priceHistoryService.getPriceHistory();
-      history = history.filter(item => item.productId); // Apenas produtos
+      history = history.filter((item) => item.productId); // Apenas produtos
     }
 
     // Agrupar por mês e calcular médias
     const monthlyData = history.reduce((acc: any, item) => {
       const date = new Date(item.createdAt);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const monthKey = `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, '0')}`;
 
       if (!acc[monthKey]) {
         acc[monthKey] = {
           month: date.toLocaleDateString('pt-BR', { month: 'short' }),
           costs: [],
-          date: date
+          date: date,
         };
       }
 
@@ -41,14 +45,16 @@ export const getCostEvolution = async (req: Request, res: Response) => {
       .slice(-parseInt(months as string)) // Últimos N meses
       .map((data: any) => ({
         month: data.month,
-        cost: data.costs.reduce((sum: number, cost: number) => sum + cost, 0) / data.costs.length,
-        changes: data.costs.length
+        cost:
+          data.costs.reduce((sum: number, cost: number) => sum + cost, 0) /
+          data.costs.length,
+        changes: data.costs.length,
       }));
 
     res.json(evolutionData);
   } catch (error) {
-    console.error("Error getting cost evolution:", error);
-    res.status(500).json({ message: "Erro ao buscar evolução de custos" });
+    console.error('Error getting cost evolution:', error);
+    res.status(500).json({ message: 'Erro ao buscar evolução de custos' });
   }
 };
 
@@ -65,12 +71,15 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     const products = await prisma.product.findMany();
 
     // Filter products by category if specified
-    const filteredProducts = category === 'all' ? products : products.filter(p => p.category === category);
+    const filteredProducts =
+      category === 'all'
+        ? products
+        : products.filter((p) => p.category === category);
 
     // Calculate profit margins (using marginPercentage from database)
     const profitData = filteredProducts.map((product) => ({
       profitMargin: product.marginPercentage,
-      category: product.category
+      category: product.category,
     }));
 
     let avgProfitMargin = 0;
@@ -87,33 +96,42 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       }, {} as Record<string, number[]>);
 
       // Create category breakdown for frontend
-      categoryBreakdown = Object.entries(categoryGroups).map(([cat, margins]) => ({
-        category: cat,
-        avgMargin: margins.reduce((a, b) => a + b, 0) / margins.length,
-        productCount: margins.length
-      }));
+      categoryBreakdown = Object.entries(categoryGroups).map(
+        ([cat, margins]) => ({
+          category: cat,
+          avgMargin: margins.reduce((a, b) => a + b, 0) / margins.length,
+          productCount: margins.length,
+        })
+      );
 
       if (category === 'all') {
         // General average across all categories
-        const categoryAverages = Object.values(categoryGroups).map(margins =>
-          margins.reduce((a, b) => a + b, 0) / margins.length
+        const categoryAverages = Object.values(categoryGroups).map(
+          (margins: number[]) =>
+            margins.reduce((a: number, b: number) => a + b, 0) / margins.length
         );
-        avgProfitMargin = categoryAverages.length > 0
-          ? categoryAverages.reduce((a, b) => a + b, 0) / categoryAverages.length
-          : 0;
+        avgProfitMargin =
+          categoryAverages.length > 0
+            ? categoryAverages.reduce((a: number, b: number) => a + b, 0) /
+              categoryAverages.length
+            : 0;
       } else {
         // Average for specific category
-        const categoryMargins = categoryGroups[category] || [];
-        avgProfitMargin = categoryMargins.length > 0
-          ? categoryMargins.reduce((a, b) => a + b, 0) / categoryMargins.length
-          : 0;
+        const categoryKey = String(category);
+        const categoryMargins = categoryGroups[categoryKey] || [];
+        avgProfitMargin =
+          categoryMargins.length > 0
+            ? categoryMargins.reduce((a: number, b: number) => a + b, 0) /
+              categoryMargins.length
+            : 0;
       }
     } else {
       // Calculate average profit by product
-      const margins = profitData.map(item => item.profitMargin);
-      avgProfitMargin = margins.length > 0
-        ? margins.reduce((a, b) => a + b, 0) / margins.length
-        : 0;
+      const margins = profitData.map((item) => item.profitMargin);
+      avgProfitMargin =
+        margins.length > 0
+          ? margins.reduce((a, b) => a + b, 0) / margins.length
+          : 0;
     }
 
     // Today's changes
@@ -122,13 +140,15 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     const todayChanges = await prisma.priceHistory.count({
       where: {
         createdAt: {
-          gte: today
-        }
-      }
+          gte: today,
+        },
+      },
     });
 
     // Get unique categories for frontend
-    const uniqueCategories = [...new Set(products.map(p => p.category))].sort();
+    const uniqueCategories = Array.from(
+      new Set(products.map((p) => p.category))
+    ).sort();
 
     res.json({
       totalIngredients: ingredientCount,
@@ -138,8 +158,8 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       todayChanges,
     });
   } catch (error) {
-    console.error("Error getting dashboard stats:", error);
-    res.status(500).json({ message: "Erro ao buscar estatísticas" });
+    console.error('Error getting dashboard stats:', error);
+    res.status(500).json({ message: 'Erro ao buscar estatísticas' });
   }
 };
 
@@ -147,59 +167,59 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
   // Strong cache-busting headers
   res.set({
     'Cache-Control': 'no-cache, no-store, must-revalidate, private',
-    'Pragma': 'no-cache',
-    'Expires': '0',
+    Pragma: 'no-cache',
+    Expires: '0',
     'Last-Modified': new Date().toUTCString(),
-    'ETag': Math.random().toString(36)
+    ETag: Math.random().toString(36),
   });
 
   try {
     // Get recent ingredient updates with proper relations
     const recentIngredientUpdates = await prisma.priceHistory.findMany({
-      where: { 
-        ingredientId: { not: null } 
+      where: {
+        ingredientId: { not: null },
       },
-      include: { 
-        ingredient: true 
+      include: {
+        ingredient: true,
       },
       orderBy: { createdAt: 'desc' },
-      take: 5
+      take: 5,
     });
 
-    // Get recent product updates with proper relations  
+    // Get recent product updates with proper relations
     const recentProductUpdates = await prisma.priceHistory.findMany({
-      where: { 
-        productId: { not: null } 
+      where: {
+        productId: { not: null },
       },
-      include: { 
-        product: true 
+      include: {
+        product: true,
       },
       orderBy: { createdAt: 'desc' },
-      take: 5
+      take: 5,
     });
 
     // Format ingredient updates
-    const enrichedIngredientUpdates = recentIngredientUpdates.map(update => ({
+    const enrichedIngredientUpdates = recentIngredientUpdates.map((update) => ({
       id: update.id,
       type: 'ingredient' as const,
-      name: update.ingredient?.name || "Ingrediente desconhecido",
+      name: update.ingredient?.name || 'Ingrediente desconhecido',
       itemId: update.ingredientId,
       oldPrice: update.oldPrice,
       newPrice: update.newPrice,
       changeType: update.changeType,
-      createdAt: update.createdAt
+      createdAt: update.createdAt,
     }));
 
     // Format product updates
-    const enrichedProductUpdates = recentProductUpdates.map(update => ({
+    const enrichedProductUpdates = recentProductUpdates.map((update) => ({
       id: update.id,
       type: 'product' as const,
-      name: update.product?.name || "Produto desconhecido", 
+      name: update.product?.name || 'Produto desconhecido',
       itemId: update.productId,
       oldPrice: update.oldPrice,
       newPrice: update.newPrice,
       changeType: update.changeType,
-      createdAt: update.createdAt
+      createdAt: update.createdAt,
     }));
 
     const responseData = {
@@ -209,7 +229,7 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
 
     res.json(responseData);
   } catch (error) {
-    console.error("Error fetching recent updates:", error);
-    res.status(500).json({ message: "Erro ao buscar atualizações recentes" });
+    console.error('Error fetching recent updates:', error);
+    res.status(500).json({ message: 'Erro ao buscar atualizações recentes' });
   }
 };

@@ -1,9 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle, TrendingUp, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useCurrencySymbol } from "@/contexts/SettingsContext";
 import { formatCurrency } from "@/lib/utils";
 import type { Ingredient, PriceHistory } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
+import { AlertTriangle, TrendingUp, X } from "lucide-react";
 import { useState } from "react";
 
 interface CostAlert {
@@ -17,6 +18,7 @@ interface CostAlert {
 
 export function CostAlerts() {
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
+  const currencySymbol = useCurrencySymbol();
 
   const { data: ingredients = [] } = useQuery<Ingredient[]>({
     queryKey: ["/api/ingredients"],
@@ -38,11 +40,11 @@ export function CostAlerts() {
   // Gerar alertas baseado nos dados e configurações
   const generateAlerts = (): CostAlert[] => {
     const alerts: CostAlert[] = [];
-    
+
     // Se configurações não carregaram ou alertas estão desabilitados, retornar vazio
     if (!settings) return [];
-    
-    const recentHistory = priceHistory.filter(h => 
+
+    const recentHistory = priceHistory.filter(h =>
       h.ingredientId && new Date(h.createdAt).getTime() > Date.now() - (7 * 24 * 60 * 60 * 1000)
     );
 
@@ -52,8 +54,9 @@ export function CostAlerts() {
         const ingredient = ingredients.find(i => i.id === history.ingredientId);
         if (!ingredient) return;
 
-        const oldPrice = parseFloat(history.oldPrice);
-        const newPrice = parseFloat(history.newPrice);
+        // Garante que os argumentos sejam string
+        const oldPrice = parseFloat(String(history.oldPrice));
+        const newPrice = parseFloat(String(history.newPrice));
         const percentage = ((newPrice - oldPrice) / oldPrice) * 100;
 
         // Usar threshold das configurações
@@ -74,16 +77,17 @@ export function CostAlerts() {
     // Alertas de ingredientes com custo alto (apenas se habilitado)
     if (settings.enableCostAlerts) {
       ingredients.forEach(ingredient => {
-        const unitCost = parseFloat(ingredient.price) / parseFloat(ingredient.quantity);
-        
+        // Garante que os argumentos sejam string
+        const unitCost = parseFloat(String(ingredient.price)) / parseFloat(String(ingredient.quantity));
+
         // Usar threshold das configurações
         const threshold = settings.highCostAlertThreshold || 50;
-        
+
         if (unitCost > threshold) {
           alerts.push({
             type: "high_cost",
             title: `Custo elevado detectado`,
-            description: `${ingredient.name} tem custo de ${formatCurrency(unitCost)} por ${ingredient.unit}`,
+            description: `${ingredient.name} tem custo de ${formatCurrency(unitCost, currencySymbol)} por ${ingredient.unit}`,
             ingredient,
             severity: unitCost > threshold * 2 ? "high" : "medium"
           });
@@ -128,7 +132,7 @@ export function CostAlerts() {
         <AlertTriangle className="w-5 h-5 mr-2 text-amber-500" />
         Alertas de Custos ({alerts.length})
       </h3>
-      
+
       {alerts.map((alert, index) => (
         <Alert key={index} className={getSeverityColor(alert.severity)}>
           <div className="flex items-start justify-between">

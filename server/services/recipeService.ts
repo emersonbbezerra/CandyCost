@@ -1,23 +1,31 @@
-
-import { prisma } from "../db";
+import { prisma } from '../db';
 
 export const recipeService = {
   async deleteRecipesByProduct(productId: string) {
     await prisma.recipe.deleteMany({
-      where: { productId }
+      where: { productId },
     });
   },
 
   async createRecipe(data: {
     productId: string;
-    ingredientId: number | null;
+    ingredientId: string | null;
     productIngredientId: string | null;
-    quantity: string;
+    quantity: string | number;
     unit: string;
   }) {
     const newRecipe = await prisma.recipe.create({
-      data
+      data: {
+        productId: data.productId,
+        ingredientId: data.ingredientId,
+        productIngredientId: data.productIngredientId,
+        quantity:
+          typeof data.quantity === 'string'
+            ? parseFloat(data.quantity)
+            : data.quantity,
+        unit: data.unit,
+      },
     });
     return newRecipe;
-  }
+  },
 };

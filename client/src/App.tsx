@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Sidebar } from "@/components/sidebar";
 import { useAuth } from "@/hooks/useAuth";
+import { SettingsProvider } from "@/contexts/SettingsContext";
 import Dashboard from "@/pages/dashboard";
 import Ingredients from "@/pages/ingredients";
 import Products from "@/pages/products";
@@ -70,10 +71,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-gradient-main">
-        <Toaster />
-        <Router />
-      </div>
+      <SettingsProvider>
+        <div className="min-h-screen bg-gradient-main">
+          <Toaster />
+          <Router />
+        </div>
+      </SettingsProvider>
     </QueryClientProvider>
   );
 }

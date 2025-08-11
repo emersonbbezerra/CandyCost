@@ -43,7 +43,7 @@ export function Sidebar() {
     { path: "/system", label: "Sistema", icon: Settings },
   ] : [];
 
-  const allMenuItems = [...menuItems, ...adminItems];
+  const allMenuItems = [...menuItems, ...adminItems, ...systemItems];
 
   const isActive = (path: string) => {
     if (path === "/") return location === "/";

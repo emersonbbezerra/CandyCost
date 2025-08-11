@@ -1,13 +1,15 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { TrendingUp, TrendingDown, ShoppingCart } from "lucide-react";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { useFormatCurrency } from "@/hooks/useFormatCurrency";
+import { formatDate } from "@/lib/utils";
 import type { PriceHistory, Product } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
+import { ShoppingCart, TrendingUp } from "lucide-react";
+import { useState } from "react";
+import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 export default function CostsHistory() {
+  const formatCurrency = useFormatCurrency();
   const [selectedProduct, setSelectedProduct] = useState<string>("all");
 
   const { data: products = [] } = useQuery<Product[]>({
@@ -23,17 +25,17 @@ export default function CostsHistory() {
   const productHistory = allPriceHistory.filter(item => item.productId && !item.ingredientId);
 
   // Filtrar produtos baseado na seleção
-  const filteredProductHistory = productHistory.filter(item => 
+  const filteredProductHistory = productHistory.filter(item =>
     selectedProduct === "all" || item.productId?.toString() === selectedProduct
   );
 
   // Group product history by month for chart
   const productChartData = filteredProductHistory.reduce((acc: Record<string, any>, item) => {
-    const month = new Date(item.createdAt).toLocaleDateString('pt-BR', { 
-      month: 'short', 
-      year: 'numeric' 
+    const month = new Date(item.createdAt).toLocaleDateString('pt-BR', {
+      month: 'short',
+      year: 'numeric'
     });
-    
+
     if (!acc[month]) {
       acc[month] = {
         month,
@@ -42,12 +44,14 @@ export default function CostsHistory() {
         totalIncrease: 0,
       };
     }
-    
-    const increase = ((parseFloat(item.newPrice) - parseFloat(item.oldPrice)) / parseFloat(item.oldPrice)) * 100;
+
+    const oldPrice = typeof item.oldPrice === 'string' ? parseFloat(item.oldPrice) : item.oldPrice;
+    const newPrice = typeof item.newPrice === 'string' ? parseFloat(item.newPrice) : item.newPrice;
+    const increase = ((newPrice - oldPrice) / oldPrice) * 100;
     acc[month].changes += 1;
     acc[month].totalIncrease += increase;
     acc[month].avgIncrease = acc[month].totalIncrease / acc[month].changes;
-    
+
     return acc;
   }, {} as Record<string, any>);
 
@@ -60,7 +64,7 @@ export default function CostsHistory() {
   // Buscar nome do produto
   const getProductName = (id: number | null) => {
     if (!id) return "Produto desconhecido";
-    const product = products.find(p => p.id === id);
+    const product = products.find(p => String(p.id) === String(id));
     return product?.name || "Produto não encontrado";
   };
 
@@ -107,17 +111,17 @@ export default function CostsHistory() {
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={productChartArray}>
                       <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                      <XAxis 
-                        dataKey="month" 
+                      <XAxis
+                        dataKey="month"
                         fontSize={12}
                         tick={{ fill: '#6b7280' }}
                       />
-                      <YAxis 
+                      <YAxis
                         fontSize={12}
                         tick={{ fill: '#6b7280' }}
                         label={{ value: 'Variação (%)', angle: -90, position: 'insideLeft' }}
                       />
-                      <Tooltip 
+                      <Tooltip
                         formatter={(value: any) => [`${value.toFixed(1)}%`, "Variação Média"]}
                         labelFormatter={(label) => `Mês: ${label}`}
                         contentStyle={{
@@ -126,10 +130,10 @@ export default function CostsHistory() {
                           borderRadius: '8px'
                         }}
                       />
-                      <Bar 
-                        dataKey="avgIncrease" 
-                        fill="#10b981" 
-                        name="Variação Média %" 
+                      <Bar
+                        dataKey="avgIncrease"
+                        fill="#10b981"
+                        name="Variação Média %"
                         radius={[4, 4, 0, 0]}
                       />
                     </BarChart>
@@ -146,17 +150,17 @@ export default function CostsHistory() {
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={productChartArray}>
                       <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                      <XAxis 
-                        dataKey="month" 
+                      <XAxis
+                        dataKey="month"
                         fontSize={12}
                         tick={{ fill: '#6b7280' }}
                       />
-                      <YAxis 
+                      <YAxis
                         fontSize={12}
                         tick={{ fill: '#6b7280' }}
                         label={{ value: 'Alterações', angle: -90, position: 'insideLeft' }}
                       />
-                      <Tooltip 
+                      <Tooltip
                         formatter={(value: any) => [`${value}`, "Alterações"]}
                         labelFormatter={(label) => `Mês: ${label}`}
                         contentStyle={{
@@ -165,10 +169,10 @@ export default function CostsHistory() {
                           borderRadius: '8px'
                         }}
                       />
-                      <Line 
-                        type="monotone" 
-                        dataKey="changes" 
-                        stroke="#3b82f6" 
+                      <Line
+                        type="monotone"
+                        dataKey="changes"
+                        stroke="#3b82f6"
                         strokeWidth={3}
                         dot={{ fill: '#3b82f6', strokeWidth: 2, r: 6 }}
                         activeDot={{ r: 8, stroke: '#3b82f6', strokeWidth: 2 }}
@@ -199,34 +203,35 @@ export default function CostsHistory() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-gray-900 font-medium truncate">
-                      {getProductName(change.productId)}
+                      {getProductName(
+                        typeof change.productId === 'string' ? parseInt(change.productId) : change.productId
+                      )}
                     </p>
                     <p className="text-gray-600 text-sm">
-                      Custo alterado de {formatCurrency(parseFloat(change.oldPrice))} para {formatCurrency(parseFloat(change.newPrice))}
+                      Custo alterado de {formatCurrency(typeof change.oldPrice === 'string' ? parseFloat(change.oldPrice) : change.oldPrice)} para {formatCurrency(typeof change.newPrice === 'string' ? parseFloat(change.newPrice) : change.newPrice)}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      Motivo: {change.changeReason || "Alteração automática"}
+                      Motivo: {change.description ? change.description : "Alteração automática"}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">
                       {formatDate(new Date(change.createdAt))}
                     </p>
                   </div>
                   <div className="text-left sm:text-right flex-shrink-0">
-                    <span className={`px-3 py-1 text-sm font-medium rounded-full ${
-                      parseFloat(change.newPrice) > parseFloat(change.oldPrice)
-                        ? "bg-red-100 text-red-700"
-                        : "bg-green-100 text-green-700"
-                    }`}>
-                      {parseFloat(change.newPrice) > parseFloat(change.oldPrice) ? "+" : ""}
-                      {(((parseFloat(change.newPrice) - parseFloat(change.oldPrice)) / parseFloat(change.oldPrice)) * 100).toFixed(1)}%
+                    <span className={`px-3 py-1 text-sm font-medium rounded-full ${(typeof change.newPrice === 'string' ? parseFloat(change.newPrice) : change.newPrice) > (typeof change.oldPrice === 'string' ? parseFloat(change.oldPrice) : change.oldPrice)
+                      ? "bg-red-100 text-red-700"
+                      : "bg-green-100 text-green-700"
+                      }`}>
+                      {(typeof change.newPrice === 'string' ? parseFloat(change.newPrice) : change.newPrice) > (typeof change.oldPrice === 'string' ? parseFloat(change.oldPrice) : change.oldPrice) ? "+" : ""}
+                      {(((typeof change.newPrice === 'string' ? parseFloat(change.newPrice) : change.newPrice) - (typeof change.oldPrice === 'string' ? parseFloat(change.oldPrice) : change.oldPrice)) / (typeof change.oldPrice === 'string' ? parseFloat(change.oldPrice) : change.oldPrice) * 100).toFixed(1)}%
                     </span>
                     <p className="text-xs text-gray-500 mt-1">
-                      {parseFloat(change.newPrice) > parseFloat(change.oldPrice) ? "Aumento" : "Redução"}
+                      {(typeof change.newPrice === 'string' ? parseFloat(change.newPrice) : change.newPrice) > (typeof change.oldPrice === 'string' ? parseFloat(change.oldPrice) : change.oldPrice) ? "Aumento" : "Redução"}
                     </p>
                   </div>
                 </div>
               ))}
-              
+
               {recentProductChanges.length === 0 && (
                 <div className="text-center py-12 text-gray-500">
                   <ShoppingCart className="w-12 h-12 text-gray-300 mx-auto mb-4" />

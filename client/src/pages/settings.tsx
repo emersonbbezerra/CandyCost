@@ -130,6 +130,7 @@ export default function Settings() {
           : "Suas preferências pessoais foram atualizadas!"
       );
       queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
     },
     onError: (error: any) => {
       errorToast(

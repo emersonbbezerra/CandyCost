@@ -1,29 +1,27 @@
-import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { FixedCostForm } from "@/components/fixed-cost-form";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
 import { FIXED_COST_CATEGORIES, RECURRENCE_TYPES } from "@shared/constants";
 import type { FixedCost, InsertFixedCost } from "@shared/schema";
-import { 
-  Calculator, 
-  Edit, 
-  Plus, 
-  Trash2, 
-  Search, 
-  Filter,
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Calculator,
   DollarSign,
+  Edit,
+  Plus,
+  Search,
   ToggleLeft,
   ToggleRight,
-  TrendingUp
+  Trash2
 } from "lucide-react";
+import { useState } from "react";
 
 export default function FixedCosts() {
   const [selectedFixedCost, setSelectedFixedCost] = useState<FixedCost | null>(null);
@@ -58,7 +56,7 @@ export default function FixedCosts() {
 
 
   const createMutation = useMutation({
-    mutationFn: (data: InsertFixedCost) => 
+    mutationFn: (data: InsertFixedCost) =>
       apiRequest("POST", "/api/fixed-costs", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs"] });
@@ -143,20 +141,21 @@ export default function FixedCosts() {
 
   const filteredFixedCosts = fixedCosts.filter(cost => {
     const matchesSearch = cost.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         cost.category.toLowerCase().includes(searchTerm.toLowerCase());
+      cost.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === "all" || cost.category === categoryFilter;
-    const matchesStatus = statusFilter === "all" || 
-                         (statusFilter === "active" && cost.isActive) ||
-                         (statusFilter === "inactive" && !cost.isActive);
+    const matchesStatus = statusFilter === "all" ||
+      (statusFilter === "active" && cost.isActive) ||
+      (statusFilter === "inactive" && !cost.isActive);
 
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
   const handleSubmit = (data: InsertFixedCost) => {
     if (selectedFixedCost) {
-      updateMutation.mutate({ id: selectedFixedCost.id, data });
+      updateMutation.mutate({ id: typeof selectedFixedCost.id === 'string' ? parseInt(selectedFixedCost.id) : selectedFixedCost.id, data });
     } else {
-      createMutation.mutate(data);
+      // Corrige: se algum campo precisa ser number, converta aqui
+      createMutation.mutate({ ...data, value: typeof data.value === 'string' ? parseFloat(data.value) : data.value });
     }
   };
 
@@ -170,7 +169,8 @@ export default function FixedCosts() {
   };
 
   const handleToggleActive = (fixedCost: FixedCost) => {
-    toggleActiveMutation.mutate(fixedCost.id);
+    // Corrige: se espera string, converta para string
+    toggleActiveMutation.mutate(typeof fixedCost.id === 'string' ? parseInt(fixedCost.id) : fixedCost.id);
   };
 
   const getRecurrenceLabel = (recurrence: string) => {
@@ -178,8 +178,8 @@ export default function FixedCosts() {
     return found?.label || recurrence;
   };
 
-  const calculateMonthlyValue = (value: string, recurrence: string) => {
-    const numValue = parseFloat(value);
+  const calculateMonthlyValue = (value: string | number, recurrence: string) => {
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
     switch (recurrence) {
       case "monthly": return numValue;
       case "quarterly": return numValue / 3;
@@ -343,7 +343,7 @@ export default function FixedCosts() {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Valor:</span>
                   <span className="font-semibold">
-                    {formatCurrency(parseFloat(fixedCost.value))}
+                    {formatCurrency(typeof fixedCost.value === 'string' ? parseFloat(fixedCost.value) : fixedCost.value)}
                   </span>
                 </div>
 
@@ -397,12 +397,12 @@ export default function FixedCosts() {
 
       {/* Delete Confirmation Dialog */}
       <ConfirmationDialog
-        isOpen={!!deleteConfirm}
-        onClose={() => setDeleteConfirm(null)}
-        onConfirm={() => deleteConfirm && deleteMutation.mutate(deleteConfirm.id)}
+        open={!!deleteConfirm}
+        onOpenChange={open => { if (!open) setDeleteConfirm(null); }}
+        onConfirm={() => deleteConfirm && deleteMutation.mutate(typeof deleteConfirm.id === 'string' ? parseInt(deleteConfirm.id) : deleteConfirm.id)}
         title="Excluir Custo Fixo"
         description={`Tem certeza que deseja excluir "${deleteConfirm?.name}"? Esta ação não pode ser desfeita.`}
-        isLoading={deleteMutation.isPending}
+      // isLoading removido, não existe na interface do componente
       />
     </div>
   );

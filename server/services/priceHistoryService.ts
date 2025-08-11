@@ -1,4 +1,4 @@
-import { priceHistoryRepository } from "../repositories/priceHistoryRepository";
+import { priceHistoryRepository } from '../repositories/priceHistoryRepository';
 
 export const priceHistoryService = {
   async getPriceHistory(ingredientId?: string, productId?: string) {
@@ -13,24 +13,26 @@ export const priceHistoryService = {
     changeReason?: string | null;
     createdAt?: Date;
   }) {
-    console.log("Creating price history:", {
+    console.log('Creating price history:', {
       ingredientId: data.ingredientId,
       productId: data.productId,
       oldPrice: data.oldPrice,
       newPrice: data.newPrice,
       changeReason: data.changeReason,
-      createdAt: data.createdAt
+      createdAt: data.createdAt,
     });
 
     const result = await priceHistoryRepository.create({
-      ingredientId: data.ingredientId || null,
-      productId: data.productId || null,
+      ingredientId: data.ingredientId ?? undefined,
+      productId: data.productId ?? undefined,
       oldPrice: parseFloat(data.oldPrice),
       newPrice: parseFloat(data.newPrice),
-      changeReason: data.changeReason || null,
-      itemType: data.ingredientId ? 'ingredient' : 'product'
+      description: data.changeReason ?? undefined,
+      itemType: data.ingredientId ? 'ingredient' : 'product',
+      itemName: '', // valor padrão, ajuste conforme necessário
+      changeType: 'manual', // valor padrão, ajuste conforme necessário
     });
-    console.log("Price history created with ID:", result?.id);
+    console.log('Price history created with ID:', result?.id);
     return result;
   },
 };

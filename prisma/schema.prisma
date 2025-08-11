@@ -125,6 +125,7 @@ model WorkConfiguration {
   daysPerMonth           Float    @default(22.0)
   hourlyRate             Float    @default(25.0)
   highCostAlertThreshold Float    @default(50.0)
+  currencySymbol         String   @default("R$")
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 

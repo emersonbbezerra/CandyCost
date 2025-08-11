@@ -81,17 +81,17 @@ export function ExportReports() {
         totalIngredients: ingredients.length,
         totalProducts: products.length,
         totalPriceChanges: priceHistory.length,
-        avgIngredientCost: ingredients.reduce((sum, ing) => sum + parseFloat(ing.price), 0) / ingredients.length
+        avgIngredientCost: ingredients.reduce((sum, ing) => sum + parseFloat(String(ing.price)), 0) / ingredients.length
       },
       ingredients: ingredients.map(ing => ({
         ...ing,
-        unitCost: parseFloat(ing.price) / parseFloat(ing.quantity)
+        unitCost: parseFloat(String(ing.price)) / parseFloat(String(ing.quantity))
       })),
       products,
       priceHistory: priceHistory.map(hist => ({
         ...hist,
         percentageChange: hist.oldPrice && hist.newPrice ?
-          ((parseFloat(hist.newPrice) - parseFloat(hist.oldPrice)) / parseFloat(hist.oldPrice) * 100).toFixed(2) + "%"
+          ((parseFloat(String(hist.newPrice)) - parseFloat(String(hist.oldPrice))) / parseFloat(String(hist.oldPrice)) * 100).toFixed(2) + "%"
           : null
       }))
     };

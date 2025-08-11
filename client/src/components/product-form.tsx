@@ -1,37 +1,46 @@
-import { useForm, useFieldArray } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Trash2 } from "lucide-react";
-import { insertProductSchema, insertRecipeSchema, type Product, type Ingredient } from "@shared/schema";
-import { PRODUCT_CATEGORIES, INGREDIENT_CATEGORIES, UNITS } from "@shared/constants";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { PRODUCT_CATEGORIES, UNITS } from "@shared/constants";
+import { type Ingredient, type Product, type Recipe } from "@shared/schema";
+// import { z } from "zod"; // já importado acima
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Plus, Trash2 } from "lucide-react";
+import { useEffect } from "react";
+import { useFieldArray, useForm } from "react-hook-form";
+import { z } from "zod";
 
-const productSchema = insertProductSchema.extend({
-  recipes: z.array(
-    insertRecipeSchema.omit({ productId: true }).extend({
-      ingredientId: z.number().nullable(),
-      productIngredientId: z.number().nullable(),
-    })
-  ).optional(),
-  preparationTimeMinutes: z.number().min(1, "Tempo de preparo deve ser maior que 0").default(60),
+
+// Schema do formulário incluindo recipes
+const productFormSchema = z.object({
+  name: z.string().min(1),
+  category: z.string().min(1),
+  description: z.string().optional(),
+  isAlsoIngredient: z.boolean(),
+  marginPercentage: z.number().min(0),
+  preparationTimeMinutes: z.number().optional(),
+  recipes: z.array(z.object({
+    ingredientId: z.string().optional(),
+    productIngredientId: z.string().optional(),
+    quantity: z.number().min(0),
+    unit: z.string().min(1),
+  })),
 });
 
-interface ProductFormProps {
+type ProductFormValues = z.infer<typeof productFormSchema>;
+
+export interface ProductFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  product?: Product & { recipes?: any[] };
+  product?: (Product & { recipes?: Array<Partial<Recipe>> });
 }
 
 export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
@@ -48,20 +57,20 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
 
   const availableProductIngredients = products.filter((p) => p.isAlsoIngredient && p.id !== product?.id);
 
-  const form = useForm<z.infer<typeof productSchema>>({
-    resolver: zodResolver(productSchema),
+  const form = useForm<ProductFormValues>({
+    resolver: zodResolver(productFormSchema),
     defaultValues: {
       name: product?.name || "",
       category: product?.category || "",
       description: product?.description || "",
-      isAlsoIngredient: product?.isAlsoIngredient || false,
-      marginPercentage: product?.marginPercentage || "60",
-      preparationTimeMinutes: product?.preparationTimeMinutes || 60,
+      isAlsoIngredient: product?.isAlsoIngredient ?? false,
+      marginPercentage: typeof product?.marginPercentage === "number" ? product.marginPercentage : 60,
+      preparationTimeMinutes: typeof product?.preparationTimeMinutes === "number" ? product.preparationTimeMinutes : 60,
       recipes: product?.recipes?.map((r) => ({
-        ingredientId: r.ingredientId,
-        productIngredientId: r.productIngredientId,
-        quantity: r.quantity,
-        unit: r.unit,
+        ingredientId: r.ingredientId ? String(r.ingredientId) : undefined,
+        productIngredientId: r.productIngredientId ? String(r.productIngredientId) : undefined,
+        quantity: typeof r.quantity === "number" ? r.quantity : 0,
+        unit: r.unit ?? "kg",
       })) || [],
     },
   });
@@ -71,32 +80,29 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
     name: "recipes",
   });
 
-  // Atualizar formulário quando o produto muda
   useEffect(() => {
     if (product) {
-      const formData = {
+      form.reset({
         name: product.name || "",
         category: product.category || "",
         description: product.description || "",
         isAlsoIngredient: Boolean(product.isAlsoIngredient),
-        marginPercentage: String(product.marginPercentage || "60"),
-        preparationTimeMinutes: Number(product.preparationTimeMinutes) || 60,
+        marginPercentage: typeof product.marginPercentage === "number" ? product.marginPercentage : 60,
+        preparationTimeMinutes: typeof product.preparationTimeMinutes === "number" ? product.preparationTimeMinutes : 60,
         recipes: Array.isArray(product.recipes) ? product.recipes.map((r) => ({
-          ingredientId: r.ingredientId || null,
-          productIngredientId: r.productIngredientId || null,
-          quantity: String(r.quantity || ""),
-          unit: String(r.unit || "kg"),
+          ingredientId: r.ingredientId ? String(r.ingredientId) : undefined,
+          productIngredientId: r.productIngredientId ? String(r.productIngredientId) : undefined,
+          quantity: typeof r.quantity === "number" ? r.quantity : 0,
+          unit: r.unit ?? "kg",
         })) : [],
-      };
-      console.log("Resetando formulário com dados:", formData);
-      form.reset(formData);
+      });
     } else {
       form.reset({
         name: "",
         category: "",
         description: "",
         isAlsoIngredient: false,
-        marginPercentage: "60",
+        marginPercentage: 60,
         preparationTimeMinutes: 60,
         recipes: [],
       });
@@ -104,15 +110,13 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
   }, [product, form]);
 
   const createMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof productSchema>) => {
+    mutationFn: async (data: ProductFormValues) => {
       const { recipes, ...productData } = data;
       const response = await apiRequest("POST", "/api/products", productData);
       const newProduct = await response.json();
-
       if (recipes && recipes.length > 0) {
         await apiRequest("POST", `/api/products/${newProduct.id}/recipes`, recipes);
       }
-
       return newProduct;
     },
     onSuccess: () => {
@@ -138,15 +142,13 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof productSchema>) => {
+    mutationFn: async (data: ProductFormValues) => {
       const { recipes, ...productData } = data;
       const response = await apiRequest("PUT", `/api/products/${product?.id}`, productData);
       const updatedProduct = await response.json();
-
       if (recipes) {
         await apiRequest("POST", `/api/products/${product?.id}/recipes`, recipes);
       }
-
       return updatedProduct;
     },
     onSuccess: () => {
@@ -170,7 +172,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof productSchema>) => {
+  const onSubmit = (data: ProductFormValues) => {
     if (product) {
       updateMutation.mutate(data);
     } else {
@@ -271,7 +273,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                         min="0"
                         placeholder="60"
                         {...field}
-                        onChange={(e) => field.onChange(e.target.value)}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
                       />
                     </FormControl>
                     <FormMessage />
@@ -291,7 +293,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                         min="1"
                         placeholder="60"
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 60)}
+                        onChange={(e) => field.onChange(Number(e.target.value) || 60)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -331,7 +333,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => append({ ingredientId: null, productIngredientId: null, quantity: "", unit: "kg" })}
+                    onClick={() => append({ ingredientId: undefined, productIngredientId: undefined, quantity: 0, unit: "kg" })}
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Adicionar Ingrediente
@@ -353,16 +355,16 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                                 if (value === "null") {
                                   field.onChange(null);
                                   // Also clear productIngredientId
-                                  form.setValue(`recipes.${index}.productIngredientId`, null);
+                                  form.setValue(`recipes.${index}.productIngredientId`, undefined);
                                 } else if (value.startsWith("product-")) {
                                   // This is a product ingredient
                                   const productId = parseInt(value.replace("product-", ""));
                                   field.onChange(null); // Clear ingredientId
-                                  form.setValue(`recipes.${index}.productIngredientId`, productId);
+                                  form.setValue(`recipes.${index}.productIngredientId`, String(productId));
                                 } else {
                                   // This is a regular ingredient
                                   field.onChange(parseInt(value));
-                                  form.setValue(`recipes.${index}.productIngredientId`, null);
+                                  form.setValue(`recipes.${index}.productIngredientId`, undefined);
                                 }
                               }}
                               value={(() => {
@@ -422,7 +424,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                           <FormItem>
                             <FormLabel>Quantidade</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.001" placeholder="0.5" {...field} />
+                              <Input type="number" step="0.001" placeholder="0.5" {...field} onChange={e => field.onChange(Number(e.target.value))} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

@@ -1,4 +1,3 @@
-import { formatCurrency } from "@/lib/utils";
 import { Calculator, Cookie, Sprout, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "./ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -15,16 +14,16 @@ interface StatsCardsProps {
     onCategoryChange: (category: string) => void;
 }
 
-export function StatsCards({ 
-    totalIngredients, 
-    totalProducts, 
-    avgProfitMargin, 
-    profitType, 
+export function StatsCards({
+    totalIngredients,
+    totalProducts,
+    avgProfitMargin,
+    profitType,
     selectedCategory,
     availableCategories,
-    todayChanges, 
+    todayChanges,
     onProfitTypeChange,
-    onCategoryChange 
+    onCategoryChange
 }: StatsCardsProps) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -103,9 +102,9 @@ export function StatsCards({
                     </div>
                     <div className="mt-4 flex items-center text-sm">
                         <span className="text-gray-500">
-                            {profitType === 'product' ? 'média por produto' : 
-                             selectedCategory === 'all' ? 'média geral por categoria' : 
-                             `média da categoria ${selectedCategory}`}
+                            {profitType === 'product' ? 'média por produto' :
+                                selectedCategory === 'all' ? 'média geral por categoria' :
+                                    `média da categoria ${selectedCategory}`}
                         </span>
                     </div>
                 </CardContent>

@@ -12,7 +12,7 @@ import { PRODUCT_CATEGORIES } from "@shared/constants";
 import type { Product, ProductCost } from "@shared/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChefHat, Edit, Filter, Layers, Plus, Search, Trash2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 type ProductWithCost = Product & { cost?: ProductCost };
 
@@ -121,7 +121,9 @@ export default function Products() {
 
   const confirmDelete = () => {
     if (productToDelete) {
-      deleteMutation.mutate(productToDelete.id);
+      // Garante que o id seja do tipo number
+      const id = typeof productToDelete.id === 'string' ? Number(productToDelete.id) : productToDelete.id;
+      deleteMutation.mutate(id);
       setDeleteConfirmOpen(false);
       setProductToDelete(null);
     }
