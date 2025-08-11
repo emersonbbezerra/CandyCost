@@ -467,7 +467,7 @@ export default function Ingredients() {
                           onClick={() => handleDelete(ingredient)}
                           disabled={deleteMutation.isPending}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4 text-red-600" />
                         </Button>
                       </div>
                     </TableCell>
@@ -510,7 +510,7 @@ export default function Ingredients() {
                         onClick={() => handleDelete(ingredient)}
                         disabled={deleteMutation.isPending}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4 text-red-600" />
                       </Button>
                     </div>
                   </div>

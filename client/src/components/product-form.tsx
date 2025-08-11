@@ -550,7 +550,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                         onClick={() => remove(index)}
                         className="h-9 w-9 p-0"
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <Trash2 className="w-3 h-3 text-red-600" />
                       </Button>
                     </div>
                   </div>

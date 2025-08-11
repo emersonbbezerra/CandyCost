@@ -395,7 +395,7 @@ export default function Products() {
                     onClick={() => handleDelete(product)}
                     disabled={deleteMutation.isPending}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-4 h-4 text-red-600" />
                   </Button>
                 </div>
                 <div className="text-xs text-gray-400">
