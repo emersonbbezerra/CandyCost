@@ -388,6 +388,9 @@ export default function FixedCosts() {
         onConfirm={() => deleteConfirm && deleteMutation.mutate(typeof deleteConfirm.id === 'string' ? parseInt(deleteConfirm.id) : deleteConfirm.id)}
         title="Excluir Custo Fixo"
         description={`Tem certeza que deseja excluir "${deleteConfirm?.name}"? Esta ação não pode ser desfeita.`}
+        variant="destructive"
+        confirmText="Excluir"
+        cancelText="Cancelar"
       // isLoading removido, não existe na interface do componente
       />
     </div>
