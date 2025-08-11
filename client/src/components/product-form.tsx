@@ -12,9 +12,20 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { PRODUCT_CATEGORIES, UNITS } from "@shared/constants";
 import { type Ingredient, type Product, type Recipe } from "@shared/schema";
 // import { z } from "zod"; // já importado acima
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -85,6 +96,21 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
     control: form.control,
     name: "recipes",
   });
+
+  // Confirmação de remoção de ingrediente da receita
+  const [confirmRemoveIndex, setConfirmRemoveIndex] = useState<number | null>(null);
+  const [isRemoving, setIsRemoving] = useState(false);
+  const requestRemove = (index: number) => setConfirmRemoveIndex(index);
+  const confirmRemove = async () => {
+    if (confirmRemoveIndex === null) return;
+    try {
+      setIsRemoving(true);
+      remove(confirmRemoveIndex);
+    } finally {
+      setIsRemoving(false);
+      setConfirmRemoveIndex(null);
+    }
+  };
 
   useEffect(() => {
     if (product) {
@@ -543,15 +569,34 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                     </div>
 
                     <div className="col-span-1 flex justify-center">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => remove(index)}
-                        className="h-9 w-9 p-0"
-                      >
-                        <Trash2 className="w-3 h-3 text-red-600" />
-                      </Button>
+                      <AlertDialog open={confirmRemoveIndex === index} onOpenChange={(open) => !open && setConfirmRemoveIndex(null)}>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => requestRemove(index)}
+                            className="h-9 w-9 p-0"
+                            title="Remover ingrediente"
+                          >
+                            <Trash2 className="w-3 h-3 text-red-600" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Remover ingrediente?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Esta ação remove o ingrediente desta receita antes de salvar o produto. Tem certeza que deseja continuar?
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel disabled={isRemoving}>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction variant="destructive" onClick={confirmRemove} disabled={isRemoving}>
+                              {isRemoving ? "Removendo..." : "Remover"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                 ))}
