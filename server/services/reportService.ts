@@ -3,12 +3,7 @@ import { productService } from './productService';
 
 export const reportService = {
   async getIngredients() {
-    const ingredients = await prisma.ingredient.findMany();
-    return ingredients.map((ingredient) => ({
-      ...ingredient,
-      quantity: ingredient.quantity.toString(),
-      price: ingredient.price.toString(),
-    }));
+    return await prisma.ingredient.findMany();
   },
 
   async getProducts() {

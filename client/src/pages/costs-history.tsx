@@ -203,9 +203,7 @@ export default function CostsHistory() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-gray-900 font-medium truncate">
-                      {getProductName(
-                        typeof change.productId === 'string' ? parseInt(change.productId) : change.productId
-                      )}
+                      {change.itemName || "Produto desconhecido"}
                     </p>
                     <p className="text-gray-600 text-sm">
                       Custo alterado de {formatCurrency(typeof change.oldPrice === 'string' ? parseFloat(change.oldPrice) : change.oldPrice)} para {formatCurrency(typeof change.newPrice === 'string' ? parseFloat(change.newPrice) : change.newPrice)}

@@ -335,16 +335,23 @@ export const productService = {
       );
 
       for (const recipe of recipesWithIngredient) {
-        const ingredientCostDifference =
-          (newPrice - oldPrice) * recipe.quantity;
-        console.log(
-          `Product ${recipe.product.name} cost change: ${ingredientCostDifference}`
+        // Calcular custo total do produto antes da alteração
+        const oldProductCost = await this.calculateProductCostAtPrice(
+          String(recipe.product.id),
+          ingredientId,
+          String(oldPrice)
         );
-
+        // Calcular custo total do produto depois da alteração
+        const newProductCost = await this.calculateProductCost(
+          String(recipe.product.id)
+        );
         // Criar entrada no histórico de preços para o produto
         await priceHistoryService.createPriceHistory({
-          oldPrice: String(0), // Não temos o custo total anterior facilmente disponível
-          newPrice: String(ingredientCostDifference), // Registrar a diferença de custo
+          itemType: 'product',
+          itemName: recipe.product?.name || 'Produto desconhecido',
+          oldPrice: oldProductCost.totalCost ?? 0,
+          newPrice: newProductCost.totalCost ?? 0,
+          changeType: 'ingredient_update',
           changeReason: `Alteração de preço do ingrediente: ${
             recipe.ingredient?.name || 'desconhecido'
           }`,

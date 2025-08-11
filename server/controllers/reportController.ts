@@ -66,8 +66,7 @@ export const getReports = async (_req: Request, res: Response) => {
 
     const criticalIngredients = ingredients
       .map((ingredient) => {
-        const costPerUnit =
-          parseFloat(ingredient.price) / parseFloat(ingredient.quantity);
+        const costPerUnit = ingredient.price / ingredient.quantity;
         const usageCount = ingredientUsage.get(ingredient.id) || 0;
         return {
           ingredient,

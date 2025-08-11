@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
+import { priceHistoryService } from '../services/priceHistoryService';
 import { productService } from '../services/productService';
 
 export const getIngredients = async (_req: Request, res: Response) => {
@@ -63,13 +64,24 @@ export const updateIngredient = async (req: Request, res: Response) => {
 
     const result = await productService.updateIngredient(id, ingredientData);
 
-    // Se o preço mudou, rastrear mudanças nos produtos afetados
+    // Se o preço mudou, registrar histórico do ingrediente e rastrear produtos afetados
     if (
       oldIngredient &&
       ingredientData.price &&
       oldIngredient.price !== ingredientData.price
     ) {
       console.log('Price changed, tracking affected products...');
+      // Registrar histórico do próprio ingrediente
+      await priceHistoryService.createPriceHistory({
+        itemType: 'ingredient',
+        itemName: oldIngredient.name,
+        oldPrice: oldIngredient.price,
+        newPrice: ingredientData.price,
+        changeType: 'manual',
+        changeReason: 'Alteração manual de preço',
+        ingredientId: id,
+      });
+      // Rastrear produtos afetados
       await productService.trackCostChangesForAffectedProducts(
         id,
         oldIngredient.price,
