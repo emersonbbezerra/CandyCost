@@ -1,12 +1,9 @@
-import { useState } from "react";
-import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Calculator,
   ChefHat,
   Cookie,
-  DollarSign,
   FileText,
   Home,
   LogOut,
@@ -14,10 +11,12 @@ import {
   Settings,
   Sprout,
   TrendingUp,
-  Users,
   User,
+  Users,
   X
 } from "lucide-react";
+import { useState } from "react";
+import { Link, useLocation } from "wouter";
 
 const menuItems = [
   { path: "/", label: "Dashboard", icon: Home },
@@ -28,22 +27,11 @@ const menuItems = [
   { path: "/reports", label: "Relatórios", icon: FileText },
 ];
 
-const systemItems = [
-  { path: "/settings", label: "Configurações", icon: Settings },
-  { path: "/profile", label: "Perfil", icon: User },
-];
-
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [location] = useLocation();
   const { user, logout, isLogoutPending } = useAuth();
-
-  const adminItems = user?.role === 'admin' ? [
-    { path: "/user-management", label: "Usuários", icon: Users },
-    { path: "/system", label: "Sistema", icon: Settings },
-  ] : [];
-
-  const allMenuItems = [...menuItems, ...adminItems, ...systemItems];
 
   const isActive = (path: string) => {
     if (path === "/") return location === "/";
@@ -91,17 +79,19 @@ export function Sidebar() {
         {/* Navigation */}
         <nav className="flex-1 p-4">
           <ul className="space-y-2">
-            {allMenuItems.map((item) => (
+            {menuItems.map((item) => (
               <li key={item.path}>
                 <Link href={item.path}>
                   <Button
                     variant={isActive(item.path) ? "default" : "ghost"}
-                    className={`w-full justify-start text-left ${
-                      isActive(item.path)
-                        ? "bg-pink-600 text-white hover:bg-pink-700"
-                        : "text-gray-700 hover:bg-gray-100"
-                    }`}
-                    onClick={() => setIsOpen(false)}
+                    className={`w-full justify-start text-left ${isActive(item.path)
+                      ? "bg-pink-600 text-white hover:bg-pink-700"
+                      : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                    onClick={() => {
+                      setIsOpen(false);
+                      setSettingsOpen(false);
+                    }}
                   >
                     <item.icon className="h-4 w-4 mr-3" />
                     {item.label}
@@ -109,6 +99,56 @@ export function Sidebar() {
                 </Link>
               </li>
             ))}
+            {/* Configurações com submenu */}
+            <li>
+              <Button
+                variant={isActive("/settings") ? "default" : "ghost"}
+                className={`w-full justify-start text-left flex items-center ${isActive("/settings")
+                  ? "bg-pink-600 text-white hover:bg-pink-700"
+                  : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                onClick={() => setSettingsOpen((open) => !open)}
+              >
+                <Settings className="h-4 w-4 mr-3" />
+                Configurações
+                <span className="ml-auto">{settingsOpen ? "▲" : "▼"}</span>
+              </Button>
+              {/* Submenu para admin */}
+              {user?.role === 'admin' && settingsOpen && (
+                <ul className="ml-8 mt-2 space-y-1">
+                  <li>
+                    <Link href="/user-management">
+                      <Button
+                        variant={isActive("/user-management") ? "default" : "ghost"}
+                        className={`w-full justify-start text-left ${isActive("/user-management")
+                          ? "bg-pink-600 text-white hover:bg-pink-700"
+                          : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <Users className="h-4 w-4 mr-3" />
+                        Usuários
+                      </Button>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/system">
+                      <Button
+                        variant={isActive("/system") ? "default" : "ghost"}
+                        className={`w-full justify-start text-left ${isActive("/system")
+                          ? "bg-pink-600 text-white hover:bg-pink-700"
+                          : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <Settings className="h-4 w-4 mr-3" />
+                        Sistema
+                      </Button>
+                    </Link>
+                  </li>
+                </ul>
+              )}
+            </li>
           </ul>
         </nav>
 
