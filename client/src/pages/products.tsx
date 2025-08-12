@@ -310,35 +310,75 @@ export default function Products() {
                   </div>
                   <div className="flex flex-col gap-1">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Preço de Venda:</span>
-                      <span className="font-semibold text-blue-700">
-                        {formatCurrency(product.salePrice)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Rendimento:</span>
                       <span className="font-semibold text-gray-900">
                         {product.yield} {product.yieldUnit}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Preço por unidade:</span>
+                      <span className="text-gray-600">Custo por unidade:</span>
                       <span className="font-semibold text-blue-700">
-                        {product.yield > 0 ? formatCurrency(product.salePrice / product.yield) : '-'} / {product.yieldUnit}
+                        {product.yield > 0 ? formatCurrency(product.cost.totalCost / product.yield) : '-'} / {product.yieldUnit}
                       </span>
                     </div>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Preço Sugerido ({product.marginPercentage}%):</span>
-                    <span className="font-semibold text-primary">
-                      {formatCurrency(product.cost.suggestedPrice)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Margem de Lucro:</span>
-                    <span className="font-semibold text-green-600">
-                      {formatCurrency(product.cost.margin)}
-                    </span>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Preço Sugerido ({product.marginPercentage}%):</span>
+                      <span className="font-semibold text-primary">
+                        {product.yield > 0
+                          ? `${formatCurrency(product.cost.suggestedPrice / product.yield)} / ${product.yieldUnit}`
+                          : '-'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm items-center rounded-md px-2 py-1 bg-blue-50 border border-blue-200">
+                      <span className="text-blue-800 font-medium">Preço de Venda (unit.)</span>
+                      <span className="font-bold text-blue-700">
+                        {product.cost && product.yield > 0
+                          ? `${formatCurrency(product.cost.salePricePerUnit)} / ${product.yieldUnit}`
+                          : (product.yield > 0 ? `${formatCurrency(product.salePrice / product.yield)} / ${product.yieldUnit}` : formatCurrency(product.salePrice))}
+                      </span>
+                    </div>
+                    {(() => {
+                      const yieldValue = product.yield || 1;
+                      const invalid = yieldValue <= 0 || product.salePrice == null;
+                      let costPerUnit = 0;
+                      let profitPerUnitRaw = 0;
+                      let marginPercentRaw = 0;
+                      let salePricePerUnit = 0;
+                      if (!invalid) {
+                        costPerUnit = product.cost.totalCost / yieldValue;
+                        salePricePerUnit = product.cost?.salePricePerUnit ?? (product.salePrice / yieldValue);
+                        profitPerUnitRaw = salePricePerUnit - costPerUnit;
+                        marginPercentRaw = salePricePerUnit > 0 ? (profitPerUnitRaw / salePricePerUnit) * 100 : 0;
+                      }
+                      // Tolerância para tratar quase zero como neutro (evitar -R$ 0,00 e -0.1%)
+                      const EPS_PROFIT = 0.005; // meio centavo
+                      const EPS_MARGIN = 0.05;   // 0.05%
+                      const isNeutral = !invalid && Math.abs(profitPerUnitRaw) < EPS_PROFIT;
+                      const profitPerUnit = isNeutral ? 0 : profitPerUnitRaw;
+                      const marginPercent = isNeutral || Math.abs(marginPercentRaw) < EPS_MARGIN ? 0 : marginPercentRaw;
+                      // Definir classes dinâmicas
+                      let bg = 'bg-gray-50';
+                      let border = 'border-gray-200';
+                      let labelColor = 'text-gray-700';
+                      let valueColor = 'text-gray-700';
+                      if (!invalid) {
+                        if (profitPerUnit > 0) {
+                          bg = 'bg-green-50'; border = 'border-green-200'; labelColor = 'text-green-800'; valueColor = 'text-green-600';
+                        } else if (profitPerUnit < 0) {
+                          bg = 'bg-red-50'; border = 'border-red-200'; labelColor = 'text-red-800'; valueColor = 'text-red-600';
+                        } else { // neutro
+                          bg = 'bg-yellow-50'; border = 'border-yellow-200'; labelColor = 'text-yellow-800'; valueColor = 'text-yellow-700';
+                        }
+                      }
+                      const profitDisplay = invalid ? '-' : `${formatCurrency(profitPerUnit)} / ${product.yieldUnit}`;
+                      const marginDisplay = !invalid ? ` (${marginPercent.toFixed(1)}%)` : '';
+                      return (
+                        <div className={`flex justify-between text-sm items-center rounded-md px-2 py-1 mt-1 border ${bg} ${border}`}>
+                          <span className={`${labelColor} font-medium`}>Margem de Lucro{marginDisplay}</span>
+                          <span className={`font-bold ${valueColor}`}>{profitDisplay}</span>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               ) : (

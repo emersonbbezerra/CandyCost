@@ -63,7 +63,7 @@ export const createProduct = async (req: Request, res: Response) => {
         category: z.string(),
         description: z.string().optional(),
         isAlsoIngredient: z.boolean().optional(),
-        marginPercentage: z.string().optional(),
+        marginPercentage: z.union([z.string(), z.number()]).optional(),
         preparationTimeMinutes: z.number().optional(),
         salePrice: z.number(),
         yield: z.number(),
@@ -77,9 +77,12 @@ export const createProduct = async (req: Request, res: Response) => {
       category: data.category,
       description: data.description,
       isAlsoIngredient: data.isAlsoIngredient ?? false,
-      marginPercentage: data.marginPercentage
-        ? parseFloat(data.marginPercentage)
-        : 0,
+      marginPercentage:
+        data.marginPercentage !== undefined
+          ? typeof data.marginPercentage === 'string'
+            ? parseFloat(data.marginPercentage)
+            : data.marginPercentage
+          : 0,
       preparationTimeMinutes: data.preparationTimeMinutes,
       salePrice: data.salePrice,
       yield: data.yield,
@@ -106,16 +109,23 @@ export const updateProduct = async (req: Request, res: Response) => {
         category: z.string().optional(),
         description: z.string().optional(),
         isAlsoIngredient: z.boolean().optional(),
-        marginPercentage: z.string().optional(),
+        marginPercentage: z.union([z.string(), z.number()]).optional(),
         preparationTimeMinutes: z.number().optional(),
-        salePrice: z.number().min(0).optional(),
-        yield: z.number().min(1).optional(),
+        salePrice: z.union([z.string(), z.number()]).optional(),
+        yield: z.union([z.string(), z.number()]).optional(),
         yieldUnit: z.string().min(1).optional(),
       })
       .partial()
       .parse(req.body);
 
     // Ajustar tipos para compatibilidade com Partial<InsertProduct>
+    const parsedSalePrice =
+      typeof data.salePrice === 'string'
+        ? parseFloat(data.salePrice)
+        : data.salePrice;
+    const parsedYield =
+      typeof data.yield === 'string' ? parseFloat(data.yield) : data.yield;
+
     const updateData: Partial<import('@shared/schema').InsertProduct> = {
       name: data.name,
       category: data.category,
@@ -124,16 +134,33 @@ export const updateProduct = async (req: Request, res: Response) => {
         typeof data.isAlsoIngredient === 'boolean'
           ? data.isAlsoIngredient
           : undefined,
-      marginPercentage: data.marginPercentage
-        ? parseFloat(data.marginPercentage)
-        : undefined,
+      marginPercentage:
+        data.marginPercentage !== undefined
+          ? typeof data.marginPercentage === 'string'
+            ? parseFloat(data.marginPercentage)
+            : data.marginPercentage
+          : undefined,
       preparationTimeMinutes: data.preparationTimeMinutes,
       salePrice:
-        typeof data.salePrice === 'number' ? data.salePrice : undefined,
-      yield: typeof data.yield === 'number' ? data.yield : undefined,
+        typeof parsedSalePrice === 'number' && !isNaN(parsedSalePrice)
+          ? parsedSalePrice
+          : undefined,
+      yield:
+        typeof parsedYield === 'number' && !isNaN(parsedYield)
+          ? parsedYield
+          : undefined,
       yieldUnit:
         typeof data.yieldUnit === 'string' ? data.yieldUnit : undefined,
     };
+    // Log simples para depuração (pode ser removido depois)
+    console.log(
+      '[updateProduct] id:',
+      id,
+      'raw body:',
+      req.body,
+      'parsed:',
+      updateData
+    );
     // Remover campos undefined para evitar erro do Prisma
     Object.keys(updateData).forEach((key) => {
       if (updateData[key as keyof typeof updateData] === undefined) {

@@ -10,7 +10,7 @@ import { errorToast, successToast, useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PRODUCT_CATEGORIES, UNITS } from "@shared/constants";
-import { type Ingredient, type Product, type Recipe } from "@shared/schema";
+import { type Ingredient, type Product, type ProductCost, type Recipe } from "@shared/schema";
 // import { z } from "zod"; // já importado acima
 import {
   AlertDialog,
@@ -54,7 +54,7 @@ type ProductFormValues = z.infer<typeof productFormSchema>;
 export interface ProductFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  product?: (Product & { recipes?: Array<Partial<Recipe>> });
+  product?: (Product & { recipes?: Array<Partial<Recipe>>; cost?: Partial<ProductCost> });
 }
 
 export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
@@ -71,6 +71,16 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
 
   const availableProductIngredients = products.filter((p) => p.isAlsoIngredient && p.id !== product?.id);
 
+  // Função auxiliar para extrair preço unitário seguro
+  const extractUnitSalePrice = (p?: ProductFormProps['product']) => {
+    if (!p) return 0;
+    if (p.cost && typeof p.cost.salePricePerUnit === 'number') return p.cost.salePricePerUnit;
+    if (typeof p.salePrice === 'number' && typeof p.yield === 'number' && p.yield > 0) {
+      return p.salePrice / p.yield;
+    }
+    return typeof p.salePrice === 'number' ? p.salePrice : 0;
+  };
+
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
@@ -80,7 +90,8 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
       isAlsoIngredient: product?.isAlsoIngredient ?? false,
       marginPercentage: typeof product?.marginPercentage === "number" ? product.marginPercentage : 60,
       preparationTimeMinutes: typeof product?.preparationTimeMinutes === "number" ? product.preparationTimeMinutes : 60,
-      salePrice: typeof product?.salePrice === "number" ? product.salePrice : 0,
+      // Campo de entrada representa o PREÇO DE VENDA UNITÁRIO (por unidade de rendimento)
+      salePrice: extractUnitSalePrice(product),
       yield: typeof product?.yield === "number" ? product.yield : 1,
       yieldUnit: product?.yieldUnit || "un",
       recipes: product?.recipes?.map((r) => ({
@@ -121,7 +132,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
         isAlsoIngredient: Boolean(product.isAlsoIngredient),
         marginPercentage: typeof product.marginPercentage === "number" ? product.marginPercentage : 60,
         preparationTimeMinutes: typeof product.preparationTimeMinutes === "number" ? product.preparationTimeMinutes : 60,
-        salePrice: typeof product.salePrice === "number" ? product.salePrice : 0,
+        salePrice: extractUnitSalePrice(product),
         yield: typeof product.yield === "number" ? product.yield : 1,
         yieldUnit: product.yieldUnit || "un",
         recipes: Array.isArray(product.recipes) ? product.recipes.map((r) => ({
@@ -207,10 +218,24 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
         unit: r.unit === 'unidade' ? 'un' : r.unit,
       })),
     };
+    const yieldValueRaw = normalized.yield;
+    const yieldValue = yieldValueRaw && yieldValueRaw > 0 ? yieldValueRaw : 1;
+    const unitPrice = normalized.salePrice;
+    if (isNaN(unitPrice) || unitPrice <= 0) {
+      errorToast("Erro", "Preço de venda unitário inválido");
+      return;
+    }
+    const totalSalePrice = Number((unitPrice * yieldValue).toFixed(4));
+    if (!isFinite(totalSalePrice) || totalSalePrice <= 0) {
+      errorToast("Erro", "Falha ao calcular preço total");
+      return;
+    }
+    const toSend: ProductFormValues = { ...normalized, salePrice: totalSalePrice };
+    console.log('[ProductForm] Submitting product:', { input: normalized, toSend });
     if (product) {
-      updateMutation.mutate(normalized);
+      updateMutation.mutate(toSend);
     } else {
-      createMutation.mutate(normalized);
+      createMutation.mutate(toSend);
     }
   };
 
@@ -280,7 +305,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                 name="salePrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Preço de Venda</FormLabel>
+                    <FormLabel>Preço de Venda (por unidade)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
