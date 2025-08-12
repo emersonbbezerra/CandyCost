@@ -55,16 +55,59 @@ export default function FixedCosts() {
   });
 
 
+  // Helpers de cálculo local (reutiliza lógica do backend)
+  const computeMonthlyValue = (value: number, recurrence: string) => {
+    switch (recurrence) {
+      case 'monthly': return value;
+      case 'quarterly': return value / 3;
+      case 'yearly': return value / 12;
+      default: return 0;
+    }
+  };
+  const recomputeDerivedCaches = (fixedCostsList: FixedCost[]) => {
+    // Fixed costs list already updated externamente
+    // Montly total
+    const monthlyTotalCalc = fixedCostsList.filter(fc => fc.isActive)
+      .reduce((acc, fc) => acc + computeMonthlyValue(Number(fc.value), fc.recurrence), 0);
+    queryClient.setQueryData(["/api/fixed-costs/monthly-total"], { monthlyTotal: monthlyTotalCalc });
+    // Cost per hour (usa workConfig se carregado)
+    if (workConfig) {
+      const totalHours = (workConfig.daysPerMonth || 22) * (workConfig.hoursPerDay || 8);
+      if (totalHours > 0) {
+        queryClient.setQueryData(["/api/fixed-costs/cost-per-hour"], { costPerHour: monthlyTotalCalc / totalHours });
+      }
+    }
+    // By category
+    const byCategory: Record<string, { total: number; costs: FixedCost[] }> = {};
+    fixedCostsList.filter(fc => fc.isActive).forEach(fc => {
+      const mv = computeMonthlyValue(Number(fc.value), fc.recurrence);
+      if (!byCategory[fc.category]) byCategory[fc.category] = { total: 0, costs: [] };
+      byCategory[fc.category].total += mv;
+      byCategory[fc.category].costs.push(fc);
+    });
+    queryClient.setQueryData(["/api/fixed-costs/by-category"], byCategory);
+  };
+
   // CREATE
   const createMutation = useMutation({
-    mutationFn: (data: InsertFixedCost) => apiRequest("POST", "/api/fixed-costs", data),
-    onSuccess: () => {
+    mutationFn: async (data: InsertFixedCost) => {
+      const res = await apiRequest("POST", "/api/fixed-costs", data);
+      return res.json() as Promise<FixedCost>;
+    },
+    onSuccess: (newCost) => {
+      // Atualiza lista local
+      queryClient.setQueryData<FixedCost[]>(["/api/fixed-costs"], (old = []) => [newCost, ...old]);
+      recomputeDerivedCaches([newCost, ...(queryClient.getQueryData<FixedCost[]>(["/api/fixed-costs"]) || [])]);
+      // Invalida para sincronizar servidor
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/monthly-total"] });
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/by-category"] });
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/cost-per-hour"] });
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/active"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
       successToast("Sucesso", "Custo fixo criado com sucesso!");
       setShowForm(false);
     },
@@ -75,15 +118,22 @@ export default function FixedCosts() {
 
   // UPDATE (id é string - cuid)
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<InsertFixedCost> }) =>
-      apiRequest("PUT", `/api/fixed-costs/${id}`, data),
-    onSuccess: () => {
+    mutationFn: async ({ id, data }: { id: string; data: Partial<InsertFixedCost> }) => {
+      const res = await apiRequest("PUT", `/api/fixed-costs/${id}`, data);
+      return res.json() as Promise<FixedCost>;
+    },
+    onSuccess: (updated) => {
+      queryClient.setQueryData<FixedCost[]>(["/api/fixed-costs"], (old = []) => old.map(fc => fc.id === updated.id ? updated : fc));
+      recomputeDerivedCaches((queryClient.getQueryData<FixedCost[]>(["/api/fixed-costs"]) || []));
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/monthly-total"] });
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/by-category"] });
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/cost-per-hour"] });
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/active"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
       successToast("Sucesso", "Custo fixo atualizado com sucesso!");
       setShowForm(false);
       setSelectedFixedCost(null);
@@ -97,12 +147,20 @@ export default function FixedCosts() {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       await apiRequest("DELETE", `/api/fixed-costs/${id}`);
+      return id;
     },
-    onSuccess: () => {
+    onSuccess: (id) => {
+      queryClient.setQueryData<FixedCost[]>(["/api/fixed-costs"], (old = []) => old.filter(fc => fc.id !== id));
+      recomputeDerivedCaches((queryClient.getQueryData<FixedCost[]>(["/api/fixed-costs"]) || []));
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/active"] });
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/monthly-total"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/by-category"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/cost-per-hour"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
       successToast("Sucesso", "Custo fixo excluído com sucesso!");
     },
     onError: (error: Error) => {
@@ -113,14 +171,29 @@ export default function FixedCosts() {
   // TOGGLE ACTIVE (id é string)
   const toggleActiveMutation = useMutation({
     mutationFn: async (id: string) => {
+      // Otimista antes da requisição
+      const previous = queryClient.getQueryData<FixedCost[]>(["/api/fixed-costs"]);
+      if (previous) {
+        const toggled = previous.map(fc => fc.id === id ? { ...fc, isActive: !fc.isActive } : fc);
+        queryClient.setQueryData(["/api/fixed-costs"], toggled);
+        recomputeDerivedCaches(toggled);
+      }
       const response = await apiRequest("PATCH", `/api/fixed-costs/${id}/toggle`, {});
-      return response.json();
+      return response.json() as Promise<FixedCost>;
     },
-    onSuccess: () => {
+    onSuccess: (updated) => {
+      // Garante estado final igual servidor
+      queryClient.setQueryData<FixedCost[]>(["/api/fixed-costs"], (old = []) => old.map(fc => fc.id === updated.id ? updated : fc));
+      recomputeDerivedCaches((queryClient.getQueryData<FixedCost[]>(["/api/fixed-costs"]) || []));
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/active"] });
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/monthly-total"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/by-category"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/cost-per-hour"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
       successToast("Sucesso", "Status do custo fixo alterado com sucesso!");
     },
     onError: (error: Error) => {

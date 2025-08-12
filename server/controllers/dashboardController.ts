@@ -174,29 +174,27 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
   });
 
   try {
-    // Get recent ingredient updates with proper relations
-    const recentIngredientUpdates = await prisma.priceHistory.findMany({
-      where: {
-        ingredientId: { not: null },
-      },
+    // Buscar últimos registros gerais (ingredientes, produtos e custos fixos)
+    const recentAll = await prisma.priceHistory.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 30, // pega mais e depois separamos
       include: {
         ingredient: true,
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-    });
-
-    // Get recent product updates with proper relations
-    const recentProductUpdates = await prisma.priceHistory.findMany({
-      where: {
-        productId: { not: null },
-      },
-      include: {
         product: true,
       },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
     });
+
+    const recentIngredientUpdates = recentAll
+      .filter((r) => r.ingredientId)
+      .slice(0, 5);
+    const recentProductUpdates = recentAll
+      .filter((r) => r.productId)
+      .slice(0, 5);
+    const recentFixedCostUpdates = recentAll
+      .filter(
+        (r) => !r.productId && !r.ingredientId && r.itemType === 'fixed_cost'
+      )
+      .slice(0, 5);
 
     // Format ingredient updates
     const enrichedIngredientUpdates = recentIngredientUpdates.map((update) => ({
@@ -224,9 +222,22 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
       createdAt: update.createdAt,
     }));
 
+    const enrichedFixedCostUpdates = recentFixedCostUpdates.map((update) => ({
+      id: update.id,
+      type: 'fixed_cost' as const,
+      name: update.itemName || 'Custo Fixo',
+      itemId: null,
+      oldPrice: update.oldPrice,
+      newPrice: update.newPrice,
+      unit: undefined,
+      changeType: update.changeType,
+      createdAt: update.createdAt,
+    }));
+
     const responseData = {
       ingredientUpdates: enrichedIngredientUpdates,
       productUpdates: enrichedProductUpdates,
+      fixedCostUpdates: enrichedFixedCostUpdates,
     };
 
     res.json(responseData);

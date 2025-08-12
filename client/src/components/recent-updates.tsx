@@ -3,7 +3,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
 // A API /api/dashboard/recent-updates retorna objetos simplificados (não todo PriceHistory)
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, Package, RefreshCw, Sprout } from "lucide-react";
+import { Calculator, ExternalLink, Package, RefreshCw, Sprout } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { ProductForm } from "./product-form";
@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
 interface SimplifiedUpdate {
     id: string;
-    type: 'ingredient' | 'product';
+    type: 'ingredient' | 'product' | 'fixed_cost';
     name: string;
     itemId: string | null; // id do ingrediente ou produto
     oldPrice: number;
@@ -25,6 +25,7 @@ interface SimplifiedUpdate {
 interface RecentUpdates {
     ingredientUpdates: SimplifiedUpdate[];
     productUpdates: SimplifiedUpdate[];
+    fixedCostUpdates?: SimplifiedUpdate[];
 }
 
 // Helper function to format date, assuming it's available or can be defined
@@ -88,9 +89,6 @@ export function RecentUpdatesCard() {
 
     const handleFormClose = () => {
         setIsProductFormOpen(false);
-        setEditingProduct(undefined);
-
-        // Invalidar cache relacionado
         queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
         queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
         queryClient.invalidateQueries({ queryKey: ["/api/products"] });
@@ -199,7 +197,15 @@ export function RecentUpdatesCard() {
                                             Custo atualizado de {formatCurrency(update.oldPrice ?? 0)} para {formatCurrency(update.newPrice ?? 0)}{update.unit ? ` / ${update.unit}` : ''} - <strong>{update.name}</strong>
                                         </p>
                                         <p className="text-sm text-gray-500 mt-1">
-                                            {update.changeType === 'auto' ? 'Atualização automática' : 'Atualização manual'}
+                                            {(() => {
+                                                switch (update.changeType) {
+                                                    case 'ingredient_update': return 'Atualização por ingrediente';
+                                                    case 'fixed_cost_update': return 'Recalculo por alteração de custo fixo';
+                                                    case 'fixed_cost_toggle': return 'Recalculo por ativação/desativação de custo fixo';
+                                                    case 'auto': return 'Atualização automática';
+                                                    default: return 'Atualização manual';
+                                                }
+                                            })()}
                                         </p>
                                         <p className="text-xs text-gray-400 mt-1">
                                             {formatRelativeTime(new Date(update.createdAt))}
@@ -242,6 +248,42 @@ export function RecentUpdatesCard() {
                             ))
                         )}
                     </div>
+                </div>
+            </CardContent>
+            <CardContent>
+                {/* Custos Fixos */}
+                <div className="mt-6">
+                    <h3 className="text-lg font-semibold mb-2">Custos Fixos</h3>
+                    {isLoading ? (
+                        <p className="text-gray-500">Carregando atualizações de custos fixos...</p>
+                    ) : data?.fixedCostUpdates && data.fixedCostUpdates.length === 0 ? (
+                        <p className="text-gray-500">Nenhuma atualização de custo fixo registrada ainda.</p>
+                    ) : (
+                        data?.fixedCostUpdates?.slice(0, 3).map((update) => (
+                            <div key={`fixed-${update.id}`} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg mb-2">
+                                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <Calculator className="text-purple-600 w-5 h-5" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className="text-gray-900">
+                                        {update.changeType.includes('toggle') ? 'Status alterado' : 'Valor alterado'} de {formatCurrency(update.oldPrice ?? 0)} para {formatCurrency(update.newPrice ?? 0)} - <strong>{update.name}</strong>
+                                    </p>
+                                    <p className="text-sm text-gray-500 mt-1">
+                                        {(() => {
+                                            switch (update.changeType) {
+                                                case 'fixed_cost_update': return 'Alteração de custo fixo';
+                                                case 'fixed_cost_toggle': return 'Ativação/Desativação de custo fixo';
+                                                default: return 'Atualização';
+                                            }
+                                        })()}
+                                    </p>
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        {formatRelativeTime(new Date(update.createdAt))}
+                                    </p>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             </CardContent>
 
