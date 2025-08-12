@@ -402,7 +402,8 @@ export default function UserManagementAdmin() {
                         onClick={() => handleDeleteUser(user)}
                         className="flex-1 sm:flex-none"
                       >
-                        <Trash2 className="h-4 w-4 mr-1 text-red-600" />
+                        {/* Ícone herdando a cor do texto (removido text-red-600) */}
+                        <Trash2 className="h-4 w-4 mr-1" />
                         <span className="hidden sm:inline">Excluir</span>
                         <span className="sm:hidden">Excluir</span>
                       </Button>

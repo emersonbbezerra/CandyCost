@@ -30,7 +30,7 @@ const menuItems = [
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const { user, logout, isLogoutPending } = useAuth();
 
   const isActive = (path: string) => {
@@ -107,14 +107,20 @@ export function Sidebar() {
                   ? "bg-pink-600 text-white hover:bg-pink-700"
                   : "text-gray-700 hover:bg-gray-100"
                   }`}
-                onClick={() => setSettingsOpen((open) => !open)}
+                onClick={() => {
+                  // Navega para a página de configurações e garante submenu aberto
+                  if (location !== '/settings') navigate('/settings');
+                  setSettingsOpen(true);
+                  // Fecha menu mobile após navegação
+                  setIsOpen(false);
+                }}
               >
                 <Settings className="h-4 w-4 mr-3" />
                 Configurações
                 <span className="ml-auto">{settingsOpen ? "▲" : "▼"}</span>
               </Button>
-              {/* Submenu para admin */}
-              {user?.role === 'admin' && settingsOpen && (
+              {/* Submenu (visível para todos). A proteção acontece dentro das páginas (campos desabilitados para não-admin) */}
+              {settingsOpen && (
                 <ul className="ml-8 mt-2 space-y-1">
                   <li>
                     <Link href="/user-management">

@@ -1,24 +1,23 @@
-import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { Sidebar } from "@/components/sidebar";
-import { useAuth } from "@/hooks/useAuth";
+import { Toaster } from "@/components/ui/toaster";
 import { SettingsProvider } from "@/contexts/SettingsContext";
-import Dashboard from "@/pages/dashboard";
-import Ingredients from "@/pages/ingredients";
-import Products from "@/pages/products";
-import FixedCosts from "@/pages/fixed-costs";
+import { useAuth } from "@/hooks/useAuth";
 import CostsHistory from "@/pages/costs-history";
-import Reports from "@/pages/reports";
-import System from "@/pages/system";
-import Settings from "@/pages/settings";
-import UserManagement from "@/pages/user-management";
-import UserManagementAdmin from "@/pages/user-management-admin";
-import Profile from "@/pages/profile-simple";
+import Dashboard from "@/pages/dashboard";
+import FixedCosts from "@/pages/fixed-costs";
+import Ingredients from "@/pages/ingredients";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
+import Products from "@/pages/products";
+import Profile from "@/pages/profile-simple";
+import Reports from "@/pages/reports";
+import Settings from "@/pages/settings";
+import System from "@/pages/system";
+import UserManagementAdmin from "@/pages/user-management-admin";
+import UserManagementRestricted from "@/pages/user-management-restricted";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Route, Switch } from "wouter";
+import { queryClient } from "./lib/queryClient";
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -47,7 +46,7 @@ function Router() {
       <Sidebar />
       <main className="flex-1 pt-16 lg:pt-0 bg-transparent">
         <div className="animate-fadeInUp">
-        <Switch>
+          <Switch>
             <Route path="/" component={Dashboard} />
             <Route path="/ingredients" component={Ingredients} />
             <Route path="/products" component={Products} />
@@ -59,7 +58,12 @@ function Router() {
             <Route path="/system/backup" component={System} />
             <Route path="/settings" component={Settings} />
             <Route path="/profile" component={Profile} />
-            {user?.role === 'admin' && <Route path="/user-management" component={UserManagementAdmin} />}
+            {/* Rota de usuários: admin vê painel completo, usuário comum vê página restrita informativa */}
+            {user?.role === 'admin' ? (
+              <Route path="/user-management" component={UserManagementAdmin} />
+            ) : (
+              <Route path="/user-management" component={UserManagementRestricted} />
+            )}
             <Route component={NotFound} />
           </Switch>
         </div>
