@@ -55,9 +55,9 @@ export default function FixedCosts() {
   });
 
 
+  // CREATE
   const createMutation = useMutation({
-    mutationFn: (data: InsertFixedCost) =>
-      apiRequest("POST", "/api/fixed-costs", data),
+    mutationFn: (data: InsertFixedCost) => apiRequest("POST", "/api/fixed-costs", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/monthly-total"] });
@@ -73,8 +73,9 @@ export default function FixedCosts() {
     },
   });
 
+  // UPDATE (id é string - cuid)
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<InsertFixedCost> }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<InsertFixedCost> }) =>
       apiRequest("PUT", `/api/fixed-costs/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs"] });
@@ -92,8 +93,9 @@ export default function FixedCosts() {
     },
   });
 
+  // DELETE (id é string)
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       await apiRequest("DELETE", `/api/fixed-costs/${id}`);
     },
     onSuccess: () => {
@@ -108,9 +110,10 @@ export default function FixedCosts() {
     },
   });
 
+  // TOGGLE ACTIVE (id é string)
   const toggleActiveMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await apiRequest("PATCH", `/api/fixed-costs/${id}/toggle`, { isActive: true });
+    mutationFn: async (id: string) => {
+      const response = await apiRequest("PATCH", `/api/fixed-costs/${id}/toggle`, {});
       return response.json();
     },
     onSuccess: () => {
@@ -138,9 +141,8 @@ export default function FixedCosts() {
 
   const handleSubmit = (data: InsertFixedCost) => {
     if (selectedFixedCost) {
-      updateMutation.mutate({ id: typeof selectedFixedCost.id === 'string' ? parseInt(selectedFixedCost.id) : selectedFixedCost.id, data });
+      updateMutation.mutate({ id: selectedFixedCost.id, data });
     } else {
-      // Corrige: se algum campo precisa ser number, converta aqui
       createMutation.mutate({ ...data, value: typeof data.value === 'string' ? parseFloat(data.value) : data.value });
     }
   };
@@ -155,8 +157,7 @@ export default function FixedCosts() {
   };
 
   const handleToggleActive = (fixedCost: FixedCost) => {
-    // Corrige: se espera string, converta para string
-    toggleActiveMutation.mutate(typeof fixedCost.id === 'string' ? parseInt(fixedCost.id) : fixedCost.id);
+    toggleActiveMutation.mutate(fixedCost.id);
   };
 
   const getRecurrenceLabel = (recurrence: string) => {
@@ -385,7 +386,7 @@ export default function FixedCosts() {
       <ConfirmationDialog
         open={!!deleteConfirm}
         onOpenChange={open => { if (!open) setDeleteConfirm(null); }}
-        onConfirm={() => deleteConfirm && deleteMutation.mutate(typeof deleteConfirm.id === 'string' ? parseInt(deleteConfirm.id) : deleteConfirm.id)}
+        onConfirm={() => deleteConfirm && deleteMutation.mutate(deleteConfirm.id)}
         title="Excluir Custo Fixo"
         description={`Tem certeza que deseja excluir "${deleteConfirm?.name}"? Esta ação não pode ser desfeita.`}
         variant="destructive"
