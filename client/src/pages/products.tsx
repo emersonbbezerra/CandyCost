@@ -41,7 +41,8 @@ export default function Products() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<ProductWithCost | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  // Exibir 9 cards por página (3 linhas de 3)
+  const itemsPerPage = 9;
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
