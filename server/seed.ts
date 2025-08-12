@@ -209,7 +209,7 @@ async function seed() {
       insertedIngredients.push(inserted);
     }
 
-    // Produtos de exemplo
+    // Produtos de exemplo (valores abaixo em unitSalePrice = preço unitário; será convertido para total)
     const sampleProducts = [
       {
         name: 'Brigadeiro Gourmet',
@@ -218,7 +218,7 @@ async function seed() {
         isAlsoIngredient: true,
         marginPercentage: 70,
         preparationTimeMinutes: 30,
-        salePrice: 2.5,
+        unitSalePrice: 2.5,
         yield: 30,
         yieldUnit: 'un',
       },
@@ -229,7 +229,7 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 60,
         preparationTimeMinutes: 45,
-        salePrice: 5.0,
+        unitSalePrice: 5.0,
         yield: 12,
         yieldUnit: 'un',
       },
@@ -240,7 +240,7 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 65,
         preparationTimeMinutes: 60,
-        salePrice: 3.5,
+        unitSalePrice: 3.5,
         yield: 20,
         yieldUnit: 'un',
       },
@@ -251,7 +251,7 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 35,
         preparationTimeMinutes: 120,
-        salePrice: 80.0,
+        unitSalePrice: 80.0 / 12,
         yield: 12,
         yieldUnit: 'fatia',
       },
@@ -262,7 +262,7 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 40,
         preparationTimeMinutes: 90,
-        salePrice: 75.0,
+        unitSalePrice: 75.0 / 12,
         yield: 12,
         yieldUnit: 'fatia',
       },
@@ -273,7 +273,7 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 45,
         preparationTimeMinutes: 180,
-        salePrice: 90.0,
+        unitSalePrice: 90.0 / 14,
         yield: 14,
         yieldUnit: 'fatia',
       },
@@ -284,7 +284,7 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 25,
         preparationTimeMinutes: 10,
-        salePrice: 18.0,
+        unitSalePrice: 18.0,
         yield: 1,
         yieldUnit: 'porção',
       },
@@ -295,7 +295,7 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 20,
         preparationTimeMinutes: 50,
-        salePrice: 6.0,
+        unitSalePrice: 6.0,
         yield: 10,
         yieldUnit: 'un',
       },
@@ -306,7 +306,7 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 15,
         preparationTimeMinutes: 150,
-        salePrice: 95.0,
+        unitSalePrice: 95.0 / 14,
         yield: 14,
         yieldUnit: 'fatia',
       },
@@ -317,7 +317,7 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 200,
         preparationTimeMinutes: 25,
-        salePrice: 2.5,
+        unitSalePrice: 2.5,
         yield: 30,
         yieldUnit: 'un',
       },
@@ -328,7 +328,7 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 80,
         preparationTimeMinutes: 5,
-        salePrice: 9.0,
+        unitSalePrice: 9.0,
         yield: 1,
         yieldUnit: 'fatia',
       },
@@ -339,7 +339,7 @@ async function seed() {
         isAlsoIngredient: true,
         marginPercentage: 100,
         preparationTimeMinutes: 15,
-        salePrice: 35.0,
+        unitSalePrice: 35.0,
         yield: 1,
         yieldUnit: 'kg',
       },
@@ -350,7 +350,7 @@ async function seed() {
         isAlsoIngredient: true,
         marginPercentage: 120,
         preparationTimeMinutes: 20,
-        salePrice: 30.0,
+        unitSalePrice: 30.0,
         yield: 1,
         yieldUnit: 'kg',
       },
@@ -361,7 +361,7 @@ async function seed() {
         isAlsoIngredient: true,
         marginPercentage: 90,
         preparationTimeMinutes: 25,
-        salePrice: 40.0,
+        unitSalePrice: 40.0,
         yield: 1,
         yieldUnit: 'kg',
       },
@@ -372,7 +372,7 @@ async function seed() {
         isAlsoIngredient: false,
         marginPercentage: 150,
         preparationTimeMinutes: 40,
-        salePrice: 3.0,
+        unitSalePrice: 3.0,
         yield: 10,
         yieldUnit: 'un',
       },
@@ -381,6 +381,9 @@ async function seed() {
     // Inserir produtos
     const insertedProducts = [];
     for (const product of sampleProducts) {
+      const totalSalePrice = Number(
+        (product.unitSalePrice * product.yield).toFixed(2)
+      );
       const inserted = await prisma.product.create({
         data: {
           name: product.name,
@@ -389,12 +392,24 @@ async function seed() {
           isAlsoIngredient: product.isAlsoIngredient,
           marginPercentage: product.marginPercentage,
           preparationTimeMinutes: product.preparationTimeMinutes,
-          salePrice: product.salePrice,
+          salePrice: totalSalePrice, // armazenado como preço TOTAL
           yield: product.yield,
           yieldUnit: product.yieldUnit,
         },
       });
       insertedProducts.push(inserted);
+      // Histórico inicial de preço (por unidade) - oldPrice = newPrice
+      await prisma.priceHistory.create({
+        data: {
+          itemType: 'product',
+          itemName: product.name,
+          oldPrice: Number(product.unitSalePrice.toFixed(2)),
+          newPrice: Number(product.unitSalePrice.toFixed(2)),
+          changeType: 'initial_seed',
+          description: 'Preço unitário inicial (seed)',
+          productId: inserted.id,
+        },
+      });
     }
 
     // Sample recipes
@@ -671,6 +686,145 @@ async function seed() {
         productIngredientIndex: null,
         quantity: '0.03',
         unit: 'kg',
+      },
+      // --- Novas receitas adicionadas para produtos que estavam sem composição ---
+      // productIndex 10: Fatia de Bolo Red Velvet (simples, 1 fatia)
+      {
+        productIndex: 10,
+        ingredientIndex: 0, // Farinha de Trigo
+        productIngredientIndex: null,
+        quantity: '0.02',
+        unit: 'kg',
+      },
+      {
+        productIndex: 10,
+        ingredientIndex: 3, // Açúcar Cristal
+        productIngredientIndex: null,
+        quantity: '0.015',
+        unit: 'kg',
+      },
+      {
+        productIndex: 10,
+        ingredientIndex: 5, // Ovos
+        productIngredientIndex: null,
+        quantity: '1',
+        unit: 'un',
+      },
+      // productIndex 11: Calda de Chocolate (1 kg)
+      {
+        productIndex: 11,
+        ingredientIndex: 2, // Chocolate 70%
+        productIngredientIndex: null,
+        quantity: '0.4',
+        unit: 'kg',
+      },
+      {
+        productIndex: 11,
+        ingredientIndex: 10, // Leite Integral
+        productIngredientIndex: null,
+        quantity: '0.3',
+        unit: 'l',
+      },
+      {
+        productIndex: 11,
+        ingredientIndex: 3, // Açúcar Cristal
+        productIngredientIndex: null,
+        quantity: '0.2',
+        unit: 'kg',
+      },
+      {
+        productIndex: 11,
+        ingredientIndex: 4, // Manteiga
+        productIngredientIndex: null,
+        quantity: '0.05',
+        unit: 'kg',
+      },
+      // productIndex 12: Recheio de Brigadeiro (1 kg)
+      {
+        productIndex: 12,
+        ingredientIndex: 1, // Leite Condensado
+        productIngredientIndex: null,
+        quantity: '0.395',
+        unit: 'kg',
+      },
+      {
+        productIndex: 12,
+        ingredientIndex: 2, // Chocolate 70%
+        productIngredientIndex: null,
+        quantity: '0.25',
+        unit: 'kg',
+      },
+      {
+        productIndex: 12,
+        ingredientIndex: 4, // Manteiga
+        productIngredientIndex: null,
+        quantity: '0.05',
+        unit: 'kg',
+      },
+      {
+        productIndex: 12,
+        ingredientIndex: 6, // Creme de Leite
+        productIngredientIndex: null,
+        quantity: '0.1',
+        unit: 'kg',
+      },
+      // productIndex 13: Cobertura de Ganache (1 kg)
+      {
+        productIndex: 13,
+        ingredientIndex: 12, // Chocolate Branco
+        productIngredientIndex: null,
+        quantity: '0.5',
+        unit: 'kg',
+      },
+      {
+        productIndex: 13,
+        ingredientIndex: 6, // Creme de Leite
+        productIngredientIndex: null,
+        quantity: '0.3',
+        unit: 'kg',
+      },
+      {
+        productIndex: 13,
+        ingredientIndex: 4, // Manteiga
+        productIngredientIndex: null,
+        quantity: '0.05',
+        unit: 'kg',
+      },
+      {
+        productIndex: 13,
+        ingredientIndex: 3, // Açúcar Cristal
+        productIngredientIndex: null,
+        quantity: '0.1',
+        unit: 'kg',
+      },
+      // productIndex 14: Caseirinho de Chocolate (10 un)
+      {
+        productIndex: 14,
+        ingredientIndex: 0, // Farinha de Trigo
+        productIngredientIndex: null,
+        quantity: '0.1',
+        unit: 'kg',
+      },
+      {
+        productIndex: 14,
+        ingredientIndex: 3, // Açúcar Cristal
+        productIngredientIndex: null,
+        quantity: '0.08',
+        unit: 'kg',
+      },
+      {
+        productIndex: 14,
+        ingredientIndex: 2, // Chocolate 70%
+        productIngredientIndex: null,
+        quantity: '0.05',
+        unit: 'kg',
+      },
+      {
+        productIndex: 14,
+        ingredientIndex: 5, // Ovos
+        productIngredientIndex: null,
+        quantity: '2',
+        unit: 'un',
       },
     ];
 
