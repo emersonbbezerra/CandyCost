@@ -1,15 +1,14 @@
-import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { ChefHat, LogIn, UserPlus } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/hooks/useAuth";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ChefHat, Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { passwordErrorMessage, passwordRegex } from "../../../shared/passwordValidation";
 
@@ -37,6 +36,9 @@ type RegisterForm = z.infer<typeof registerSchema>;
 export default function Login() {
   const { login, register, isLoginPending, isRegisterPending } = useAuth();
   const [activeTab, setActiveTab] = useState("login");
+  const [loginPasswordVisible, setLoginPasswordVisible] = useState(false);
+  const [registerPasswordVisible, setRegisterPasswordVisible] = useState(false);
+  const [registerConfirmVisible, setRegisterConfirmVisible] = useState(false);
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -130,11 +132,22 @@ export default function Login() {
                         <FormItem>
                           <FormLabel>Senha</FormLabel>
                           <FormControl>
-                            <Input
-                              type="password"
-                              placeholder="Sua senha"
-                              {...field}
-                            />
+                            <div className="relative">
+                              <Input
+                                type={loginPasswordVisible ? "text" : "password"}
+                                placeholder="Sua senha"
+                                {...field}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setLoginPasswordVisible(v => !v)}
+                                className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
+                                tabIndex={-1}
+                                aria-label={loginPasswordVisible ? 'Ocultar senha' : 'Mostrar senha'}
+                              >
+                                {loginPasswordVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                              </button>
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -150,13 +163,7 @@ export default function Login() {
                   </form>
                 </Form>
 
-                <div className="text-center text-sm text-gray-600 mt-4">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="font-medium text-blue-800">Conta de Administrador:</p>
-                    <p className="text-blue-600">Email: admin@confeitaria.com</p>
-                    <p className="text-blue-600">Senha: admin123!</p>
-                  </div>
-                </div>
+                {/* Bloco de credenciais removido */}
               </TabsContent>
 
               <TabsContent value="register" className="space-y-4 mt-6">
@@ -223,11 +230,22 @@ export default function Login() {
                         <FormItem>
                           <FormLabel>Senha Segura</FormLabel>
                           <FormControl>
-                            <Input
-                              type="password"
-                              placeholder="Crie uma senha forte"
-                              {...field}
-                            />
+                            <div className="relative">
+                              <Input
+                                type={registerPasswordVisible ? 'text' : 'password'}
+                                placeholder="Crie uma senha forte"
+                                {...field}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setRegisterPasswordVisible(v => !v)}
+                                className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
+                                tabIndex={-1}
+                                aria-label={registerPasswordVisible ? 'Ocultar senha' : 'Mostrar senha'}
+                              >
+                                {registerPasswordVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                              </button>
+                            </div>
                           </FormControl>
                           <div className="text-xs text-gray-600 mt-1 space-y-1">
                             <p>✓ Mínimo 8 caracteres</p>
@@ -247,16 +265,26 @@ export default function Login() {
                         <FormItem>
                           <FormLabel>Confirmar Senha</FormLabel>
                           <FormControl>
-                            <Input
-                              type="password"
-                              placeholder="Digite a senha novamente"
-                              {...field}
-                              onChange={(e) => {
-                                field.onChange(e);
-                                // Trigger validation immediately
-                                registerForm.trigger("confirmPassword");
-                              }}
-                            />
+                            <div className="relative">
+                              <Input
+                                type={registerConfirmVisible ? 'text' : 'password'}
+                                placeholder="Digite a senha novamente"
+                                {...field}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  registerForm.trigger('confirmPassword');
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setRegisterConfirmVisible(v => !v)}
+                                className="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-gray-700"
+                                tabIndex={-1}
+                                aria-label={registerConfirmVisible ? 'Ocultar senha' : 'Mostrar senha'}
+                              >
+                                {registerConfirmVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                              </button>
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>

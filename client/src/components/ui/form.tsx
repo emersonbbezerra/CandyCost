@@ -1,8 +1,8 @@
 "use client"
 
-import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
 import { Slot } from "@radix-ui/react-slot"
+import * as React from "react"
 import {
   Controller,
   FormProvider,
@@ -12,8 +12,8 @@ import {
   type FieldValues,
 } from "react-hook-form"
 
-import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
 
 const Form = FormProvider
 
@@ -157,7 +157,13 @@ const FormMessage = React.forwardRef<
     <p
       ref={ref}
       id={formMessageId}
-      className={cn("text-sm font-medium text-destructive", className)}
+      // Ajuste: usar classes de alerta vermelhas mais fortes para evidenciar erros
+      className={cn(
+        "text-sm font-medium text-red-600 dark:text-red-500",
+        // Mantém compatibilidade com tema (caso use text-destructive adicionalmente)
+        "text-destructive",
+        className
+      )}
       {...props}
     >
       {body}
@@ -167,12 +173,8 @@ const FormMessage = React.forwardRef<
 FormMessage.displayName = "FormMessage"
 
 export {
-  useFormField,
-  Form,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormDescription,
-  FormMessage,
-  FormField,
+  Form, FormControl,
+  FormDescription, FormField, FormItem,
+  FormLabel, FormMessage, useFormField
 }
+
