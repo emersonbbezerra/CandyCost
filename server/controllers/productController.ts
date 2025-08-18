@@ -182,9 +182,16 @@ export const updateProduct = async (req: Request, res: Response) => {
 export const deleteProduct = async (req: Request, res: Response) => {
   try {
     const id = req.params.id;
+    if (!id || typeof id !== 'string') {
+      return res.status(400).json({ message: 'ID do produto inválido' });
+    }
     await productService.deleteProduct(id);
-    res.status(204).send();
-  } catch (error) {
+    return res.status(204).send();
+  } catch (error: any) {
+    console.error('[deleteProduct] Erro ao deletar produto:', error);
+    if (error?.code === 'P2025') {
+      return res.status(404).json({ message: 'Produto não encontrado' });
+    }
     res.status(500).json({ message: 'Erro ao deletar produto' });
   }
 };

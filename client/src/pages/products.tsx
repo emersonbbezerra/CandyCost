@@ -67,16 +67,18 @@ export default function Products() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
+    mutationFn: async (id: string) => {
       await apiRequest("DELETE", `/api/products/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products", "details"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
       successToast("Sucesso", "Produto excluído com sucesso!");
     },
-    onError: () => {
+    onError: (err) => {
+      console.error("Erro na deleção do produto:", err);
       errorToast("Erro", "Erro ao excluir produto. Tente novamente.");
     },
   });
@@ -116,9 +118,7 @@ export default function Products() {
 
   const confirmDelete = () => {
     if (productToDelete) {
-      // Garante que o id seja do tipo number
-      const id = typeof productToDelete.id === 'string' ? Number(productToDelete.id) : productToDelete.id;
-      deleteMutation.mutate(id);
+      deleteMutation.mutate(productToDelete.id);
       setDeleteConfirmOpen(false);
       setProductToDelete(null);
     }
