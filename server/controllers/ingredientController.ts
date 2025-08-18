@@ -64,33 +64,55 @@ export const updateIngredient = async (req: Request, res: Response) => {
 
     const result = await productService.updateIngredient(id, ingredientData);
 
-    // Se o preço mudou, registrar histórico do ingrediente (por unidade) e rastrear produtos afetados
+    // Se o preço OU a quantidade mudaram (afetando o preço por unidade), registrar histórico e rastrear produtos afetados
     if (
       oldIngredient &&
-      ingredientData.price &&
-      oldIngredient.price !== ingredientData.price
+      ingredientData.price !== undefined &&
+      ingredientData.quantity !== undefined
     ) {
-      console.log('Price changed, tracking affected products...');
-      // Registrar histórico do próprio ingrediente usando preço por unidade
       const oldUnitPrice = oldIngredient.price / oldIngredient.quantity;
       const newUnitPrice = ingredientData.price / ingredientData.quantity;
-      await priceHistoryService.createPriceHistory({
-        itemType: 'ingredient',
-        itemName: oldIngredient.name,
-        oldPrice: oldUnitPrice,
-        newPrice: newUnitPrice,
-        changeType: 'manual',
-        changeReason: 'Alteração manual de preço por unidade',
-        ingredientId: id,
-      });
-      // Rastrear produtos afetados (passando preços por unidade)
-      await productService.trackCostChangesForAffectedProducts(
-        id,
-        oldUnitPrice,
-        newUnitPrice
-      );
-    }
 
+      // Verificar se o preço por unidade realmente mudou
+      const unitPriceChanged = Math.abs(oldUnitPrice - newUnitPrice) > 0.01; // tolerância de 1 centavo
+
+      if (unitPriceChanged) {
+        console.log(
+          '🔄 [updateIngredient] Unit price changed, tracking affected products...'
+        );
+        console.log(
+          `📊 [updateIngredient] Old unit price: ${oldUnitPrice.toFixed(
+            4
+          )}, New unit price: ${newUnitPrice.toFixed(4)}`
+        );
+
+        // Registrar histórico do próprio ingrediente usando preço por unidade
+        await priceHistoryService.createPriceHistory({
+          itemType: 'ingredient',
+          itemName: oldIngredient.name,
+          oldPrice: oldUnitPrice,
+          newPrice: newUnitPrice,
+          changeType: 'manual',
+          changeReason: 'Alteração manual de preço por unidade',
+          ingredientId: id,
+        });
+
+        // Rastrear produtos afetados (passando preços por unidade)
+        await productService.trackCostChangesForAffectedProducts(
+          id,
+          oldUnitPrice,
+          newUnitPrice
+        );
+      } else {
+        console.log('Unit price unchanged, no tracking needed');
+      }
+    } else {
+      console.log('Missing data for unit price comparison:', {
+        hasOldIngredient: !!oldIngredient,
+        hasPrice: ingredientData.price !== undefined,
+        hasQuantity: ingredientData.quantity !== undefined,
+      });
+    }
     res.json(result);
   } catch (error) {
     console.error('Error updating ingredient:', error);

@@ -354,8 +354,9 @@ export const productService = {
     newUnitPrice: number
   ): Promise<void> {
     try {
+      console.log('🔄 [trackCostChangesForAffectedProducts] Starting...');
       console.log(
-        `Tracking cost changes for ingredient ${ingredientId}: ${oldUnitPrice} -> ${newUnitPrice}`
+        `🧪 [trackCostChangesForAffectedProducts] Ingredient: ${ingredientId}, Old price: ${oldUnitPrice}, New price: ${newUnitPrice}`
       );
 
       // Buscar todas as receitas que usam este ingrediente
@@ -368,20 +369,53 @@ export const productService = {
       });
 
       console.log(
-        `Found ${recipesWithIngredient.length} recipes using this ingredient`
+        `📊 [trackCostChangesForAffectedProducts] Found ${recipesWithIngredient.length} recipes using this ingredient`
       );
 
+      if (recipesWithIngredient.length === 0) {
+        console.log(
+          '⚠️ [trackCostChangesForAffectedProducts] No recipes found for this ingredient'
+        );
+        return;
+      }
+
       for (const recipe of recipesWithIngredient) {
+        console.log(
+          `🔍 [trackCostChangesForAffectedProducts] Processing product: ${recipe.product?.name} (ID: ${recipe.productId})`
+        );
+
         // Calcular custo total do produto antes da alteração
+        console.log(
+          '📈 [trackCostChangesForAffectedProducts] Calculating old product cost...'
+        );
         const oldProductCost = await this.calculateProductCostAtUnitPrice(
           String(recipe.product.id),
           ingredientId,
           Number(oldUnitPrice)
         );
+        console.log(
+          `💰 [trackCostChangesForAffectedProducts] Old cost: ${JSON.stringify(
+            oldProductCost,
+            null,
+            2
+          )}`
+        );
+
         // Calcular custo total do produto depois da alteração
+        console.log(
+          '📈 [trackCostChangesForAffectedProducts] Calculating new product cost...'
+        );
         const newProductCost = await this.calculateProductCost(
           String(recipe.product.id)
         );
+        console.log(
+          `💰 [trackCostChangesForAffectedProducts] New cost: ${JSON.stringify(
+            newProductCost,
+            null,
+            2
+          )}`
+        );
+
         // Criar entrada no histórico de preços para o produto (custo por unidade)
         const oldUnit =
           oldProductCost.costPerYieldUnit ??
@@ -389,6 +423,14 @@ export const productService = {
         const newUnit =
           newProductCost.costPerYieldUnit ??
           newProductCost.totalCost / (newProductCost.yield || 1);
+
+        console.log(
+          `📊 [trackCostChangesForAffectedProducts] Unit costs - Old: ${oldUnit}, New: ${newUnit}`
+        );
+
+        console.log(
+          '📝 [trackCostChangesForAffectedProducts] Creating price history...'
+        );
         await priceHistoryService.createPriceHistory({
           itemType: 'product',
           itemName: recipe.product?.name || 'Produto desconhecido',
@@ -400,9 +442,36 @@ export const productService = {
           }`,
           productId: recipe.productId,
         });
+
+        // 🔥 IMPORTANTE: Atualizar o timestamp updatedAt do produto para refletir nas mudanças de "há X minutos"
+        console.log(
+          `🕐 [trackCostChangesForAffectedProducts] Updating product timestamp for: ${recipe.product?.name}`
+        );
+        const updateResult = await prisma.product.update({
+          where: { id: recipe.productId },
+          data: {
+            // Forçar atualização do updatedAt sem alterar outros campos
+            updatedAt: new Date(),
+          },
+        });
+        console.log(
+          `✅ [trackCostChangesForAffectedProducts] Product timestamp updated successfully for: ${recipe.product?.name}`,
+          {
+            id: updateResult.id,
+            name: updateResult.name,
+            updatedAt: updateResult.updatedAt,
+          }
+        );
       }
+
+      console.log(
+        '🎉 [trackCostChangesForAffectedProducts] Process completed successfully!'
+      );
     } catch (error) {
-      console.error('Error tracking cost changes:', error);
+      console.error(
+        '❌ [trackCostChangesForAffectedProducts] Error tracking cost changes:',
+        error
+      );
     }
   },
 };
