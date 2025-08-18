@@ -24,7 +24,10 @@ interface ComboboxProps {
     disabled?: boolean;
 }
 
-export function Combobox({
+export const Combobox = React.forwardRef<
+    HTMLButtonElement,
+    ComboboxProps
+>(({
     options,
     value,
     onValueChange,
@@ -33,7 +36,7 @@ export function Combobox({
     emptyMessage = "Nenhum item encontrado.",
     className,
     disabled = false,
-}: ComboboxProps) {
+}, ref) => {
     const [open, setOpen] = React.useState(false);
     const [searchValue, setSearchValue] = React.useState("");
 
@@ -48,34 +51,16 @@ export function Combobox({
     const selectedOption = options.find(option => option.value === value);
 
     const handleSelect = (optionValue: string) => {
-        console.log('🔵 Combobox handleSelect called:', {
-            optionValue,
-            currentValue: value,
-            onValueChangeDefined: !!onValueChange
-        });
-
         onValueChange?.(optionValue);
         setOpen(false);
         setSearchValue(""); // Limpar busca após seleção
     };
 
-    // Debug: Log quando as props mudam
-    React.useEffect(() => {
-        console.log('🟡 Combobox props changed:', {
-            value,
-            optionsCount: options.length,
-            firstOption: options[0],
-            onValueChangeDefined: !!onValueChange
-        });
-    }, [value, options, onValueChange]);
-
     return (
-        <Popover open={open} onOpenChange={(newOpen) => {
-            console.log('🟣 Popover open state changing:', { from: open, to: newOpen });
-            setOpen(newOpen);
-        }}>
+        <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button
+                    ref={ref}
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
@@ -85,9 +70,6 @@ export function Combobox({
                         className
                     )}
                     disabled={disabled}
-                    onClick={() => {
-                        console.log('🟢 Trigger button clicked, current open:', open);
-                    }}
                 >
                     {selectedOption ? selectedOption.label : placeholder}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -103,11 +85,7 @@ export function Combobox({
                             value={searchValue}
                             onChange={(e) => setSearchValue(e.target.value)}
                             className="flex h-11 w-full bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground border-0 focus:ring-0"
-                            onClick={(e) => {
-                                console.log('⚪ Search input clicked');
-                                e.stopPropagation();
-                            }}
-                            onFocus={() => console.log('⚫ Search input focused')}
+                            onClick={(e) => e.stopPropagation()}
                         />
                     </div>
 
@@ -123,13 +101,11 @@ export function Combobox({
                                     <div
                                         key={option.value}
                                         onClick={(e) => {
-                                            console.log('🔴 Item clicked:', { option, e });
                                             e.preventDefault();
                                             e.stopPropagation();
                                             handleSelect(option.value);
                                         }}
                                         onMouseDown={(e) => {
-                                            console.log('🟠 Item mousedown:', option);
                                             e.preventDefault(); // Prevenir que o Popover feche antes do onClick
                                         }}
                                         className="dropdown-item-fix relative flex w-full cursor-pointer select-none items-center py-2.5 pl-8 pr-3 text-sm outline-none hover:bg-blue-light hover:text-primary rounded-md transition-colors"
@@ -151,4 +127,6 @@ export function Combobox({
             </PopoverContent>
         </Popover>
     );
-}
+});
+
+Combobox.displayName = "Combobox";

@@ -25,7 +25,7 @@ import { PRODUCT_CATEGORIES, UNITS } from "@shared/constants";
 import { type Ingredient, type Product, type ProductCost, type Recipe } from "@shared/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -71,20 +71,6 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
 
   const availableProductIngredients = products.filter((p) => p.isAlsoIngredient && p.id !== product?.id);
 
-  // Preparar opções para o combobox de ingredientes
-  const ingredientOptions: ComboboxOption[] = [
-    // Ingredientes regulares
-    ...ingredients.map((ingredient) => ({
-      value: ingredient.id,  // Manter como string
-      label: ingredient.name,
-    })),
-    // Produtos que também são ingredientes
-    ...availableProductIngredients.map((productIngredient) => ({
-      value: `product-${productIngredient.id}`,
-      label: productIngredient.name,
-    })),
-  ];
-
   // Função auxiliar para extrair preço unitário seguro
   const extractUnitSalePrice = (p?: ProductFormProps['product']) => {
     if (!p) return 0;
@@ -97,6 +83,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
+    shouldFocusError: false, // Desabilitar foco automático em campos com erro
     defaultValues: {
       name: product?.name || "",
       category: product?.category || "",
@@ -125,7 +112,51 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
   // Confirmação de remoção de ingrediente da receita
   const [confirmRemoveIndex, setConfirmRemoveIndex] = useState<number | null>(null);
   const [isRemoving, setIsRemoving] = useState(false);
+
+  // Controle de foco para novos ingredientes
+  const [lastAddedIndex, setLastAddedIndex] = useState<number | null>(null);
+  const ingredientRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
   const requestRemove = (index: number) => setConfirmRemoveIndex(index);
+
+  // Função para gerar opções contextuais para cada Combobox (evita duplicatas mas preserva nomes)
+  const getIngredientOptionsForIndex = (currentIndex: number): ComboboxOption[] => {
+    const currentRecipes = form.watch("recipes") || [];
+    const usedIngredientIds = new Set<string>();
+    const usedProductIngredientIds = new Set<string>();
+
+    // Coletar ingredientes já utilizados, exceto no índice atual
+    currentRecipes.forEach((recipe, index) => {
+      if (index !== currentIndex) {
+        if (recipe.ingredientId) {
+          usedIngredientIds.add(recipe.ingredientId);
+        }
+        if (recipe.productIngredientId) {
+          usedProductIngredientIds.add(recipe.productIngredientId);
+        }
+      }
+    });
+
+    const options = [
+      // Ingredientes regulares (filtrar já utilizados, exceto o atual)
+      ...ingredients
+        .filter((ingredient) => !usedIngredientIds.has(ingredient.id))
+        .map((ingredient) => ({
+          value: ingredient.id,
+          label: ingredient.name,
+        })),
+      // Produtos que também são ingredientes (filtrar já utilizados, exceto o atual)
+      ...availableProductIngredients
+        .filter((productIngredient) => !usedProductIngredientIds.has(productIngredient.id))
+        .map((productIngredient) => ({
+          value: `product-${productIngredient.id}`,
+          label: productIngredient.name,
+        })),
+    ];
+
+    return options;
+  };
+
   const confirmRemove = async () => {
     if (confirmRemoveIndex === null) return;
     try {
@@ -171,6 +202,22 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
       });
     }
   }, [product, form]);
+
+  // Focar no campo de ingrediente quando um novo item é adicionado
+  useEffect(() => {
+    if (lastAddedIndex !== null && ingredientRefs.current[lastAddedIndex]) {
+      // Usar requestAnimationFrame para garantir que a renderização termine
+      const animationFrame = requestAnimationFrame(() => {
+        const ingredientField = ingredientRefs.current[lastAddedIndex];
+        if (ingredientField) {
+          // Focar diretamente no campo de ingrediente
+          ingredientField.focus();
+        }
+        setLastAddedIndex(null);
+      });
+      return () => cancelAnimationFrame(animationFrame);
+    }
+  }, [lastAddedIndex, fields]);
 
   const createMutation = useMutation({
     mutationFn: async (data: ProductFormValues) => {
@@ -249,12 +296,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
       return;
     }
     const toSend: ProductFormValues = { ...normalized, salePrice: totalSalePrice };
-    console.log('[ProductForm] Submitting product:', {
-      input: normalized,
-      toSend,
-      recipes: normalized.recipes,
-      recipesCount: normalized.recipes?.length
-    });
+
     if (product) {
       updateMutation.mutate(toSend);
     } else {
@@ -487,7 +529,11 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => append({ ingredientId: undefined, productIngredientId: undefined, quantity: 0, unit: "kg" })}
+                    onClick={() => {
+                      const newIndex = fields.length;
+                      append({ ingredientId: undefined, productIngredientId: undefined, quantity: 0, unit: "kg" });
+                      setLastAddedIndex(newIndex);
+                    }}
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Adicionar Ingrediente
@@ -506,7 +552,10 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                             <FormLabel>Ingrediente</FormLabel>
                             <FormControl>
                               <Combobox
-                                options={ingredientOptions}
+                                ref={(el) => {
+                                  ingredientRefs.current[index] = el;
+                                }}
+                                options={getIngredientOptionsForIndex(index)}
                                 placeholder="Selecione um ingrediente"
                                 searchPlaceholder="Buscar ingrediente..."
                                 emptyMessage="Nenhum ingrediente encontrado"
@@ -520,19 +569,25 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                                   return "";
                                 })()}
                                 onValueChange={(value) => {
-                                  console.log('🟦 ProductForm ingredient selection:', { value, index });
                                   if (!value || value === "") {
                                     field.onChange(null);
                                     form.setValue(`recipes.${index}.productIngredientId`, undefined);
+                                    form.setValue(`recipes.${index}.unit`, "kg"); // Unidade padrão
                                   } else if (value.startsWith("product-")) {
                                     // This is a product ingredient
                                     const productId = value.replace("product-", "");
+                                    const productIngredient = availableProductIngredients.find(p => p.id === productId);
                                     field.onChange(null); // Clear ingredientId
                                     form.setValue(`recipes.${index}.productIngredientId`, productId);
+                                    // Definir unidade do produto ingrediente
+                                    form.setValue(`recipes.${index}.unit`, productIngredient?.yieldUnit || "un");
                                   } else {
                                     // This is a regular ingredient - manter como string
+                                    const ingredient = ingredients.find(ing => ing.id === value);
                                     field.onChange(value);
                                     form.setValue(`recipes.${index}.productIngredientId`, undefined);
+                                    // Definir unidade do ingrediente
+                                    form.setValue(`recipes.${index}.unit`, ingredient?.unit || "kg");
                                   }
                                 }}
                               />
@@ -563,29 +618,37 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                       <FormField
                         control={form.control}
                         name={`recipes.${index}.unit`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Unidade</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              value={field.value || ""}
-                            >
+                        render={({ field }) => {
+                          // Obter a unidade do ingrediente selecionado
+                          const currentRecipe = form.watch(`recipes.${index}`);
+                          let displayUnit = "Unidade";
+
+                          if (currentRecipe?.ingredientId) {
+                            const ingredient = ingredients.find(ing => ing.id === currentRecipe.ingredientId);
+                            if (ingredient?.unit) {
+                              const unitInfo = UNITS.find(u => u.value === ingredient.unit);
+                              displayUnit = unitInfo?.label || ingredient.unit;
+                            }
+                          } else if (currentRecipe?.productIngredientId) {
+                            const productIngredient = availableProductIngredients.find(p => p.id === currentRecipe.productIngredientId);
+                            if (productIngredient?.yieldUnit) {
+                              const unitInfo = UNITS.find(u => u.value === productIngredient.yieldUnit);
+                              displayUnit = unitInfo?.label || productIngredient.yieldUnit;
+                            }
+                          }
+
+                          return (
+                            <FormItem>
+                              <FormLabel>Unidade</FormLabel>
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Unidade" />
-                                </SelectTrigger>
+                                <div className="flex h-10 w-full items-center rounded-md border border-input bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                                  {displayUnit}
+                                </div>
                               </FormControl>
-                              <SelectContent className="max-h-[200px] overflow-y-auto">
-                                {UNITS.map((unit) => (
-                                  <SelectItem key={unit.value} value={unit.value}>
-                                    {unit.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
                       />
                     </div>
 
