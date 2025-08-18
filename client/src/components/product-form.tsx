@@ -1,17 +1,3 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { errorToast, successToast, useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { PRODUCT_CATEGORIES, UNITS } from "@shared/constants";
-import { type Ingredient, type Product, type ProductCost, type Recipe } from "@shared/schema";
-// import { z } from "zod"; // já importado acima
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +9,20 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { errorToast, successToast, useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { PRODUCT_CATEGORIES, UNITS } from "@shared/constants";
+import { type Ingredient, type Product, type ProductCost, type Recipe } from "@shared/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -70,6 +70,20 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
   });
 
   const availableProductIngredients = products.filter((p) => p.isAlsoIngredient && p.id !== product?.id);
+
+  // Preparar opções para o combobox de ingredientes
+  const ingredientOptions: ComboboxOption[] = [
+    // Ingredientes regulares
+    ...ingredients.map((ingredient) => ({
+      value: ingredient.id,  // Manter como string
+      label: ingredient.name,
+    })),
+    // Produtos que também são ingredientes
+    ...availableProductIngredients.map((productIngredient) => ({
+      value: `product-${productIngredient.id}`,
+      label: productIngredient.name,
+    })),
+  ];
 
   // Função auxiliar para extrair preço unitário seguro
   const extractUnitSalePrice = (p?: ProductFormProps['product']) => {
@@ -197,6 +211,10 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      // Invalidar também a query específica do produto editado para forçar recálculo de custos
+      if (product?.id) {
+        queryClient.invalidateQueries({ queryKey: ["/api/products", product.id] });
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/ingredients"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
@@ -231,7 +249,12 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
       return;
     }
     const toSend: ProductFormValues = { ...normalized, salePrice: totalSalePrice };
-    console.log('[ProductForm] Submitting product:', { input: normalized, toSend });
+    console.log('[ProductForm] Submitting product:', {
+      input: normalized,
+      toSend,
+      recipes: normalized.recipes,
+      recipesCount: normalized.recipes?.length
+    });
     if (product) {
       updateMutation.mutate(toSend);
     } else {
@@ -481,66 +504,39 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Ingrediente</FormLabel>
-                            <Select
-                              onValueChange={(value) => {
-                                if (value === "null") {
-                                  field.onChange(null);
-                                  // Also clear productIngredientId
-                                  form.setValue(`recipes.${index}.productIngredientId`, undefined);
-                                } else if (value.startsWith("product-")) {
-                                  // This is a product ingredient
-                                  const productId = parseInt(value.replace("product-", ""));
-                                  field.onChange(null); // Clear ingredientId
-                                  form.setValue(`recipes.${index}.productIngredientId`, String(productId));
-                                } else {
-                                  // This is a regular ingredient
-                                  field.onChange(parseInt(value));
-                                  form.setValue(`recipes.${index}.productIngredientId`, undefined);
-                                }
-                              }}
-                              value={(() => {
-                                const recipe = form.watch(`recipes.${index}`);
-                                if (recipe?.productIngredientId) {
-                                  return `product-${recipe.productIngredientId}`;
-                                } else if (recipe?.ingredientId) {
-                                  return recipe.ingredientId.toString();
-                                }
-                                return "";
-                              })()}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue
-                                    placeholder="Selecione um ingrediente"
-                                  >
-                                    {(() => {
-                                      const recipe = form.watch(`recipes.${index}`);
-                                      if (recipe?.productIngredientId) {
-                                        const productIngredient = availableProductIngredients.find(p => p.id === recipe.productIngredientId);
-                                        return productIngredient ? productIngredient.name : "Produto não encontrado";
-                                      } else if (recipe?.ingredientId) {
-                                        const ingredient = ingredients.find(i => i.id === recipe.ingredientId);
-                                        return ingredient ? ingredient.name : "Ingrediente não encontrado";
-                                      }
-                                      return "Selecione um ingrediente";
-                                    })()}
-                                  </SelectValue>
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="max-h-[200px] overflow-y-auto">
-                                <SelectItem value="null">Selecione...</SelectItem>
-                                {ingredients.map((ingredient) => (
-                                  <SelectItem key={ingredient.id} value={ingredient.id.toString()}>
-                                    {ingredient.name}
-                                  </SelectItem>
-                                ))}
-                                {availableProductIngredients.map((productIngredient) => (
-                                  <SelectItem key={`product-${productIngredient.id}`} value={`product-${productIngredient.id}`}>
-                                    {productIngredient.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <FormControl>
+                              <Combobox
+                                options={ingredientOptions}
+                                placeholder="Selecione um ingrediente"
+                                searchPlaceholder="Buscar ingrediente..."
+                                emptyMessage="Nenhum ingrediente encontrado"
+                                value={(() => {
+                                  const recipe = form.watch(`recipes.${index}`);
+                                  if (recipe?.productIngredientId) {
+                                    return `product-${recipe.productIngredientId}`;
+                                  } else if (recipe?.ingredientId) {
+                                    return recipe.ingredientId; // Manter como string
+                                  }
+                                  return "";
+                                })()}
+                                onValueChange={(value) => {
+                                  console.log('🟦 ProductForm ingredient selection:', { value, index });
+                                  if (!value || value === "") {
+                                    field.onChange(null);
+                                    form.setValue(`recipes.${index}.productIngredientId`, undefined);
+                                  } else if (value.startsWith("product-")) {
+                                    // This is a product ingredient
+                                    const productId = value.replace("product-", "");
+                                    field.onChange(null); // Clear ingredientId
+                                    form.setValue(`recipes.${index}.productIngredientId`, productId);
+                                  } else {
+                                    // This is a regular ingredient - manter como string
+                                    field.onChange(value);
+                                    form.setValue(`recipes.${index}.productIngredientId`, undefined);
+                                  }
+                                }}
+                              />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
