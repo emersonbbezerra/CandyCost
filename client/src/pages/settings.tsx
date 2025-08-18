@@ -1,28 +1,27 @@
-import { useState, useEffect } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Settings as SettingsIcon, 
-  Percent, 
-  TrendingUp, 
-  AlertTriangle, 
-  DollarSign,
-  Calculator,
-  Bell,
-  Info,
-  Clock,
-  Calendar
-} from "lucide-react";
-import { successToast, errorToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { errorToast, successToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { apiRequest } from "@/lib/queryClient";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  AlertTriangle,
+  Bell,
+  Calculator,
+  Calendar,
+  Clock,
+  DollarSign,
+  Info,
+  Percent,
+  Settings as SettingsIcon,
+  TrendingUp
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface SystemSettings {
   defaultMarginPercentage: number;
@@ -62,7 +61,7 @@ export default function Settings() {
   const [dataLoaded, setDataLoaded] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  
+
   // Verificar se o usuário é admin para determinar quais configurações podem ser alteradas
   const isAdmin = user?.role === 'admin';
 
@@ -86,15 +85,13 @@ export default function Settings() {
     }
   });
 
-  // Atualizar configurações quando dados carregarem (apenas uma vez)
+  // Atualizar configurações quando dados carregarem (apenas uma vez por carregamento inicial)
   useEffect(() => {
     if (currentSettings && !isLoading && !dataLoaded) {
       setSettings(currentSettings);
       setDataLoaded(true);
     }
-  }, [currentSettings, isLoading, dataLoaded]);
-
-  // Atualizar configuração de trabalho quando carregar
+  }, [currentSettings, isLoading, dataLoaded]);  // Atualizar configuração de trabalho quando carregar
   useEffect(() => {
     if (currentWorkConfig && !isLoadingWorkConfig) {
       setWorkConfig(currentWorkConfig);
@@ -106,7 +103,7 @@ export default function Settings() {
       // Escolher rota baseada no papel do usuário
       let endpoint = "/api/settings/personal";
       let settingsToSend = newSettings;
-      
+
       if (isAdmin) {
         // Admin pode alterar todas as configurações
         endpoint = "/api/settings";
@@ -117,20 +114,29 @@ export default function Settings() {
           enableCostAlerts: newSettings.enableCostAlerts
         } as SystemSettings;
       }
-      
+
       const response = await apiRequest("PUT", endpoint, settingsToSend);
       return response.json();
     },
     onSuccess: (savedSettings) => {
+      // Atualizar o estado com os dados salvos do servidor
       setSettings(savedSettings);
+
       successToast(
         "Configurações Salvas",
-        isAdmin 
+        isAdmin
           ? "Todas as configurações do sistema foram atualizadas!"
           : "Suas preferências pessoais foram atualizadas!"
       );
-      queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
-      queryClient.invalidateQueries({ queryKey: ["settings"] });
+
+      // Invalidar apenas queries do dashboard para refletir mudanças
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+
+      // Forçar recarregamento das configurações após um breve delay
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
+      }, 500);
     },
     onError: (error: any) => {
       errorToast(
@@ -138,9 +144,7 @@ export default function Settings() {
         error.message || "Não foi possível salvar as configurações. Tente novamente."
       );
     }
-  });
-
-  const handleSave = () => {
+  }); const handleSave = () => {
     saveSettingsMutation.mutate(settings);
   };
 
@@ -206,7 +210,7 @@ export default function Settings() {
           {isAdmin ? 'Configurações do Sistema' : 'Minhas Preferências'}
         </h2>
         <p className="text-gray-600 mt-2">
-          {isAdmin 
+          {isAdmin
             ? 'Configure todas as definições do sistema para sua confeitaria'
             : 'Personalize suas preferências de notificações'
           }
@@ -237,16 +241,16 @@ export default function Settings() {
                 <Input
                   id="businessName"
                   value={settings.businessName}
-                  onChange={(e) => setSettings({...settings, businessName: e.target.value})}
+                  onChange={(e) => setSettings({ ...settings, businessName: e.target.value })}
                   placeholder="Ex: Doces da Maria"
                   disabled={!isAdmin}
                 />
               </div>
               <div>
                 <Label htmlFor="currencySymbol">Símbolo da Moeda</Label>
-                <Select 
-                  value={settings.currencySymbol} 
-                  onValueChange={(value) => setSettings({...settings, currencySymbol: value})}
+                <Select
+                  value={settings.currencySymbol}
+                  onValueChange={(value) => setSettings({ ...settings, currencySymbol: value })}
                   disabled={!isAdmin}
                 >
                   <SelectTrigger>
@@ -283,7 +287,7 @@ export default function Settings() {
                     min="0"
                     max="500"
                     value={settings.defaultMarginPercentage}
-                    onChange={(e) => setSettings({...settings, defaultMarginPercentage: parseInt(e.target.value) || 0})}
+                    onChange={(e) => setSettings({ ...settings, defaultMarginPercentage: parseInt(e.target.value) || 0 })}
                     disabled={!isAdmin}
                   />
                   <Percent className="w-4 h-4 text-gray-500" />
@@ -296,7 +300,7 @@ export default function Settings() {
                 <Switch
                   id="autoMargins"
                   checked={settings.autoCalculateMargins}
-                  onCheckedChange={(checked) => setSettings({...settings, autoCalculateMargins: checked})}
+                  onCheckedChange={(checked) => setSettings({ ...settings, autoCalculateMargins: checked })}
                   disabled={!isAdmin}
                 />
                 <Label htmlFor="autoMargins" className="text-sm">
@@ -329,7 +333,7 @@ export default function Settings() {
                     min="1"
                     max="7"
                     value={workConfig.workDaysPerWeek}
-                    onChange={(e) => setWorkConfig({...workConfig, workDaysPerWeek: parseInt(e.target.value) || 1})}
+                    onChange={(e) => setWorkConfig({ ...workConfig, workDaysPerWeek: parseInt(e.target.value) || 1 })}
                     disabled={!isAdmin}
                   />
                   <Calendar className="w-4 h-4 text-gray-500" />
@@ -338,7 +342,7 @@ export default function Settings() {
                   Número de dias trabalhados por semana
                 </p>
               </div>
-              
+
               <div>
                 <Label htmlFor="hoursPerDay">Horas por Dia</Label>
                 <div className="flex items-center space-x-2">
@@ -349,7 +353,7 @@ export default function Settings() {
                     max="24"
                     step="0.5"
                     value={workConfig.hoursPerDay}
-                    onChange={(e) => setWorkConfig({...workConfig, hoursPerDay: e.target.value})}
+                    onChange={(e) => setWorkConfig({ ...workConfig, hoursPerDay: e.target.value })}
                     disabled={!isAdmin}
                   />
                   <Clock className="w-4 h-4 text-gray-500" />
@@ -358,7 +362,7 @@ export default function Settings() {
                   Horas trabalhadas por dia
                 </p>
               </div>
-              
+
               <div>
                 <Label htmlFor="weeksPerMonth">Semanas por Mês</Label>
                 <div className="flex items-center space-x-2">
@@ -369,7 +373,7 @@ export default function Settings() {
                     max="5"
                     step="0.1"
                     value={workConfig.weeksPerMonth}
-                    onChange={(e) => setWorkConfig({...workConfig, weeksPerMonth: e.target.value})}
+                    onChange={(e) => setWorkConfig({ ...workConfig, weeksPerMonth: e.target.value })}
                     disabled={!isAdmin}
                   />
                   <Calendar className="w-4 h-4 text-gray-500" />
@@ -379,7 +383,7 @@ export default function Settings() {
                 </p>
               </div>
             </div>
-            
+
             <div className="bg-blue-50 p-4 rounded-lg">
               <div className="flex items-center space-x-2 mb-2">
                 <Info className="w-4 h-4 text-blue-600" />
@@ -395,7 +399,7 @@ export default function Settings() {
 
             {isAdmin && (
               <div className="pt-4 border-t">
-                <Button 
+                <Button
                   onClick={handleSaveWorkConfig}
                   disabled={saveWorkConfigMutation.isPending}
                   className="w-full"
@@ -422,11 +426,11 @@ export default function Settings() {
                   <Switch
                     id="priceAlerts"
                     checked={settings.enablePriceAlerts}
-                    onCheckedChange={(checked) => setSettings({...settings, enablePriceAlerts: checked})}
+                    onCheckedChange={(checked) => setSettings({ ...settings, enablePriceAlerts: checked })}
                   />
                   <Label htmlFor="priceAlerts">Alertas de aumento de preço</Label>
                 </div>
-                
+
                 {settings.enablePriceAlerts && (
                   <div>
                     <Label htmlFor="priceThreshold">Limite de aumento (%)</Label>
@@ -437,7 +441,7 @@ export default function Settings() {
                         min="1"
                         max="100"
                         value={settings.priceIncreaseAlertThreshold}
-                        onChange={(e) => setSettings({...settings, priceIncreaseAlertThreshold: parseInt(e.target.value) || 0})}
+                        onChange={(e) => setSettings({ ...settings, priceIncreaseAlertThreshold: parseInt(e.target.value) || 0 })}
                         disabled={!isAdmin}
                       />
                       <TrendingUp className="w-4 h-4 text-gray-500" />
@@ -454,11 +458,11 @@ export default function Settings() {
                   <Switch
                     id="costAlerts"
                     checked={settings.enableCostAlerts}
-                    onCheckedChange={(checked) => setSettings({...settings, enableCostAlerts: checked})}
+                    onCheckedChange={(checked) => setSettings({ ...settings, enableCostAlerts: checked })}
                   />
                   <Label htmlFor="costAlerts">Alertas de custo elevado</Label>
                 </div>
-                
+
                 {settings.enableCostAlerts && (
                   <div>
                     <Label htmlFor="costThreshold">Limite de custo ({settings.currencySymbol})</Label>
@@ -469,7 +473,7 @@ export default function Settings() {
                         min="1"
                         step="0.01"
                         value={settings.highCostAlertThreshold}
-                        onChange={(e) => setSettings({...settings, highCostAlertThreshold: parseFloat(e.target.value) || 0})}
+                        onChange={(e) => setSettings({ ...settings, highCostAlertThreshold: parseFloat(e.target.value) || 0 })}
                         disabled={!isAdmin}
                       />
                       <DollarSign className="w-4 h-4 text-gray-500" />
@@ -488,22 +492,22 @@ export default function Settings() {
         <Alert>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            <strong>Atenção:</strong> Algumas alterações podem afetar cálculos existentes. 
+            <strong>Atenção:</strong> Algumas alterações podem afetar cálculos existentes.
             A margem padrão será aplicada apenas a novos produtos criados após o salvamento.
           </AlertDescription>
         </Alert>
 
         {/* Botões de Ação */}
         <div className="flex justify-between pt-6">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={handleReset}
             disabled={saveSettingsMutation.isPending}
           >
             Resetar Padrões
           </Button>
-          
-          <Button 
+
+          <Button
             onClick={handleSave}
             disabled={saveSettingsMutation.isPending}
             className="min-w-32"

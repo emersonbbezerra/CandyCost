@@ -122,14 +122,20 @@ model PriceHistory {
 }
 
 model WorkConfiguration {
-  id                     String   @id @default(cuid())
-  hoursPerDay            Float    @default(8.0)
-  daysPerMonth           Float    @default(22.0)
-  hourlyRate             Float    @default(25.0)
-  highCostAlertThreshold Float    @default(50.0)
-  currencySymbol         String   @default("R$")
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  id                          String   @id @default(cuid())
+  hoursPerDay                 Float    @default(8.0)
+  daysPerMonth                Float    @default(22.0)
+  hourlyRate                  Float    @default(25.0)
+  highCostAlertThreshold      Float    @default(50.0)
+  currencySymbol              String   @default("R$")
+  enableCostAlerts            Boolean  @default(true)
+  enablePriceAlerts           Boolean  @default(true)
+  defaultMarginPercentage     Float    @default(60.0)
+  priceIncreaseAlertThreshold Float    @default(20.0)
+  autoCalculateMargins        Boolean  @default(true)
+  businessName                String   @default("Minha Confeitaria")
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
 
   @@map("work_configuration")
 }
