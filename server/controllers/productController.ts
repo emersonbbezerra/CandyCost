@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
+import { priceHistoryService } from '../services/priceHistoryService';
 import { productService } from '../services/productService';
 
 export const getProducts = async (_req: Request, res: Response) => {
@@ -118,6 +119,13 @@ export const updateProduct = async (req: Request, res: Response) => {
       .partial()
       .parse(req.body);
 
+    // Capturar custo atual ANTES da atualização
+    const oldCost = await productService.calculateProductCost(id);
+    console.log(
+      '[ProductController] Old cost before update:',
+      oldCost.costPerYieldUnit
+    );
+
     // Ajustar tipos para compatibilidade com Partial<InsertProduct>
     const parsedSalePrice =
       typeof data.salePrice === 'string'
@@ -167,7 +175,69 @@ export const updateProduct = async (req: Request, res: Response) => {
         delete updateData[key as keyof typeof updateData];
       }
     });
+
     const product = await productService.updateProduct(id, updateData);
+
+    // Recalcular custo APÓS a atualização
+    const newCost = await productService.calculateProductCost(id);
+    console.log(
+      '[ProductController] New cost after update:',
+      newCost.costPerYieldUnit
+    );
+
+    // Registrar no histórico se campos que afetam custo foram alterados
+    const costAffectingFields = [
+      'yield',
+      'salePrice',
+      'marginPercentage',
+      'preparationTimeMinutes',
+    ];
+    const changedFields = costAffectingFields.filter(
+      (field) => data[field as keyof typeof data] !== undefined
+    );
+
+    if (changedFields.length > 0) {
+      console.log(
+        '[ProductController] Cost-affecting fields changed:',
+        changedFields
+      );
+
+      const oldCostPerUnit = oldCost.costPerYieldUnit ?? 0;
+      const newCostPerUnit = newCost.costPerYieldUnit ?? 0;
+      const threshold = 0.0001;
+
+      console.log(
+        `[ProductController] Cost comparison: ${oldCostPerUnit.toFixed(
+          6
+        )} -> ${newCostPerUnit.toFixed(6)}, diff: ${Math.abs(
+          newCostPerUnit - oldCostPerUnit
+        ).toFixed(6)}`
+      );
+
+      if (Math.abs(newCostPerUnit - oldCostPerUnit) > threshold) {
+        console.log(
+          '[ProductController] Registering cost change in price history...'
+        );
+
+        const changeReason = `Atualização de ${changedFields.join(', ')}`;
+
+        await priceHistoryService.createPriceHistory({
+          productId: id,
+          itemType: 'product',
+          oldPrice: oldCostPerUnit,
+          newPrice: newCostPerUnit,
+          changeReason,
+          changeType: 'product_update',
+        });
+
+        console.log('[ProductController] Price history recorded successfully');
+      } else {
+        console.log(
+          '[ProductController] Cost change too small, not recording in history'
+        );
+      }
+    }
+
     res.json(product);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -175,6 +245,7 @@ export const updateProduct = async (req: Request, res: Response) => {
         .status(400)
         .json({ message: 'Dados inválidos', errors: error.issues });
     }
+    console.error('[ProductController] Error updating product:', error);
     res.status(500).json({ message: 'Erro ao atualizar produto' });
   }
 };
