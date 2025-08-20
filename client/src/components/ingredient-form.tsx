@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCurrencySymbol } from "@/contexts/SettingsContext";
 import { errorToast, successToast, useToast } from "@/hooks/use-toast";
+import { useCostInvalidation } from "@/hooks/useCostInvalidation";
 import { useFormatCurrency } from "@/hooks/useFormatCurrency";
 import { apiRequest } from "@/lib/queryClient";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,6 +25,7 @@ interface IngredientFormProps {
 export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFormProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const costInvalidation = useCostInvalidation();
   const currencySymbol = useCurrencySymbol();
   const formatCurrencyWithSymbol = useFormatCurrency();
 
@@ -68,9 +70,7 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/ingredients"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
+      costInvalidation.invalidateOnIngredientChange();
       successToast("Sucesso", "Ingrediente criado com sucesso!");
       onOpenChange(false);
       form.reset();
@@ -86,11 +86,7 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
       return response.json();
     },
     onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/ingredients"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
+      costInvalidation.invalidateOnIngredientChange();
 
       const affectedCount = result.affectedProducts?.length || 0;
       successToast("Sucesso", `Ingrediente atualizado! ${affectedCount > 0 ? `${affectedCount} produtos foram afetados.` : ''}`);

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { errorToast, successToast, useToast } from "@/hooks/use-toast";
+import { useCostInvalidation } from "@/hooks/useCostInvalidation";
 import { useFormatCurrency } from "@/hooks/useFormatCurrency";
 import { apiRequest } from "@/lib/queryClient";
 import { formatRelativeTime } from "@/lib/utils";
@@ -59,6 +60,7 @@ export default function Ingredients() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const costInvalidation = useCostInvalidation();
 
   const { data: ingredients = [], isLoading } = useQuery<Ingredient[]>({
     queryKey: ["/api/ingredients"],
@@ -86,10 +88,7 @@ export default function Ingredients() {
       await apiRequest("DELETE", `/api/ingredients/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/ingredients"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
+      costInvalidation.invalidateOnIngredientChange();
       successToast("Sucesso", "Ingrediente excluído com sucesso!");
     },
     onError: () => {

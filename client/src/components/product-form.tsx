@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { errorToast, successToast, useToast } from "@/hooks/use-toast";
+import { useCostInvalidation } from "@/hooks/useCostInvalidation";
 import { apiRequest } from "@/lib/queryClient";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PRODUCT_CATEGORIES, UNITS } from "@shared/constants";
@@ -60,6 +61,7 @@ export interface ProductFormProps {
 export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const costInvalidation = useCostInvalidation();
 
   const { data: ingredients = [] } = useQuery<Ingredient[]>({
     queryKey: ["/api/ingredients"],
@@ -231,11 +233,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
       return newProduct;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/ingredients"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
+      costInvalidation.invalidateOnProductChange();
       successToast("Sucesso", "Produto criado com sucesso!");
       onOpenChange(false);
       form.reset();
@@ -257,15 +255,11 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
       return updatedProduct;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      costInvalidation.invalidateOnProductChange();
       // Invalidar também a query específica do produto editado para forçar recálculo de custos
       if (product?.id) {
         queryClient.invalidateQueries({ queryKey: ["/api/products", product.id] });
       }
-      queryClient.invalidateQueries({ queryKey: ["/api/ingredients"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
       successToast("Sucesso", "Produto atualizado com sucesso!");
       onOpenChange(false);
     },

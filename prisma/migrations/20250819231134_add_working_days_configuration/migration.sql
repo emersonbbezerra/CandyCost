@@ -1,0 +1,11 @@
+-- AlterTable
+ALTER TABLE "public"."work_configuration" ADD COLUMN     "annualWorkingDays" INTEGER NOT NULL DEFAULT 261,
+ADD COLUMN     "annualWorkingHours" DOUBLE PRECISION NOT NULL DEFAULT 2088.0,
+ADD COLUMN     "monthlyWorkingHours" DOUBLE PRECISION NOT NULL DEFAULT 174.0,
+ADD COLUMN     "workFriday" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN     "workMonday" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN     "workSaturday" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "workSunday" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "workThursday" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN     "workTuesday" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN     "workWednesday" BOOLEAN NOT NULL DEFAULT true;

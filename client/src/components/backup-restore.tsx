@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { errorToast, successToast, useToast } from "@/hooks/use-toast";
+import { useCostInvalidation } from "@/hooks/useCostInvalidation";
 import { apiRequest } from "@/lib/queryClient";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle, Database, Download, Upload } from "lucide-react";
@@ -18,6 +19,7 @@ export function BackupRestore() {
   const [backupDataToRestore, setBackupDataToRestore] = useState<any>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const costInvalidation = useCostInvalidation();
 
   const handleBackup = async () => {
     setIsBackingUp(true);
@@ -101,12 +103,8 @@ export function BackupRestore() {
       return response.json();
     },
     onSuccess: (data) => {
-      // Invalidar todas as queries para recarregar dados
-      queryClient.invalidateQueries({ queryKey: ["/api/ingredients"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/reports"] });
+      // Invalidar todos os grupos de queries relacionadas a custos
+      costInvalidation.invalidateFullRecalculation();
 
       successToast("Restauração Concluída", `Backup restaurado com sucesso! ${data.restored.ingredients} ingredientes, ${data.restored.products} produtos e ${data.restored.priceHistory} registros de histórico foram restaurados.`);
 

@@ -3,6 +3,10 @@ dotenv.config();
 
 import { prisma } from './db';
 import { userService } from './services/userService';
+import {
+  calculateWorkingDays,
+  type WorkingDaysConfig,
+} from './utils/workingDaysCalculator';
 
 async function setupSessionsTable() {
   try {
@@ -887,15 +891,58 @@ async function seed() {
     }
 
     // Inserir configuração de trabalho (WorkConfiguration)
+    console.log('📊 Criando configuração de trabalho com cálculos precisos...');
+
+    // Definir configuração padrão: segunda a sexta-feira, 8 horas por dia
+    const defaultWorkConfig: WorkingDaysConfig = {
+      workMonday: true,
+      workTuesday: true,
+      workWednesday: true,
+      workThursday: true,
+      workFriday: true,
+      workSaturday: false,
+      workSunday: false,
+      hoursPerDay: 8.0,
+    };
+
+    // Calcular campos derivados usando o algoritmo preciso
+    const workCalculations = calculateWorkingDays(defaultWorkConfig);
+
     await prisma.workConfiguration.create({
       data: {
         hoursPerDay: 8.0,
-        daysPerMonth: 22.0,
+        daysPerMonth: 22.0, // mantido para compatibilidade
         hourlyRate: 25.0,
         highCostAlertThreshold: 50.0,
         currencySymbol: 'R$',
+        enableCostAlerts: true,
+        enablePriceAlerts: true,
+        defaultMarginPercentage: 60.0,
+        priceIncreaseAlertThreshold: 20.0,
+        autoCalculateMargins: true,
+        businessName: 'Doces da Maria - Demo',
+        // Configuração de dias da semana
+        workMonday: defaultWorkConfig.workMonday,
+        workTuesday: defaultWorkConfig.workTuesday,
+        workWednesday: defaultWorkConfig.workWednesday,
+        workThursday: defaultWorkConfig.workThursday,
+        workFriday: defaultWorkConfig.workFriday,
+        workSaturday: defaultWorkConfig.workSaturday,
+        workSunday: defaultWorkConfig.workSunday,
+        // Campos calculados precisos
+        annualWorkingDays: workCalculations.annualWorkingDays,
+        annualWorkingHours: workCalculations.annualWorkingHours,
+        monthlyWorkingHours: workCalculations.monthlyWorkingHours,
       },
     });
+
+    console.log(
+      `✅ Configuração criada: ${
+        workCalculations.annualWorkingDays
+      } dias/ano, ${
+        workCalculations.annualWorkingHours
+      } horas/ano, ${workCalculations.monthlyWorkingHours.toFixed(1)} horas/mês`
+    );
 
     // Inserir custos fixos
     const sampleFixedCosts = [

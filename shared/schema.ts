@@ -162,20 +162,53 @@ export type InsertPriceHistory = z.infer<typeof insertPriceHistorySchema>;
 export const workConfigurationSchema = z.object({
   id: z.string(),
   hoursPerDay: z.number(),
+  // Campos antigos (mantidos para compatibilidade)
   daysPerMonth: z.number(),
   hourlyRate: z.number(),
   highCostAlertThreshold: z.number(),
   currencySymbol: z.string(),
+  enableCostAlerts: z.boolean(),
+  enablePriceAlerts: z.boolean(),
+  defaultMarginPercentage: z.number(),
+  priceIncreaseAlertThreshold: z.number(),
+  autoCalculateMargins: z.boolean(),
+  businessName: z.string(),
+  // Novos campos para dias da semana
+  workMonday: z.boolean(),
+  workTuesday: z.boolean(),
+  workWednesday: z.boolean(),
+  workThursday: z.boolean(),
+  workFriday: z.boolean(),
+  workSaturday: z.boolean(),
+  workSunday: z.boolean(),
+  // Campos calculados
+  annualWorkingDays: z.number(),
+  annualWorkingHours: z.number(),
+  monthlyWorkingHours: z.number(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
 
 export const insertWorkConfigurationSchema = z.object({
   hoursPerDay: z.number().positive().default(8.0),
-  daysPerMonth: z.number().positive().default(22.0),
+  daysPerMonth: z.number().positive().default(22.0), // mantido para compatibilidade
   hourlyRate: z.number().positive().default(25.0),
   highCostAlertThreshold: z.number().positive().default(50.0),
   currencySymbol: z.string().default('R$'),
+  enableCostAlerts: z.boolean().default(true),
+  enablePriceAlerts: z.boolean().default(true),
+  defaultMarginPercentage: z.number().default(60.0),
+  priceIncreaseAlertThreshold: z.number().default(20.0),
+  autoCalculateMargins: z.boolean().default(true),
+  businessName: z.string().default('Minha Confeitaria'),
+  // Novos campos opcionais para dias da semana
+  workMonday: z.boolean().optional().default(true),
+  workTuesday: z.boolean().optional().default(true),
+  workWednesday: z.boolean().optional().default(true),
+  workThursday: z.boolean().optional().default(true),
+  workFriday: z.boolean().optional().default(true),
+  workSaturday: z.boolean().optional().default(false),
+  workSunday: z.boolean().optional().default(false),
 });
 
 export type WorkConfiguration = z.infer<typeof workConfigurationSchema>;

@@ -174,27 +174,47 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
   });
 
   try {
-    // Buscar últimos registros gerais (ingredientes, produtos e custos fixos)
-    const recentAll = await prisma.priceHistory.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 30, // pega mais e depois separamos
-      include: {
-        ingredient: true,
-        product: true,
-      },
-    });
-
-    const recentIngredientUpdates = recentAll
-      .filter((r) => r.ingredientId)
-      .slice(0, 5);
-    const recentProductUpdates = recentAll
-      .filter((r) => r.productId)
-      .slice(0, 5);
-    const recentFixedCostUpdates = recentAll
-      .filter(
-        (r) => !r.productId && !r.ingredientId && r.itemType === 'fixed_cost'
-      )
-      .slice(0, 5);
+    // Buscar últimos registros por categoria separadamente para garantir diversidade
+    const [
+      recentIngredientUpdates,
+      recentProductUpdates,
+      recentFixedCostUpdates,
+    ] = await Promise.all([
+      // Ingredientes
+      prisma.priceHistory.findMany({
+        where: { ingredientId: { not: null } },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: {
+          ingredient: true,
+          product: true,
+        },
+      }),
+      // Produtos
+      prisma.priceHistory.findMany({
+        where: { productId: { not: null } },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: {
+          ingredient: true,
+          product: true,
+        },
+      }),
+      // Custos fixos
+      prisma.priceHistory.findMany({
+        where: {
+          itemType: 'fixed_cost',
+          productId: null,
+          ingredientId: null,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: {
+          ingredient: true,
+          product: true,
+        },
+      }),
+    ]);
 
     // Format ingredient updates
     const enrichedIngredientUpdates = recentIngredientUpdates.map((update) => ({

@@ -7,13 +7,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { errorToast, successToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useCostInvalidation } from "@/hooks/useCostInvalidation";
 import { apiRequest } from "@/lib/queryClient";
+import {
+  calculateWorkingDaysClient,
+  getDayAbbreviation,
+  validateWorkingDaysConfig,
+  type WorkingDaysConfig
+} from "@/lib/workingDaysCalculator";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   Bell,
   Calculator,
-  Calendar,
   Clock,
   DollarSign,
   Info,
@@ -21,7 +27,7 @@ import {
   Settings as SettingsIcon,
   TrendingUp
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface SystemSettings {
   defaultMarginPercentage: number;
@@ -35,9 +41,21 @@ interface SystemSettings {
 }
 
 interface WorkConfiguration {
-  workDaysPerWeek: number;
+  workDaysPerWeek?: number; // mantido para compatibilidade temporária
   hoursPerDay: string;
-  weeksPerMonth: string;
+  weeksPerMonth?: string; // mantido para compatibilidade temporária
+  // Novos campos para dias da semana
+  workMonday: boolean;
+  workTuesday: boolean;
+  workWednesday: boolean;
+  workThursday: boolean;
+  workFriday: boolean;
+  workSaturday: boolean;
+  workSunday: boolean;
+  // Campos calculados
+  annualWorkingDays?: number;
+  annualWorkingHours?: number;
+  monthlyWorkingHours?: number;
 }
 
 const defaultSettings: SystemSettings = {
@@ -54,16 +72,45 @@ const defaultSettings: SystemSettings = {
 export default function Settings() {
   const [settings, setSettings] = useState<SystemSettings>(defaultSettings);
   const [workConfig, setWorkConfig] = useState<WorkConfiguration>({
-    workDaysPerWeek: 5,
+    workDaysPerWeek: 5, // compatibilidade
     hoursPerDay: "8.00",
-    weeksPerMonth: "4.0"
+    weeksPerMonth: "4.0", // compatibilidade
+    // Configuração padrão: seg-sex
+    workMonday: true,
+    workTuesday: true,
+    workWednesday: true,
+    workThursday: true,
+    workFriday: true,
+    workSaturday: false,
+    workSunday: false,
+    // Campos calculados
+    annualWorkingDays: 261,
+    annualWorkingHours: 2088,
+    monthlyWorkingHours: 174,
   });
   const [dataLoaded, setDataLoaded] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const costInvalidation = useCostInvalidation();
 
   // Verificar se o usuário é admin para determinar quais configurações podem ser alteradas
   const isAdmin = user?.role === 'admin';
+
+  // Calcular estatísticas de trabalho em tempo real
+  const workingDaysCalculation = useMemo(() => {
+    const workingDaysConfig: WorkingDaysConfig = {
+      workMonday: workConfig.workMonday,
+      workTuesday: workConfig.workTuesday,
+      workWednesday: workConfig.workWednesday,
+      workThursday: workConfig.workThursday,
+      workFriday: workConfig.workFriday,
+      workSaturday: workConfig.workSaturday,
+      workSunday: workConfig.workSunday,
+      hoursPerDay: parseFloat(workConfig.hoursPerDay) || 8
+    };
+
+    return calculateWorkingDaysClient(workingDaysConfig);
+  }, [workConfig]);
 
   // Carregar configurações do backend
   const { data: currentSettings, isLoading } = useQuery({
@@ -150,20 +197,42 @@ export default function Settings() {
 
   const saveWorkConfigMutation = useMutation({
     mutationFn: async (newWorkConfig: WorkConfiguration) => {
+      // Validar se pelo menos um dia está selecionado
+      if (!validateWorkingDaysConfig({
+        workMonday: newWorkConfig.workMonday,
+        workTuesday: newWorkConfig.workTuesday,
+        workWednesday: newWorkConfig.workWednesday,
+        workThursday: newWorkConfig.workThursday,
+        workFriday: newWorkConfig.workFriday,
+        workSaturday: newWorkConfig.workSaturday,
+        workSunday: newWorkConfig.workSunday,
+        hoursPerDay: parseFloat(newWorkConfig.hoursPerDay) || 8
+      })) {
+        throw new Error('Pelo menos um dia da semana deve estar selecionado como dia de trabalho');
+      }
+
       // Send only the necessary fields, exclude timestamps and ID
-      const { id, createdAt, updatedAt, ...configData } = newWorkConfig as any;
-      const response = await apiRequest("PUT", "/api/work-config/work-configuration", configData);
+      const { id, createdAt, updatedAt, workDaysPerWeek, weeksPerMonth, annualWorkingDays, annualWorkingHours, monthlyWorkingHours, ...configData } = newWorkConfig as any;
+
+      // Converter hoursPerDay para number
+      const cleanConfigData = {
+        ...configData,
+        hoursPerDay: parseFloat(configData.hoursPerDay) || 8
+      };
+
+      const response = await apiRequest("PUT", "/api/work-config/work-configuration", cleanConfigData);
       return response.json();
     },
     onSuccess: (savedConfig) => {
-      setWorkConfig(savedConfig);
+      setWorkConfig(prev => ({ ...prev, ...savedConfig }));
+
+      // Usar o sistema de invalidação centralizado para configuração de trabalho
+      costInvalidation.invalidateOnWorkConfigChange();
+
       successToast(
         "Configuração de Trabalho Salva",
-        "As configurações de trabalho foram atualizadas com sucesso!"
+        "As configurações de trabalho foram atualizadas com sucesso! Todos os custos foram recalculados."
       );
-      queryClient.invalidateQueries({ queryKey: ["/api/work-config/work-configuration"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/cost-per-hour"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
     },
     onError: (error: any) => {
       errorToast(
@@ -173,6 +242,14 @@ export default function Settings() {
     }
   });
 
+  // Função para alterar dias da semana
+  const handleWorkingDayChange = (day: keyof Omit<WorkConfiguration, 'hoursPerDay' | 'workDaysPerWeek' | 'weeksPerMonth' | 'annualWorkingDays' | 'annualWorkingHours' | 'monthlyWorkingHours'>, value: boolean) => {
+    setWorkConfig(prev => ({
+      ...prev,
+      [day]: value
+    }));
+  };
+
   const handleSaveWorkConfig = () => {
     saveWorkConfigMutation.mutate(workConfig);
   };
@@ -180,9 +257,17 @@ export default function Settings() {
   const handleReset = () => {
     setSettings(defaultSettings);
     setWorkConfig({
-      workDaysPerWeek: 5,
+      workDaysPerWeek: 5, // compatibilidade
       hoursPerDay: "8.00",
-      weeksPerMonth: "4.0"
+      weeksPerMonth: "4.0", // compatibilidade
+      // Configuração padrão: seg-sex
+      workMonday: true,
+      workTuesday: true,
+      workWednesday: true,
+      workThursday: true,
+      workFriday: true,
+      workSaturday: false,
+      workSunday: false,
     });
     successToast(
       "Configurações Resetadas",
@@ -319,89 +404,126 @@ export default function Settings() {
               Configuração de Trabalho
             </CardTitle>
             <p className="text-sm text-gray-600">
-              Estas configurações são utilizadas para calcular os custos fixos por hora de trabalho
+              Configure os dias da semana que você trabalha e as horas por dia para um cálculo preciso dos custos fixos
             </p>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="workDays">Dias de Trabalho por Semana</Label>
-                <div className="flex items-center space-x-2">
-                  <Input
-                    id="workDays"
-                    type="number"
-                    min="1"
-                    max="7"
-                    value={workConfig.workDaysPerWeek}
-                    onChange={(e) => setWorkConfig({ ...workConfig, workDaysPerWeek: parseInt(e.target.value) || 1 })}
-                    disabled={!isAdmin}
-                  />
-                  <Calendar className="w-4 h-4 text-gray-500" />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Número de dias trabalhados por semana
-                </p>
+          <CardContent className="space-y-6">
+            {/* Seleção de dias da semana */}
+            <div>
+              <Label className="text-base font-medium mb-3 block">Dias da Semana que Trabalha</Label>
+              <div className="grid grid-cols-7 gap-3">
+                {[
+                  { key: 'workMonday' as const, label: getDayAbbreviation('workMonday'), fullName: 'Segunda-feira' },
+                  { key: 'workTuesday' as const, label: getDayAbbreviation('workTuesday'), fullName: 'Terça-feira' },
+                  { key: 'workWednesday' as const, label: getDayAbbreviation('workWednesday'), fullName: 'Quarta-feira' },
+                  { key: 'workThursday' as const, label: getDayAbbreviation('workThursday'), fullName: 'Quinta-feira' },
+                  { key: 'workFriday' as const, label: getDayAbbreviation('workFriday'), fullName: 'Sexta-feira' },
+                  { key: 'workSaturday' as const, label: getDayAbbreviation('workSaturday'), fullName: 'Sábado' },
+                  { key: 'workSunday' as const, label: getDayAbbreviation('workSunday'), fullName: 'Domingo' }
+                ].map(day => (
+                  <div key={day.key} className="flex flex-col items-center">
+                    <div className="mb-2">
+                      <Switch
+                        checked={workConfig[day.key]}
+                        onCheckedChange={(checked) => handleWorkingDayChange(day.key, checked)}
+                        disabled={!isAdmin}
+                      />
+                    </div>
+                    <span className="text-xs text-center font-medium">{day.label}</span>
+                    <span className="text-xs text-gray-500 text-center">{day.fullName}</span>
+                  </div>
+                ))}
               </div>
+              <p className="text-xs text-gray-600 mt-2">
+                Selecione todos os dias da semana em que você trabalha na confeitaria
+              </p>
+            </div>
 
+            {/* Horas por dia */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="hoursPerDay">Horas por Dia</Label>
+                <Label htmlFor="hoursPerDay">Horas Trabalhadas por Dia</Label>
                 <div className="flex items-center space-x-2">
                   <Input
                     id="hoursPerDay"
                     type="number"
-                    min="1"
+                    min="0.5"
                     max="24"
                     step="0.5"
                     value={workConfig.hoursPerDay}
-                    onChange={(e) => setWorkConfig({ ...workConfig, hoursPerDay: e.target.value })}
+                    onChange={(e) => setWorkConfig(prev => ({ ...prev, hoursPerDay: e.target.value }))}
                     disabled={!isAdmin}
                   />
                   <Clock className="w-4 h-4 text-gray-500" />
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Horas trabalhadas por dia
-                </p>
-              </div>
-
-              <div>
-                <Label htmlFor="weeksPerMonth">Semanas por Mês</Label>
-                <div className="flex items-center space-x-2">
-                  <Input
-                    id="weeksPerMonth"
-                    type="number"
-                    min="1"
-                    max="5"
-                    step="0.1"
-                    value={workConfig.weeksPerMonth}
-                    onChange={(e) => setWorkConfig({ ...workConfig, weeksPerMonth: e.target.value })}
-                    disabled={!isAdmin}
-                  />
-                  <Calendar className="w-4 h-4 text-gray-500" />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Número de semanas por mês
+                  Número de horas trabalhadas por dia
                 </p>
               </div>
             </div>
 
+            {/* Resumo dos Cálculos */}
             <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="flex items-center space-x-2 mb-2">
+              <div className="flex items-center space-x-2 mb-3">
                 <Info className="w-4 h-4 text-blue-600" />
-                <span className="text-sm font-medium text-blue-800">Cálculo Total</span>
+                <span className="text-sm font-medium text-blue-800">Resumo dos Cálculos Anuais</span>
               </div>
-              <p className="text-sm text-blue-700">
-                Total de horas por mês: {(workConfig.workDaysPerWeek * parseFloat(workConfig.hoursPerDay || "0") * parseFloat(workConfig.weeksPerMonth || "0")).toFixed(1)} horas
-              </p>
-              <p className="text-xs text-blue-600 mt-1">
-                Este valor é usado para calcular o custo fixo por hora de trabalho
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-blue-700">Dias de trabalho por ano:</span>
+                  <span className="font-semibold text-blue-800">{workingDaysCalculation.annualWorkingDays} dias</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-blue-700">Horas de trabalho por ano:</span>
+                  <span className="font-semibold text-blue-800">{workingDaysCalculation.annualWorkingHours.toFixed(0)} horas</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-blue-700">Média de horas por mês:</span>
+                  <span className="font-semibold text-blue-800">{workingDaysCalculation.monthlyWorkingHours.toFixed(1)} horas</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-blue-700">Média de dias por mês:</span>
+                  <span className="font-semibold text-blue-800">{workingDaysCalculation.averageWorkingDaysPerMonth.toFixed(1)} dias</span>
+                </div>
+              </div>
+              <p className="text-xs text-blue-600 mt-2">
+                Estes valores são usados para calcular o custo fixo por hora de trabalho com máxima precisão
               </p>
             </div>
+
+            {/* Validação */}
+            {!validateWorkingDaysConfig({
+              workMonday: workConfig.workMonday,
+              workTuesday: workConfig.workTuesday,
+              workWednesday: workConfig.workWednesday,
+              workThursday: workConfig.workThursday,
+              workFriday: workConfig.workFriday,
+              workSaturday: workConfig.workSaturday,
+              workSunday: workConfig.workSunday,
+              hoursPerDay: parseFloat(workConfig.hoursPerDay) || 8
+            }) && (
+                <Alert className="mt-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    Você deve selecionar pelo menos um dia da semana como dia de trabalho.
+                  </AlertDescription>
+                </Alert>
+              )}
 
             {isAdmin && (
               <div className="pt-4 border-t">
                 <Button
                   onClick={handleSaveWorkConfig}
-                  disabled={saveWorkConfigMutation.isPending}
+                  disabled={saveWorkConfigMutation.isPending || !validateWorkingDaysConfig({
+                    workMonday: workConfig.workMonday,
+                    workTuesday: workConfig.workTuesday,
+                    workWednesday: workConfig.workWednesday,
+                    workThursday: workConfig.workThursday,
+                    workFriday: workConfig.workFriday,
+                    workSaturday: workConfig.workSaturday,
+                    workSunday: workConfig.workSunday,
+                    hoursPerDay: parseFloat(workConfig.hoursPerDay) || 8
+                  })}
                   className="w-full"
                 >
                   {saveWorkConfigMutation.isPending ? "Salvando..." : "Salvar Configuração de Trabalho"}

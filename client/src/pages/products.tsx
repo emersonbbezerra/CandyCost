@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { errorToast, successToast, useToast } from "@/hooks/use-toast";
+import { useCostInvalidation } from "@/hooks/useCostInvalidation";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
 import { PRODUCT_CATEGORIES } from "@shared/constants";
@@ -46,6 +47,7 @@ export default function Products() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const costInvalidation = useCostInvalidation();
 
   const { data: products = [], isLoading } = useQuery<ProductWithCost[]>({
     queryKey: ["/api/products"],
@@ -71,10 +73,7 @@ export default function Products() {
       await apiRequest("DELETE", `/api/products/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/products", "details"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
+      costInvalidation.invalidateOnProductChange();
       successToast("Sucesso", "Produto excluído com sucesso!");
     },
     onError: (err) => {

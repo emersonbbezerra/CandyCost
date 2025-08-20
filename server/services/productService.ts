@@ -61,9 +61,19 @@ export const productService = {
 
     // Cálculo dos custos fixos proporcionais ao tempo de preparo
     const workConfig = await prisma.workConfiguration.findFirst();
-    const daysPerMonth = workConfig?.daysPerMonth || 22.0;
-    const hoursPerDay = workConfig?.hoursPerDay || 8.0;
-    const totalWorkHoursPerMonth = daysPerMonth * hoursPerDay;
+
+    // Usar nova lógica se disponível, senão usar lógica antiga para compatibilidade
+    let totalWorkHoursPerMonth: number;
+
+    if (workConfig?.monthlyWorkingHours) {
+      // Nova lógica: usar horas mensais calculadas
+      totalWorkHoursPerMonth = workConfig.monthlyWorkingHours;
+    } else {
+      // Lógica antiga (compatibilidade)
+      const daysPerMonth = workConfig?.daysPerMonth || 22.0;
+      const hoursPerDay = workConfig?.hoursPerDay || 8.0;
+      totalWorkHoursPerMonth = daysPerMonth * hoursPerDay;
+    }
     const fixedCosts = await fixedCostRepository.findActive();
     let totalMonthlyFixedCosts = 0;
     for (const fixedCost of fixedCosts) {
@@ -232,10 +242,19 @@ export const productService = {
 
     // Get work configuration for fixed cost calculation
     const workConfig = await prisma.workConfiguration.findFirst();
-    const daysPerMonth = workConfig?.daysPerMonth || 22.0;
-    const hoursPerDay = workConfig?.hoursPerDay || 8.0;
 
-    const totalWorkHoursPerMonth = daysPerMonth * hoursPerDay;
+    // Usar nova lógica se disponível, senão usar lógica antiga para compatibilidade
+    let totalWorkHoursPerMonth: number;
+
+    if (workConfig?.monthlyWorkingHours) {
+      // Nova lógica: usar horas mensais calculadas
+      totalWorkHoursPerMonth = workConfig.monthlyWorkingHours;
+    } else {
+      // Lógica antiga (compatibilidade)
+      const daysPerMonth = workConfig?.daysPerMonth || 22.0;
+      const hoursPerDay = workConfig?.hoursPerDay || 8.0;
+      totalWorkHoursPerMonth = daysPerMonth * hoursPerDay;
+    }
 
     // Calculate total monthly fixed costs
     const fixedCosts = await fixedCostRepository.findActive();

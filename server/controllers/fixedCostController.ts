@@ -49,6 +49,26 @@ export class FixedCostController {
     try {
       const validatedData = insertFixedCostSchema.parse(req.body);
       const fixedCost = await this.fixedCostRepository.create(validatedData);
+
+      // Registrar histórico de criação de custo fixo
+      if (fixedCost) {
+        try {
+          await priceHistoryRepository.create({
+            itemType: 'fixed_cost',
+            itemName: fixedCost.name,
+            oldPrice: 0,
+            newPrice: Number(fixedCost.value),
+            changeType: 'fixed_cost_create',
+            description: 'Novo custo fixo criado',
+          });
+        } catch (historyError) {
+          console.error(
+            'Falha ao registrar histórico de criação de custo fixo',
+            historyError
+          );
+        }
+      }
+
       res.status(201).json(fixedCost);
     } catch (error) {
       console.error('Erro ao criar custo fixo:', error);
@@ -143,11 +163,34 @@ export class FixedCostController {
       if (!id) {
         return res.status(400).json({ message: 'ID inválido' });
       }
+
+      // Buscar o custo fixo antes de deletar para registrar no histórico
+      const existingFixedCost = await this.fixedCostRepository.findById(id);
+
       const success = await this.fixedCostService.deleteFixedCost(id);
       if (!success) {
         return res.status(404).json({ message: 'Custo fixo não encontrado' });
       }
-      // Ao deletar um custo fixo, não precisamos gerar histórico de cada produto (poderia ser pesado), mas poderíamos em melhoria futura.
+
+      // Registrar histórico de deleção
+      if (existingFixedCost) {
+        try {
+          await priceHistoryRepository.create({
+            itemType: 'fixed_cost',
+            itemName: existingFixedCost.name,
+            oldPrice: Number(existingFixedCost.value),
+            newPrice: 0,
+            changeType: 'fixed_cost_delete',
+            description: 'Custo fixo excluído',
+          });
+        } catch (historyError) {
+          console.error(
+            'Falha ao registrar histórico de deleção de custo fixo',
+            historyError
+          );
+        }
+      }
+
       res.json({ message: 'Custo fixo excluído com sucesso' });
     } catch (error) {
       console.error('Erro ao excluir custo fixo:', error);

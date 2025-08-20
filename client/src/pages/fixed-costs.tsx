@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { errorToast, successToast, useToast } from "@/hooks/use-toast";
+import { useCostInvalidation } from "@/hooks/useCostInvalidation";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
 import { FIXED_COST_CATEGORIES, RECURRENCE_TYPES } from "@shared/constants";
@@ -33,6 +34,7 @@ export default function FixedCosts() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const costInvalidation = useCostInvalidation();
 
   const { data: fixedCosts = [], isLoading } = useQuery<FixedCost[]>({
     queryKey: ["/api/fixed-costs"],
@@ -95,20 +97,14 @@ export default function FixedCosts() {
       return res.json() as Promise<FixedCost>;
     },
     onSuccess: (newCost) => {
-      // Atualiza lista local
+      // Atualiza lista local otimisticamente
       queryClient.setQueryData<FixedCost[]>(["/api/fixed-costs"], (old = []) => [newCost, ...old]);
       recomputeDerivedCaches([newCost, ...(queryClient.getQueryData<FixedCost[]>(["/api/fixed-costs"]) || [])]);
-      // Invalida para sincronizar servidor
-      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/monthly-total"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/by-category"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/cost-per-hour"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/active"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
-      successToast("Sucesso", "Custo fixo criado com sucesso!");
+
+      // Usar sistema de invalidação centralizado
+      costInvalidation.invalidateOnFixedCostChange();
+
+      successToast("Sucesso", "Custo fixo criado com sucesso! Todos os custos foram recalculados.");
       setShowForm(false);
     },
     onError: () => {
@@ -125,16 +121,11 @@ export default function FixedCosts() {
     onSuccess: (updated) => {
       queryClient.setQueryData<FixedCost[]>(["/api/fixed-costs"], (old = []) => old.map(fc => fc.id === updated.id ? updated : fc));
       recomputeDerivedCaches((queryClient.getQueryData<FixedCost[]>(["/api/fixed-costs"]) || []));
-      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/monthly-total"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/by-category"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/cost-per-hour"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/active"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
-      successToast("Sucesso", "Custo fixo atualizado com sucesso!");
+
+      // Usar sistema de invalidação centralizado
+      costInvalidation.invalidateOnFixedCostChange();
+
+      successToast("Sucesso", "Custo fixo atualizado com sucesso! Todos os custos foram recalculados.");
       setShowForm(false);
       setSelectedFixedCost(null);
     },
@@ -152,16 +143,11 @@ export default function FixedCosts() {
     onSuccess: (id) => {
       queryClient.setQueryData<FixedCost[]>(["/api/fixed-costs"], (old = []) => old.filter(fc => fc.id !== id));
       recomputeDerivedCaches((queryClient.getQueryData<FixedCost[]>(["/api/fixed-costs"]) || []));
-      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/active"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/monthly-total"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/by-category"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/cost-per-hour"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
-      successToast("Sucesso", "Custo fixo excluído com sucesso!");
+
+      // Usar sistema de invalidação centralizado
+      costInvalidation.invalidateOnFixedCostChange();
+
+      successToast("Sucesso", "Custo fixo excluído com sucesso! Todos os custos foram recalculados.");
     },
     onError: (error: Error) => {
       errorToast("Erro", error.message);
@@ -185,15 +171,7 @@ export default function FixedCosts() {
       // Garante estado final igual servidor
       queryClient.setQueryData<FixedCost[]>(["/api/fixed-costs"], (old = []) => old.map(fc => fc.id === updated.id ? updated : fc));
       recomputeDerivedCaches((queryClient.getQueryData<FixedCost[]>(["/api/fixed-costs"]) || []));
-      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/active"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/monthly-total"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/by-category"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/fixed-costs/cost-per-hour"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/price-history"] });
+      costInvalidation.invalidateOnFixedCostChange();
       successToast("Sucesso", "Status do custo fixo alterado com sucesso!");
     },
     onError: (error: Error) => {

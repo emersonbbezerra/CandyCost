@@ -124,6 +124,7 @@ model PriceHistory {
 model WorkConfiguration {
   id                          String   @id @default(cuid())
   hoursPerDay                 Float    @default(8.0)
+  // Campos antigos mantidos para compatibilidade (serão removidos futuramente)
   daysPerMonth                Float    @default(22.0)
   hourlyRate                  Float    @default(25.0)
   highCostAlertThreshold      Float    @default(50.0)
@@ -134,6 +135,18 @@ model WorkConfiguration {
   priceIncreaseAlertThreshold Float    @default(20.0)
   autoCalculateMargins        Boolean  @default(true)
   businessName                String   @default("Minha Confeitaria")
+  // Novos campos para o sistema de dias da semana
+  workMonday                  Boolean  @default(true)
+  workTuesday                 Boolean  @default(true)
+  workWednesday               Boolean  @default(true)
+  workThursday                Boolean  @default(true)
+  workFriday                  Boolean  @default(true)
+  workSaturday                Boolean  @default(false)
+  workSunday                  Boolean  @default(false)
+  // Campos calculados (atualizados automaticamente)
+  annualWorkingDays           Int      @default(261) // ~261 dias úteis/ano (seg-sex)
+  annualWorkingHours          Float    @default(2088.0) // 261 * 8h
+  monthlyWorkingHours         Float    @default(174.0) // 2088 / 12
   createdAt                   DateTime @default(now())
   updatedAt                   DateTime @updatedAt
 
