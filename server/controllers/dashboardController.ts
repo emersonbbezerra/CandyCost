@@ -209,79 +209,47 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
     );
 
     // Abordagem completamente separada: consulta direta por ingredientes como sugerido
-    const [
-      ingredientUpdates,
-      directProductUpdates,
-      indirectProductUpdates,
-      fixedCostUpdates,
-    ] = await Promise.all([
-      // Consulta direta e específica para ingredientes - garantia total
-      prisma.priceHistory.findMany({
-        where: {
-          ingredientId: { not: null },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 5, // Pegar os 5 mais recentes de ingredientes
-        include: {
-          ingredient: true,
-          product: true,
-        },
-      }),
-      // Consulta para produtos - APENAS mudanças diretas (ingredientes, receitas, etc.)
-      prisma.priceHistory.findMany({
-        where: {
-          productId: { not: null },
-          changeType: {
-            notIn: [
-              'fixed_cost_toggle',
-              'fixed_cost_update',
-              'work_config_impact',
-            ],
+    const [ingredientUpdates, allProductUpdates, fixedCostUpdates] =
+      await Promise.all([
+        // Consulta direta e específica para ingredientes - garantia total
+        prisma.priceHistory.findMany({
+          where: {
+            ingredientId: { not: null },
           },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 3, // Menos espaço pois teremos outra categoria
-        include: {
-          ingredient: true,
-          product: true,
-        },
-      }),
-      // Nova consulta para produtos - APENAS impactos de custos fixos (mais recentes por produto)
-      prisma.priceHistory.findMany({
-        where: {
-          productId: { not: null },
-          changeType: {
-            in: [
-              'fixed_cost_create', // ADICIONADO: Para quando custos fixos são criados
-              'fixed_cost_toggle',
-              'fixed_cost_update',
-              'fixed_cost_delete', // ADICIONADO: Para quando custos fixos são excluídos
-              'work_config_impact',
-            ],
+          orderBy: { createdAt: 'desc' },
+          take: 5, // Pegar os 5 mais recentes de ingredientes
+          include: {
+            ingredient: true,
+            product: true,
           },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 10, // Pegar mais para filtrar duplicatas depois
-        include: {
-          ingredient: true,
-          product: true,
-        },
-      }),
-      // Consulta direta para custos fixos
-      prisma.priceHistory.findMany({
-        where: {
-          itemType: 'fixed_cost',
-          productId: null,
-          ingredientId: null,
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 10, // Aumentar para mostrar mais custos fixos
-        include: {
-          ingredient: true,
-          product: true,
-        },
-      }),
-    ]);
+        }),
+        // Consulta unificada para TODOS os produtos (diretos e indiretos)
+        prisma.priceHistory.findMany({
+          where: {
+            productId: { not: null },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 20, // Pegar mais para ter dados suficientes após deduplicação
+          include: {
+            ingredient: true,
+            product: true,
+          },
+        }),
+        // Consulta direta para custos fixos
+        prisma.priceHistory.findMany({
+          where: {
+            itemType: 'fixed_cost',
+            productId: null,
+            ingredientId: null,
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 5, // Ajustado para 5 custos fixos
+          include: {
+            ingredient: true,
+            product: true,
+          },
+        }),
+      ]);
 
     // Format ingredient updates
     const enrichedIngredientUpdates = ingredientUpdates.map((update) => ({
@@ -296,38 +264,11 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
       createdAt: update.createdAt,
     }));
 
-    // Format direct product updates (ingredients, recipes, manual changes)
-    const enrichedDirectProductUpdates = directProductUpdates.map((update) => ({
-      id: update.id,
-      type: 'product' as const,
-      name: update.product?.name || 'Produto desconhecido',
-      itemId: update.productId,
-      oldPrice: update.oldPrice,
-      newPrice: update.newPrice,
-      unit: update.product?.yieldUnit || undefined,
-      changeType: update.changeType,
-      createdAt: update.createdAt,
-    }));
-
-    // Format indirect product updates (from fixed costs) - apenas o mais recente por produto
+    // Process ALL product updates (unified approach)
+    // First, deduplicate by product to keep only the most recent update per product
     const productMap = new Map<string, any>();
 
-    // Debug: log todos os registros antes do filtro
-    console.log(
-      '🔍 Registros indiretos ANTES do filtro:',
-      indirectProductUpdates.map((u) => ({
-        id: u.id,
-        productId: u.productId,
-        productName: u.product?.name,
-        changeType: u.changeType,
-        createdAt: u.createdAt.toISOString(),
-        oldPrice: u.oldPrice,
-        newPrice: u.newPrice,
-      }))
-    );
-
-    // Primeiro, agrupar por produto e manter apenas o mais recente
-    indirectProductUpdates.forEach((update) => {
+    allProductUpdates.forEach((update) => {
       const productId = update.productId;
       if (productId) {
         const existing = productMap.get(productId);
@@ -340,27 +281,20 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
       }
     });
 
-    // Debug: log produtos únicos após filtro
-    console.log(
-      '🎯 Produtos únicos APÓS filtro:',
-      Array.from(productMap.values()).map((u) => ({
-        productId: u.productId,
-        productName: u.product?.name,
-        changeType: u.changeType,
-        createdAt: u.createdAt.toISOString(),
-      }))
-    );
-
-    // Converter para array e pegar apenas os 3 mais recentes
-    const enrichedIndirectProductUpdates = Array.from(productMap.values())
+    // Convert to array, sort by date, and take the 5 most recent
+    const enrichedProductUpdates = Array.from(productMap.values())
       .sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )
-      .slice(0, 3)
+      .slice(0, 5)
       .map((update) => ({
         id: update.id,
-        type: 'product_indirect' as const,
+        type:
+          update.changeType?.includes('fixed_cost') ||
+          update.changeType === 'work_config_impact'
+            ? 'product_indirect'
+            : ('product' as const),
         name: update.product?.name || 'Produto desconhecido',
         itemId: update.productId,
         oldPrice: update.oldPrice,
@@ -369,6 +303,8 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
         changeType: update.changeType,
         createdAt: update.createdAt,
       }));
+
+    // Format fixed cost updates
 
     const enrichedFixedCostUpdates = fixedCostUpdates.map((update) => ({
       id: update.id,
@@ -395,23 +331,30 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
       `📊 Total de fixed cost updates: ${enrichedFixedCostUpdates.length}`
     );
 
+    // Separate products by type for frontend compatibility
+    const directProducts = enrichedProductUpdates.filter(
+      (p) => p.type === 'product'
+    );
+    const indirectProducts = enrichedProductUpdates.filter(
+      (p) => p.type === 'product_indirect'
+    );
+
     const responseData = {
       ingredientUpdates: enrichedIngredientUpdates,
-      productUpdates: enrichedDirectProductUpdates,
-      productIndirectUpdates: enrichedIndirectProductUpdates, // Nova categoria
+      productUpdates: directProducts,
+      productIndirectUpdates: indirectProducts,
       fixedCostUpdates: enrichedFixedCostUpdates,
     };
 
     // Log para debug - mostrar quantos registros cada categoria tem
     console.log('📊 Dashboard recent updates:', {
       ingredientCount: enrichedIngredientUpdates.length,
-      directProductCount: enrichedDirectProductUpdates.length,
-      indirectProductCount: enrichedIndirectProductUpdates.length,
+      directProductCount: directProducts.length,
+      indirectProductCount: indirectProducts.length,
       fixedCostCount: enrichedFixedCostUpdates.length,
+      totalProductUpdates: enrichedProductUpdates.length,
       ingredientNames: enrichedIngredientUpdates.map((u) => u.name).join(', '),
-      indirectProductNames: enrichedIndirectProductUpdates
-        .map((u) => u.name)
-        .join(', '),
+      allProductNames: enrichedProductUpdates.map((u) => u.name).join(', '),
     });
 
     res.json(responseData);
