@@ -109,7 +109,7 @@ export class FixedCostController {
                     oldPrice: oldPerUnit,
                     newPrice: newPerUnit,
                     changeType: 'fixed_cost_create',
-                    description: 'Recalculo devido à criação de custo fixo',
+                    description: 'Recálculo devido à criação de custo fixo',
                   });
                 }
               }
@@ -191,7 +191,7 @@ export class FixedCostController {
                 oldPrice: oldPerUnit,
                 newPrice: newPerUnit,
                 changeType: 'fixed_cost_update',
-                description: 'Recalculo devido a alteração de custo fixo',
+                description: 'Recálculo devido a alteração de custo fixo',
               });
             }
           }
@@ -277,7 +277,7 @@ export class FixedCostController {
                 oldPrice: oldPerUnit,
                 newPrice: newPerUnit,
                 changeType: 'fixed_cost_delete',
-                description: 'Recalculo devido à exclusão de custo fixo',
+                description: 'Recálculo devido à exclusão de custo fixo',
               });
             }
           }
@@ -361,7 +361,7 @@ export class FixedCostController {
                 newPrice: newPerUnit,
                 changeType: 'fixed_cost_toggle',
                 description:
-                  'Recalculo devido a ativação/desativação de custo fixo',
+                  'Recálculo devido a ativação/desativação de custo fixo',
               });
             }
           }
