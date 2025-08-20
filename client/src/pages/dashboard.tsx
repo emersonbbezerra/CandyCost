@@ -10,12 +10,13 @@ import { useEffect, useState } from "react";
 export default function Dashboard() {
   const queryClient = useQueryClient();
   const [selectedProduct, setSelectedProduct] = useState<string>("general");
-  const [profitType, setProfitType] = useState<string>("product");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
-  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
-    queryKey: ["/api/dashboard/stats", profitType, selectedCategory],
-    queryFn: () => fetch(`/api/dashboard/stats?type=${profitType}&category=${selectedCategory}`).then(res => res.json()),
+  // Novos estados para filtros de ingredientes e produtos
+  const [selectedIngredientCategory, setSelectedIngredientCategory] = useState<string>("all");
+  const [selectedProductCategory, setSelectedProductCategory] = useState<string>("all"); const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
+    queryKey: ["/api/dashboard/stats", selectedCategory],
+    queryFn: () => fetch(`/api/dashboard/stats?type=category&category=${selectedCategory}`).then(res => res.json()),
     refetchOnMount: "always",
     staleTime: 0,
   });
@@ -23,6 +24,30 @@ export default function Dashboard() {
   const { data: products = [] } = useQuery<Product[]>({
     queryKey: ["/api/products"],
   });
+
+  // Buscar ingredientes por categoria
+  const { data: ingredients = [] } = useQuery({
+    queryKey: ["/api/ingredients"],
+    queryFn: () => fetch("/api/ingredients").then(res => res.json()),
+  });
+
+  // Calcular ingredientes por categoria
+  const ingredientsByCategory = ingredients.reduce((acc: { [key: string]: number }, ingredient: any) => {
+    const category = ingredient.category || 'Outros';
+    acc[category] = (acc[category] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Calcular produtos por categoria
+  const productsByCategory = products.reduce((acc: { [key: string]: number }, product: Product) => {
+    const category = product.category || 'Outros';
+    acc[category] = (acc[category] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Extrair categorias disponíveis para cada tipo
+  const availableIngredientCategories = Object.keys(ingredientsByCategory).sort();
+  const availableProductCategories = Object.keys(productsByCategory).sort();
 
   // Invalidate recent updates when dashboard is focused or visibility changes
   useEffect(() => {
@@ -86,19 +111,23 @@ export default function Dashboard() {
         totalIngredients={stats?.totalIngredients || 0}
         totalProducts={stats?.totalProducts || 0}
         avgProfitMargin={stats?.avgProfitMargin || "0"}
-        profitType={profitType}
         selectedCategory={selectedCategory}
         availableCategories={stats?.availableCategories || []}
-        onProfitTypeChange={(type) => {
-          setProfitType(type);
-          if (type === 'product') {
-            setSelectedCategory('all');
-          }
-          refetchStats();
-        }}
-        onCategoryChange={(category) => {
+        onCategoryChange={(category: string) => {
           setSelectedCategory(category);
           refetchStats();
+        }}
+        ingredientsByCategory={ingredientsByCategory}
+        availableIngredientCategories={availableIngredientCategories}
+        selectedIngredientCategory={selectedIngredientCategory}
+        onIngredientCategoryChange={(category: string) => {
+          setSelectedIngredientCategory(category);
+        }}
+        productsByCategory={productsByCategory}
+        availableProductCategories={availableProductCategories}
+        selectedProductCategory={selectedProductCategory}
+        onProductCategoryChange={(category: string) => {
+          setSelectedProductCategory(category);
         }}
       />
 
