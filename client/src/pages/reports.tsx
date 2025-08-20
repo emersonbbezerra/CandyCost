@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { formatCurrency } from "@/lib/utils";
 import type { Ingredient, Product, ProductCost } from "@shared/schema";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   Calculator,
@@ -21,7 +21,7 @@ import {
   TrendingDown,
   TrendingUp
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface ReportsData {
   profitabilityAnalysis: {
@@ -47,6 +47,8 @@ interface ReportsData {
 }
 
 export default function Reports() {
+  const queryClient = useQueryClient();
+
   // Estados para filtros da análise de lucratividade
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -66,16 +68,47 @@ export default function Reports() {
 
   const { data: ingredients = [] } = useQuery<Ingredient[]>({
     queryKey: ["/api/ingredients"],
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   const { data: products = [] } = useQuery<Product[]>({
     queryKey: ["/api/products"],
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   const { data: reportsData, isLoading } = useQuery<ReportsData>({
     queryKey: ["/api/reports"],
-    enabled: products.length > 0
+    enabled: products.length > 0,
+    refetchOnMount: "always",
+    staleTime: 0,
   });
+
+  // Effect para invalidar queries quando a página recebe foco ou se torna visível
+  useEffect(() => {
+    const handleFocus = () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/reports"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/ingredients"] });
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/reports"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/ingredients"] });
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [queryClient]);
 
   // Obter categorias únicas dos produtos
   const categories = useMemo(() => {
