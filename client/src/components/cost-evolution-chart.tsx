@@ -80,7 +80,7 @@ export function CostEvolutionChart({ products }: CostEvolutionChartProps) {
                 {hasData ? (
                     <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                            <LineChart data={chartData} margin={{ top: 5, right: 30, left: 50, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                                 <XAxis
                                     dataKey="month"
@@ -91,7 +91,7 @@ export function CostEvolutionChart({ products }: CostEvolutionChartProps) {
                                     tickFormatter={(value) => formatCurrencyWithSymbol(value)}
                                     fontSize={12}
                                     tick={{ fill: '#6b7280' }}
-                                    label={{ value: `Valor (${currencySymbol})`, angle: -90, position: 'insideLeft' }}
+                                    label={{ value: `Valor (${currencySymbol})`, angle: -90, position: 'insideLeft', offset: -10, style: { textAnchor: 'middle' } }}
                                 />
                                 <Tooltip
                                     formatter={(value, name) => [
