@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
 interface SimplifiedUpdate {
     id: string;
-    type: 'ingredient' | 'product' | 'fixed_cost';
+    type: 'ingredient' | 'product' | 'product_indirect' | 'fixed_cost';
     name: string;
     itemId: string | null; // id do ingrediente ou produto
     oldPrice: number;
@@ -25,6 +25,7 @@ interface SimplifiedUpdate {
 interface RecentUpdates {
     ingredientUpdates: SimplifiedUpdate[];
     productUpdates: SimplifiedUpdate[];
+    productIndirectUpdates: SimplifiedUpdate[]; // Nova categoria para produtos afetados por custos fixos
     fixedCostUpdates?: SimplifiedUpdate[];
 }
 
@@ -54,11 +55,18 @@ export function RecentUpdatesCard() {
     const { data, isLoading, refetch } = useQuery<RecentUpdates>({
         queryKey: ["/api/dashboard/recent-updates"],
         refetchOnMount: "always",
-        staleTime: 30 * 60 * 1000, // 30 minutos - dados ficam válidos por mais tempo
-        gcTime: 60 * 60 * 1000, // 1 hora de cache
-        refetchOnWindowFocus: false, // Não recarregar no foco
+        staleTime: 0, // Dados sempre frescos para atualizações recentes
+        gcTime: 5 * 60 * 1000, // 5 minutos de cache
         refetchInterval: false, // Remover polling automático
         refetchIntervalInBackground: false,
+    });
+
+    // Debug: Log dos dados recebidos
+    console.log('🔄 Recent updates data received:', {
+        fixedCostUpdates: data?.fixedCostUpdates?.length || 0,
+        productUpdates: data?.productUpdates?.length || 0,
+        productIndirectUpdates: data?.productIndirectUpdates?.length || 0,
+        ingredientUpdates: data?.ingredientUpdates?.length || 0,
     });
 
     const handleEditProduct = async (productId: string) => {
@@ -184,69 +192,98 @@ export function RecentUpdatesCard() {
                         <h3 className="text-lg font-semibold mb-2">Produtos</h3>
                         {isLoading ? (
                             <p className="text-gray-500">Carregando atualizações de produtos...</p>
-                        ) : data?.productUpdates && data.productUpdates.length === 0 ? (
-                            <p className="text-gray-500">Nenhuma atualização de produto registrada ainda.</p>
-                        ) : (
-                            data?.productUpdates.slice(0, 3).map((update) => (
-                                <div key={`product-${update.id}`} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg mb-2">
-                                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                        <Package className="text-blue-600 w-5 h-5" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="text-gray-900">
-                                            Custo atualizado de {formatCurrency(update.oldPrice ?? 0)} para {formatCurrency(update.newPrice ?? 0)}{update.unit ? ` / ${update.unit}` : ''} - <strong>{update.name}</strong>
-                                        </p>
-                                        <p className="text-sm text-gray-500 mt-1">
-                                            {(() => {
-                                                switch (update.changeType) {
-                                                    case 'ingredient_update': return 'Atualização por ingrediente';
-                                                    case 'fixed_cost_update': return 'Recalculo por alteração de custo fixo';
-                                                    case 'fixed_cost_toggle': return 'Recalculo por ativação/desativação de custo fixo';
-                                                    case 'auto': return 'Atualização automática';
-                                                    default: return 'Atualização manual';
-                                                }
-                                            })()}
-                                        </p>
-                                        <p className="text-xs text-gray-400 mt-1">
-                                            {formatRelativeTime(new Date(update.createdAt))}
-                                        </p>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${update.newPrice > update.oldPrice
-                                            ? "bg-red-100 text-red-700"
-                                            : "bg-green-100 text-green-700"
-                                            }`}>
-                                            {(() => {
-                                                const oldPrice = update.oldPrice ?? 0;
-                                                const newPrice = update.newPrice ?? 0;
+                        ) : (() => {
+                            // Combinar produtos diretos e indiretos com deduplicação por produto
+                            const productMap = new Map<string, any>();
 
-                                                if (oldPrice === 0) {
-                                                    return newPrice > 0 ? "Novo" : "0%";
-                                                }
+                            // Primeiro adicionar diretos
+                            (data?.productUpdates || []).forEach(update => {
+                                if (update.itemId) {
+                                    productMap.set(update.itemId, update);
+                                }
+                            });
 
-                                                const percentChange = ((newPrice - oldPrice) / oldPrice) * 100;
-                                                return `${percentChange > 0 ? "+" : ""}${percentChange.toFixed(1)}%`;
-                                            })()}
-                                        </span>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => {
-                                                // Abre modal de edição de produto diretamente
-                                                if (update.itemId) {
-                                                    handleEditProduct(update.itemId);
-                                                } else {
-                                                    setLocation("/products");
-                                                }
-                                            }}
-                                            className="px-2 py-1 h-8"
-                                        >
-                                            <ExternalLink className="w-3 h-3" />
-                                        </Button>
+                            // Depois adicionar indiretos (mais recentes sobrescrevem)
+                            (data?.productIndirectUpdates || []).forEach(update => {
+                                if (update.itemId) {
+                                    const existing = productMap.get(update.itemId);
+                                    if (!existing || new Date(update.createdAt) > new Date(existing.createdAt)) {
+                                        productMap.set(update.itemId, update);
+                                    }
+                                }
+                            });
+
+                            // Converter para array, ordenar por data e pegar os 3 mais recentes
+                            const allProductUpdates = Array.from(productMap.values())
+                                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+                            return allProductUpdates.length === 0 ? (
+                                <p className="text-gray-500">Nenhuma atualização de produto registrada ainda.</p>
+                            ) : (
+                                allProductUpdates.slice(0, 3).map((update) => (
+                                    <div key={`product-${update.id}`} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg mb-2">
+                                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <Package className="text-blue-600 w-5 h-5" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-gray-900">
+                                                Custo atualizado de {formatCurrency(update.oldPrice ?? 0)} para {formatCurrency(update.newPrice ?? 0)}{update.unit ? ` / ${update.unit}` : ''} - <strong>{update.name}</strong>
+                                            </p>
+                                            <p className="text-sm text-gray-500 mt-1">
+                                                {(() => {
+                                                    switch (update.changeType) {
+                                                        case 'ingredient_update': return 'Atualização por ingrediente';
+                                                        case 'fixed_cost_create': return 'Recalculo por criação de custo fixo';
+                                                        case 'fixed_cost_update': return 'Recalculo por alteração de custo fixo';
+                                                        case 'fixed_cost_toggle': return 'Recalculo por ativação/desativação de custo fixo';
+                                                        case 'fixed_cost_delete': return 'Recalculo por exclusão de custo fixo';
+                                                        case 'work_config_impact': return 'Recalculo por mudança na configuração de trabalho';
+                                                        case 'auto': return 'Atualização automática';
+                                                        default: return 'Atualização manual';
+                                                    }
+                                                })()}
+                                            </p>
+                                            <p className="text-xs text-gray-400 mt-1">
+                                                {formatRelativeTime(new Date(update.createdAt))}
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${update.newPrice > update.oldPrice
+                                                ? "bg-red-100 text-red-700"
+                                                : "bg-green-100 text-green-700"
+                                                }`}>
+                                                {(() => {
+                                                    const oldPrice = update.oldPrice ?? 0;
+                                                    const newPrice = update.newPrice ?? 0;
+
+                                                    if (oldPrice === 0) {
+                                                        return newPrice > 0 ? "Novo" : "0%";
+                                                    }
+
+                                                    const percentChange = ((newPrice - oldPrice) / oldPrice) * 100;
+                                                    return `${percentChange > 0 ? "+" : ""}${percentChange.toFixed(1)}%`;
+                                                })()}
+                                            </span>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => {
+                                                    // Abre modal de edição de produto diretamente
+                                                    if (update.itemId) {
+                                                        handleEditProduct(update.itemId);
+                                                    } else {
+                                                        setLocation("/products");
+                                                    }
+                                                }}
+                                                className="px-2 py-1 h-8"
+                                            >
+                                                <ExternalLink className="w-3 h-3" />
+                                            </Button>
+                                        </div>
                                     </div>
-                                </div>
-                            ))
-                        )}
+                                ))
+                            );
+                        })()}
                     </div>
                 </div>
             </CardContent>
@@ -266,13 +303,15 @@ export function RecentUpdatesCard() {
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-gray-900">
-                                        {update.changeType.includes('toggle') ? 'Status alterado' : 'Valor alterado'} de {formatCurrency(update.oldPrice ?? 0)} para {formatCurrency(update.newPrice ?? 0)} - <strong>{update.name}</strong>
+                                        {update.changeType.includes('toggle') ? 'Status alterado' : update.changeType === 'fixed_cost_delete' ? 'Valor alterado' : update.changeType === 'fixed_cost_create' ? 'Valor alterado' : 'Valor alterado'} de {formatCurrency(update.oldPrice ?? 0)} para {formatCurrency(update.newPrice ?? 0)} - <strong>{update.name}</strong>
                                     </p>
                                     <p className="text-sm text-gray-500 mt-1">
                                         {(() => {
                                             switch (update.changeType) {
+                                                case 'fixed_cost_create': return 'Criação de custo fixo';
                                                 case 'fixed_cost_update': return 'Alteração de custo fixo';
                                                 case 'fixed_cost_toggle': return 'Ativação/Desativação de custo fixo';
+                                                case 'fixed_cost_delete': return 'Exclusão de custo fixo';
                                                 default: return 'Atualização';
                                             }
                                         })()}

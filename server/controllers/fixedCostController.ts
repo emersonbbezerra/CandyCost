@@ -48,6 +48,24 @@ export class FixedCostController {
   async create(req: Request, res: Response) {
     try {
       const validatedData = insertFixedCostSchema.parse(req.body);
+
+      // Calcular custos dos produtos ANTES da criação (se o custo fixo for ativo)
+      let productCostsBefore: Record<string, number> = {};
+      if (validatedData.isActive) {
+        const productsBefore = await productService.getProducts();
+        for (const p of productsBefore) {
+          try {
+            const costInfo = await productService.calculateProductCost(p.id);
+            const perUnit =
+              costInfo.costPerYieldUnit ||
+              costInfo.totalCost / (costInfo.yield || 1);
+            productCostsBefore[p.id] = perUnit;
+          } catch (e) {
+            // ignora falha individual
+          }
+        }
+      }
+
       const fixedCost = await this.fixedCostRepository.create(validatedData);
 
       // Registrar histórico de criação de custo fixo
@@ -66,6 +84,39 @@ export class FixedCostController {
             'Falha ao registrar histórico de criação de custo fixo',
             historyError
           );
+        }
+
+        // Calcular custos dos produtos DEPOIS da criação e registrar mudanças (apenas se o custo fixo estiver ativo)
+        if (fixedCost.isActive) {
+          const productsAfter = await productService.getProducts();
+          for (const p of productsAfter) {
+            try {
+              const newCostInfo = await productService.calculateProductCost(
+                p.id
+              );
+              const newPerUnit =
+                newCostInfo.costPerYieldUnit ||
+                newCostInfo.totalCost / (newCostInfo.yield || 1);
+              const oldPerUnit = productCostsBefore[p.id];
+
+              if (oldPerUnit !== undefined) {
+                const diff = Math.abs(newPerUnit - oldPerUnit);
+                if (diff > 0) {
+                  await priceHistoryRepository.create({
+                    itemType: 'product',
+                    itemName: p.name,
+                    productId: p.id,
+                    oldPrice: oldPerUnit,
+                    newPrice: newPerUnit,
+                    changeType: 'fixed_cost_create',
+                    description: 'Recalculo devido à criação de custo fixo',
+                  });
+                }
+              }
+            } catch (e) {
+              // ignora falha individual
+            }
+          }
         }
       }
 
@@ -167,6 +218,21 @@ export class FixedCostController {
       // Buscar o custo fixo antes de deletar para registrar no histórico
       const existingFixedCost = await this.fixedCostRepository.findById(id);
 
+      // Calcular custos dos produtos ANTES da exclusão
+      const productsBefore = await productService.getProducts();
+      const productCostsBefore: Record<string, number> = {};
+      for (const p of productsBefore) {
+        try {
+          const costInfo = await productService.calculateProductCost(p.id);
+          const perUnit =
+            costInfo.costPerYieldUnit ||
+            costInfo.totalCost / (costInfo.yield || 1);
+          productCostsBefore[p.id] = perUnit;
+        } catch (e) {
+          // ignora falha individual
+        }
+      }
+
       const success = await this.fixedCostService.deleteFixedCost(id);
       if (!success) {
         return res.status(404).json({ message: 'Custo fixo não encontrado' });
@@ -188,6 +254,35 @@ export class FixedCostController {
             'Falha ao registrar histórico de deleção de custo fixo',
             historyError
           );
+        }
+      }
+
+      // Calcular custos dos produtos DEPOIS da exclusão e registrar mudanças
+      const productsAfter = await productService.getProducts();
+      for (const p of productsAfter) {
+        try {
+          const newCostInfo = await productService.calculateProductCost(p.id);
+          const newPerUnit =
+            newCostInfo.costPerYieldUnit ||
+            newCostInfo.totalCost / (newCostInfo.yield || 1);
+          const oldPerUnit = productCostsBefore[p.id];
+
+          if (oldPerUnit !== undefined) {
+            const diff = Math.abs(newPerUnit - oldPerUnit);
+            if (diff > 0) {
+              await priceHistoryRepository.create({
+                itemType: 'product',
+                itemName: p.name,
+                productId: p.id,
+                oldPrice: oldPerUnit,
+                newPrice: newPerUnit,
+                changeType: 'fixed_cost_delete',
+                description: 'Recalculo devido à exclusão de custo fixo',
+              });
+            }
+          }
+        } catch (e) {
+          // ignora falha individual
         }
       }
 

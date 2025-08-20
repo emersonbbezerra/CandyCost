@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { errorToast, successToast, useToast } from "@/hooks/use-toast";
 import { useCostInvalidation } from "@/hooks/useCostInvalidation";
+import { useDashboardIngredientUpdates } from "@/hooks/useDashboardIngredientUpdates";
 import { useFormatCurrency } from "@/hooks/useFormatCurrency";
 import { apiRequest } from "@/lib/queryClient";
 import { formatRelativeTime } from "@/lib/utils";
@@ -61,6 +62,7 @@ export default function Ingredients() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const costInvalidation = useCostInvalidation();
+  const { invalidateIngredientUpdates } = useDashboardIngredientUpdates();
 
   const { data: ingredients = [], isLoading } = useQuery<Ingredient[]>({
     queryKey: ["/api/ingredients"],
@@ -89,6 +91,7 @@ export default function Ingredients() {
     },
     onSuccess: () => {
       costInvalidation.invalidateOnIngredientChange();
+      invalidateIngredientUpdates(); // Invalidação específica para dashboard
       successToast("Sucesso", "Ingrediente excluído com sucesso!");
     },
     onError: () => {

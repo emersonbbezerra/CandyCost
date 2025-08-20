@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useCurrencySymbol } from "@/contexts/SettingsContext";
 import { errorToast, successToast, useToast } from "@/hooks/use-toast";
 import { useCostInvalidation } from "@/hooks/useCostInvalidation";
+import { useDashboardIngredientUpdates } from "@/hooks/useDashboardIngredientUpdates";
 import { useFormatCurrency } from "@/hooks/useFormatCurrency";
 import { apiRequest } from "@/lib/queryClient";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,6 +27,7 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const costInvalidation = useCostInvalidation();
+  const { invalidateIngredientUpdates } = useDashboardIngredientUpdates();
   const currencySymbol = useCurrencySymbol();
   const formatCurrencyWithSymbol = useFormatCurrency();
 
@@ -71,6 +73,7 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
     },
     onSuccess: () => {
       costInvalidation.invalidateOnIngredientChange();
+      invalidateIngredientUpdates(); // Invalidação específica para dashboard
       successToast("Sucesso", "Ingrediente criado com sucesso!");
       onOpenChange(false);
       form.reset();
@@ -87,6 +90,7 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
     },
     onSuccess: (result) => {
       costInvalidation.invalidateOnIngredientChange();
+      invalidateIngredientUpdates(); // Invalidação específica para dashboard
 
       const affectedCount = result.affectedProducts?.length || 0;
       successToast("Sucesso", `Ingrediente atualizado! ${affectedCount > 0 ? `${affectedCount} produtos foram afetados.` : ''}`);

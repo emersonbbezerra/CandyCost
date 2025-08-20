@@ -53,7 +53,7 @@ export const INVALIDATION_GROUPS = {
     COST_RELATED_QUERIES.PRICE_HISTORY,
     COST_RELATED_QUERIES.COSTS_HISTORY,
     COST_RELATED_QUERIES.DASHBOARD_STATS,
-    COST_RELATED_QUERIES.DASHBOARD_RECENT_UPDATES,
+    // REMOVIDO TEMPORARIAMENTE: DASHBOARD_RECENT_UPDATES - para testar se o problema para
     COST_RELATED_QUERIES.DASHBOARD_COST_EVOLUTION,
     COST_RELATED_QUERIES.RECIPES,
   ],
@@ -80,7 +80,7 @@ export const INVALIDATION_GROUPS = {
     COST_RELATED_QUERIES.PRICE_HISTORY,
     COST_RELATED_QUERIES.COSTS_HISTORY,
     COST_RELATED_QUERIES.DASHBOARD_STATS,
-    COST_RELATED_QUERIES.DASHBOARD_RECENT_UPDATES,
+    COST_RELATED_QUERIES.DASHBOARD_RECENT_UPDATES, // RE-ADICIONADO para mostrar produtos afetados
     COST_RELATED_QUERIES.DASHBOARD_COST_EVOLUTION,
   ],
 
@@ -94,7 +94,7 @@ export const INVALIDATION_GROUPS = {
     COST_RELATED_QUERIES.PRICE_HISTORY,
     COST_RELATED_QUERIES.COSTS_HISTORY,
     COST_RELATED_QUERIES.DASHBOARD_STATS,
-    COST_RELATED_QUERIES.DASHBOARD_RECENT_UPDATES,
+    COST_RELATED_QUERIES.DASHBOARD_RECENT_UPDATES, // RE-ADICIONADO para mostrar produtos afetados
     COST_RELATED_QUERIES.DASHBOARD_COST_EVOLUTION,
   ],
 
@@ -199,12 +199,8 @@ export function createInvalidateQueries(queryClient: any) {
         queryClient.invalidateQueries({ queryKey: [queryKey] });
       });
 
-      // Invalidar queries de dashboard com diferentes parâmetros
-      queryClient.invalidateQueries({
-        predicate: (query: any) => {
-          return query.queryKey?.[0]?.includes?.('dashboard');
-        },
-      });
+      // REMOVIDO: Invalidação de todas queries de dashboard
+      // Agora só invalida o que está definido em FIXED_COST_CHANGES
     },
 
     /**
