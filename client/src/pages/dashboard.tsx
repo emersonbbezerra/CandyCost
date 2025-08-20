@@ -89,7 +89,6 @@ export default function Dashboard() {
         profitType={profitType}
         selectedCategory={selectedCategory}
         availableCategories={stats?.availableCategories || []}
-        todayChanges={stats?.todayChanges || 0}
         onProfitTypeChange={(type) => {
           setProfitType(type);
           if (type === 'product') {
@@ -103,9 +102,13 @@ export default function Dashboard() {
         }}
       />
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      {/* Cost Evolution Chart - Full Width at Top */}
+      <div className="mb-8">
         <CostEvolutionChart products={products} />
+      </div>
+
+      {/* Recent Updates - Full Width Below */}
+      <div className="mb-8">
         <RecentUpdatesCard />
       </div>
     </div>
