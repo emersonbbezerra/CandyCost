@@ -278,7 +278,7 @@ export default function CostsHistory() {
                       {getProductUnit(change.productId ?? null)}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      Motivo: {change.description ? change.description : "Alteração automática"}
+                      Motivo: {change.description ? change.description.replace(/Recalculo/g, 'Recálculo') : "Alteração automática"}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">
                       {formatDate(new Date(change.createdAt))}
