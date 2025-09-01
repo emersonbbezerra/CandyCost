@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calculator, ExternalLink, Package, RefreshCw, Sprout } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { IngredientForm } from "./ingredient-form";
 import { ProductForm } from "./product-form";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -50,6 +51,8 @@ export function RecentUpdatesCard() {
     const [, setLocation] = useLocation();
     const [isProductFormOpen, setIsProductFormOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<any>();
+    const [isIngredientFormOpen, setIsIngredientFormOpen] = useState(false);
+    const [editingIngredient, setEditingIngredient] = useState<any>();
     const [activeTab, setActiveTab] = useState<string>("ingredients"); // Nova aba ativa
     const { toast } = useToast();
     const queryClient = useQueryClient();
@@ -97,11 +100,38 @@ export function RecentUpdatesCard() {
         }
     };
 
+    const handleEditIngredient = async (ingredientId: string) => {
+        try {
+            const response = await apiRequest("GET", `/api/ingredients/${ingredientId}`);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const ingredient = await response.json();
+            setEditingIngredient(ingredient);
+            setIsIngredientFormOpen(true);
+        } catch (error) {
+            console.error("Erro ao carregar ingrediente:", error);
+            errorToast("Erro", "Erro ao carregar dados do ingrediente. Tente novamente.");
+        }
+    };
+
     const handleFormClose = () => {
         setIsProductFormOpen(false);
         queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
         queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
         queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+
+        // Marcar que há atualizações para refresh futuro
+        sessionStorage.setItem('hasRecentUpdates', 'true');
+    };
+
+    const handleIngredientFormClose = () => {
+        setIsIngredientFormOpen(false);
+        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/recent-updates"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/ingredients"] });
 
         // Marcar que há atualizações para refresh futuro
         sessionStorage.setItem('hasRecentUpdates', 'true');
@@ -195,13 +225,7 @@ export function RecentUpdatesCard() {
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                onClick={() => {
-                                                    if (update.itemId) {
-                                                        setLocation(`/ingredients?edit=${update.itemId}`);
-                                                    } else {
-                                                        setLocation("/ingredients");
-                                                    }
-                                                }}
+                                                onClick={() => update.itemId && handleEditIngredient(update.itemId)}
                                                 className="px-2 py-1 h-8"
                                             >
                                                 <ExternalLink className="w-3 h-3" />
@@ -365,6 +389,12 @@ export function RecentUpdatesCard() {
                 open={isProductFormOpen}
                 onOpenChange={handleFormClose}
                 product={editingProduct}
+            />
+
+            <IngredientForm
+                open={isIngredientFormOpen}
+                onOpenChange={handleIngredientFormClose}
+                ingredient={editingIngredient}
             />
         </Card>
     );
