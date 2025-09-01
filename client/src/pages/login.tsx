@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChefHat, Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
+import { Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -72,12 +72,8 @@ export default function Login() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <ChefHat className="h-12 w-12 text-pink-600" />
+            <img src="/logo.png" alt="CandyCost" className="h-20 w-auto" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">CandyCost</h1>
-          <p className="text-gray-600 mt-2">
-            Sistema de Gestão de Custos para Confeitaria
-          </p>
         </div>
 
         <Card>

@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Calculator,
-  ChefHat,
   Cookie,
   FileText,
   Home,
@@ -67,12 +66,8 @@ export function Sidebar() {
       `}>
         {/* Header */}
         <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
-            <ChefHat className="h-8 w-8 text-pink-600" />
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">CandyCost</h1>
-              <p className="text-sm text-gray-600">Sistema de Custos</p>
-            </div>
+          <div className="flex items-center justify-center">
+            <img src="/logo.png" alt="CandyCost" className="h-18 w-auto" />
           </div>
         </div>
 
