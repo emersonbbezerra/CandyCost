@@ -534,10 +534,10 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                   </Button>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 {fields.map((field, index) => (
-                  <div key={field.id} className="grid grid-cols-12 gap-3 items-end">
-                    <div className="col-span-5">
+                  <div key={field.id} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end p-3 border rounded-lg bg-gray-50/30">
+                    <div className="md:col-span-5">
                       <FormField
                         control={form.control}
                         name={`recipes.${index}.ingredientId`}
@@ -592,7 +592,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                       />
                     </div>
 
-                    <div className="col-span-3">
+                    <div className="md:col-span-3">
                       <FormField
                         control={form.control}
                         name={`recipes.${index}.quantity`}
@@ -608,7 +608,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                       />
                     </div>
 
-                    <div className="col-span-3">
+                    <div className="md:col-span-3">
                       <FormField
                         control={form.control}
                         name={`recipes.${index}.unit`}
@@ -646,7 +646,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
                       />
                     </div>
 
-                    <div className="col-span-1 flex justify-center">
+                    <div className="flex justify-center md:col-span-1 md:items-end">
                       <AlertDialog open={confirmRemoveIndex === index} onOpenChange={(open) => !open && setConfirmRemoveIndex(null)}>
                         <AlertDialogTrigger asChild>
                           <Button

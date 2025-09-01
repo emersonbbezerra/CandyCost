@@ -44,7 +44,7 @@ function Router() {
   return (
     <div className="min-h-screen flex bg-gradient-main">
       <Sidebar />
-      <main className="flex-1 pt-16 lg:pt-0 bg-transparent">
+      <main className="flex-1 pt-16 lg:pt-0 bg-transparent min-w-0 overflow-x-hidden">
         <div className="animate-fadeInUp">
           <Switch>
             <Route path="/" component={Dashboard} />

@@ -3,7 +3,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -203,7 +203,7 @@ export default function UserManagementAdmin() {
   }
 
   return (
-    <div className="p-4 lg:p-8">
+    <div className="p-4 lg:p-8 w-full min-w-0 overflow-x-hidden">
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 flex items-center">
           <Users className="w-8 h-8 mr-3 text-blue-600" />
@@ -493,14 +493,14 @@ export default function UserManagementAdmin() {
                 )}
               />
 
-              <div className="flex justify-end space-x-2 pt-4">
+              <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
                   Cancelar
                 </Button>
                 <Button type="submit" disabled={updateUserMutation.isPending}>
                   {updateUserMutation.isPending ? "Salvando..." : "Salvar Alterações"}
                 </Button>
-              </div>
+              </DialogFooter>
             </form>
           </Form>
         </DialogContent>
@@ -552,14 +552,14 @@ export default function UserManagementAdmin() {
                 )}
               />
 
-              <div className="flex justify-end space-x-2 pt-4">
+              <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setPasswordDialogOpen(false)}>
                   Cancelar
                 </Button>
                 <Button type="submit" disabled={resetPasswordMutation.isPending}>
                   {resetPasswordMutation.isPending ? "Resetando..." : "Resetar Senha"}
                 </Button>
-              </div>
+              </DialogFooter>
             </form>
           </Form>
         </DialogContent>

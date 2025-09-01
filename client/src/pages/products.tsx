@@ -12,7 +12,7 @@ import { formatCurrency, formatRelativeTime } from "@/lib/utils";
 import { PRODUCT_CATEGORIES } from "@shared/constants";
 import type { Product, ProductCost } from "@shared/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChefHat, Edit, Filter, Layers, Plus, Search, Trash2 } from "lucide-react";
+import { ArrowUpDown, ChefHat, Edit, Filter, Layers, Plus, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type ProductWithCost = Product & {
@@ -187,7 +187,7 @@ export default function Products() {
   }
 
   return (
-    <div className="p-4 lg:p-8">
+    <div className="p-4 lg:p-8 w-full min-w-0 overflow-x-hidden">
       <div className="mb-8">
         <div>
           <h2 className="text-3xl font-bold text-gray-900 flex items-center">
@@ -206,59 +206,62 @@ export default function Products() {
 
       {/* Search and Filters */}
       <Card className="mb-6">
-        <CardContent className="p-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-4">
-            <div className="flex-1 max-w-md">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Buscar receitas..."
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="pl-10"
-                />
-              </div>
+        <CardContent className="p-4 lg:p-6">
+          {/* Filtros reorganizados em grid responsivo */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+            {/* Campo de busca */}
+            <div className="relative lg:col-span-2">
+              <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+              <Input
+                placeholder="Buscar receitas..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="pl-10"
+              />
             </div>
-            <div className="flex items-center space-x-2">
-              <Filter className="w-4 h-4 text-gray-400" />
-              <Select value={categoryFilter} onValueChange={(value) => {
-                setCategoryFilter(value);
-                setCurrentPage(1);
-              }}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Todas as categorias" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[200px] overflow-y-auto">
-                  <SelectItem value="all">Todas as categorias</SelectItem>
-                  {PRODUCT_CATEGORIES.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={`${sortColumn}-${sortDirection}`} onValueChange={(value) => {
-                const [newSortColumn, newSortDirection] = value.split('-') as [typeof sortColumn, typeof sortDirection];
-                setSortColumn(newSortColumn);
-                setSortDirection(newSortDirection);
-                setCurrentPage(1);
-              }}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Ordenar por" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[200px] overflow-y-auto">
-                  <SelectItem value="name-asc">Nome A-Z</SelectItem>
-                  <SelectItem value="name-desc">Nome Z-A</SelectItem>
-                  <SelectItem value="totalCost-asc">Menor Custo</SelectItem>
-                  <SelectItem value="totalCost-desc">Maior Custo</SelectItem>
-                  <SelectItem value="marginPercentage-asc">Menor Margem</SelectItem>
-                  <SelectItem value="marginPercentage-desc">Maior Margem</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+
+            {/* Filtro de categoria */}
+            <Select value={categoryFilter} onValueChange={(value) => {
+              setCategoryFilter(value);
+              setCurrentPage(1);
+            }}>
+              <SelectTrigger>
+                <Filter className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Todas as categorias" />
+              </SelectTrigger>
+              <SelectContent className="max-h-[200px] overflow-y-auto">
+                <SelectItem value="all">Todas as categorias</SelectItem>
+                {PRODUCT_CATEGORIES.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Filtro de ordenação */}
+            <Select value={`${sortColumn}-${sortDirection}`} onValueChange={(value) => {
+              const [newSortColumn, newSortDirection] = value.split('-') as [typeof sortColumn, typeof sortDirection];
+              setSortColumn(newSortColumn);
+              setSortDirection(newSortDirection);
+              setCurrentPage(1);
+            }}>
+              <SelectTrigger>
+                <ArrowUpDown className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Ordenar por" />
+              </SelectTrigger>
+              <SelectContent className="max-h-[200px] overflow-y-auto">
+                <SelectItem value="name-asc">Nome A-Z</SelectItem>
+                <SelectItem value="name-desc">Nome Z-A</SelectItem>
+                <SelectItem value="totalCost-asc">Menor Custo</SelectItem>
+                <SelectItem value="totalCost-desc">Maior Custo</SelectItem>
+                <SelectItem value="marginPercentage-asc">Menor Margem</SelectItem>
+                <SelectItem value="marginPercentage-desc">Maior Margem</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>

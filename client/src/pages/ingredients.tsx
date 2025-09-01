@@ -15,7 +15,7 @@ import { formatRelativeTime } from "@/lib/utils";
 import { INGREDIENT_CATEGORIES } from "@shared/constants";
 import type { Ingredient } from "@shared/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, ChevronUp, Edit, Filter, Package, Plus, Search, Trash2 } from "lucide-react";
+import { ArrowUpDown, ChevronDown, ChevronUp, Edit, Filter, Package, Plus, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 
@@ -234,7 +234,7 @@ export default function Ingredients() {
   }
 
   return (
-    <div className="p-4 lg:p-8">
+    <div className="p-4 lg:p-8 w-full min-w-0 overflow-x-hidden">
       <div className="mb-8">
         <div>
           <h2 className="text-3xl font-bold text-gray-900 flex items-center">
@@ -253,109 +253,124 @@ export default function Ingredients() {
 
       {/* Search and Filters */}
       <Card className="mb-6">
-        <CardContent className="p-6 space-y-4">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-4">
-            <div className="flex-1 max-w-md">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Buscar ingredientes..."
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="pl-10"
-                />
-              </div>
+        <CardContent className="p-4 lg:p-6">
+          {/* Filtros reorganizados em grid responsivo */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+            {/* Campo de busca */}
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+              <Input
+                placeholder="Buscar ingredientes..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="pl-10"
+              />
             </div>
-            <div className="flex items-center space-x-2">
-              <Filter className="w-4 h-4 text-gray-400" />
-              <Select value={categoryFilter} onValueChange={(value) => {
-                setCategoryFilter(value);
-                setCurrentPage(1);
-              }}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Todas as categorias" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[200px] overflow-y-auto">
-                  <SelectItem value="all">Todas as categorias</SelectItem>
-                  {INGREDIENT_CATEGORIES.map((category) => (
-                    <SelectItem key={category.value} value={category.value}>
-                      {category.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+
+            {/* Filtro de categoria */}
+            <Select value={categoryFilter} onValueChange={(value) => {
+              setCategoryFilter(value);
+              setCurrentPage(1);
+            }}>
+              <SelectTrigger>
+                <Filter className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Todas as categorias" />
+              </SelectTrigger>
+              <SelectContent className="max-h-[200px] overflow-y-auto">
+                <SelectItem value="all">Todas as categorias</SelectItem>
+                {INGREDIENT_CATEGORIES.map((category) => (
+                  <SelectItem key={category.value} value={category.value}>
+                    {category.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Filtro de data */}
+            <Select value={dateFilter} onValueChange={(value) => {
+              setDateFilter(value);
+              setCurrentPage(1);
+            }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent className="max-h-[200px] overflow-y-auto">
+                <SelectItem value="all">Todas</SelectItem>
+                <SelectItem value="7">Últimos 7 dias</SelectItem>
+                <SelectItem value="30">Últimos 30 dias</SelectItem>
+                <SelectItem value="90">Últimos 90 dias</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Filtro de ordenação */}
+            <Select value={`${sortColumn}-${sortDirection}`} onValueChange={(value) => {
+              const [newSortColumn, newSortDirection] = value.split('-') as [typeof sortColumn, typeof sortDirection];
+              setSortColumn(newSortColumn);
+              setSortDirection(newSortDirection);
+              setCurrentPage(1);
+            }}>
+              <SelectTrigger>
+                <ArrowUpDown className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Ordenar por" />
+              </SelectTrigger>
+              <SelectContent className="max-h-[200px] overflow-y-auto">
+                <SelectItem value="name-asc">Nome A-Z</SelectItem>
+                <SelectItem value="name-desc">Nome Z-A</SelectItem>
+                <SelectItem value="price-asc">Menor Preço</SelectItem>
+                <SelectItem value="price-desc">Maior Preço</SelectItem>
+                <SelectItem value="unitCost-asc">Menor Custo/Un.</SelectItem>
+                <SelectItem value="unitCost-desc">Maior Custo/Un.</SelectItem>
+                <SelectItem value="updatedAt-desc">Mais Recente</SelectItem>
+                <SelectItem value="updatedAt-asc">Mais Antigo</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Novos filtros adicionais */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-4">
-            <div className="flex space-x-2 max-w-md">
-              <Input
-                type="number"
-                placeholder="Preço mínimo"
-                value={priceMinFilter}
-                onChange={(e) => {
-                  setPriceMinFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-32"
-                min={0}
-              />
-              <Input
-                type="number"
-                placeholder="Preço máximo"
-                value={priceMaxFilter}
-                onChange={(e) => {
-                  setPriceMaxFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-32"
-                min={0}
-              />
-            </div>
-            <div className="flex space-x-2 max-w-md">
-              <Input
-                type="number"
-                placeholder="Custo/unidade mínimo"
-                value={unitCostMinFilter}
-                onChange={(e) => {
-                  setUnitCostMinFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-40"
-                min={0}
-              />
-              <Input
-                type="number"
-                placeholder="Custo/unidade máximo"
-                value={unitCostMaxFilter}
-                onChange={(e) => {
-                  setUnitCostMaxFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-40"
-                min={0}
-              />
-            </div>
-            <div className="max-w-xs">
-              <Select value={dateFilter} onValueChange={(value) => {
-                setDateFilter(value);
+          {/* Filtros adicionais de preço - em uma segunda linha */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mt-4">
+            <Input
+              type="number"
+              placeholder="Preço mínimo"
+              value={priceMinFilter}
+              onChange={(e) => {
+                setPriceMinFilter(e.target.value);
                 setCurrentPage(1);
-              }}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Última atualização" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[200px] overflow-y-auto">
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="7">Últimos 7 dias</SelectItem>
-                  <SelectItem value="30">Últimos 30 dias</SelectItem>
-                  <SelectItem value="90">Últimos 90 dias</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              }}
+              min={0}
+            />
+            <Input
+              type="number"
+              placeholder="Preço máximo"
+              value={priceMaxFilter}
+              onChange={(e) => {
+                setPriceMaxFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              min={0}
+            />
+            <Input
+              type="number"
+              placeholder="Custo/unidade mínimo"
+              value={unitCostMinFilter}
+              onChange={(e) => {
+                setUnitCostMinFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              min={0}
+            />
+            <Input
+              type="number"
+              placeholder="Custo/unidade máximo"
+              value={unitCostMaxFilter}
+              onChange={(e) => {
+                setUnitCostMaxFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              min={0}
+            />
           </div>
         </CardContent>
       </Card>
@@ -367,7 +382,7 @@ export default function Ingredients() {
         </CardHeader>
         <CardContent>
           {/* Desktop Table */}
-          <div className="hidden lg:block overflow-x-auto">
+          <div className="hidden lg:block overflow-x-auto min-w-0">
             <Table>
               <TableHeader>
                 <TableRow>

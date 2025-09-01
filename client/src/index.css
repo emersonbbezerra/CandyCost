@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 * {
   border-color: hsl(var(--border));
@@ -7,7 +7,8 @@
 body {
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
   color: hsl(var(--foreground));
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter',
+    sans-serif;
   min-height: 100vh;
   line-height: 1.6;
 }
@@ -87,7 +88,8 @@ body {
 
 /* Background gradiente sofisticado */
 .bg-gradient-main {
-  background: linear-gradient(135deg,
+  background: linear-gradient(
+    135deg,
     hsl(210, 40%, 99%) 0%,
     hsl(212, 50%, 98%) 25%,
     hsl(214, 60%, 97%) 50%,
@@ -101,15 +103,14 @@ body {
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow:
-    0 8px 32px rgba(59, 130, 246, 0.08),
-    0 4px 16px rgba(37, 99, 235, 0.04),
-    0 2px 8px rgba(29, 78, 216, 0.02);
+  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.08),
+    0 4px 16px rgba(37, 99, 235, 0.04), 0 2px 8px rgba(29, 78, 216, 0.02);
 }
 
 /* Botões com gradientes elegantes */
 .btn-primary-gradient {
-  background: linear-gradient(135deg,
+  background: linear-gradient(
+    135deg,
     hsl(217, 91%, 60%) 0%,
     hsl(212, 95%, 68%) 50%,
     hsl(208, 100%, 64%) 100%
@@ -161,22 +162,48 @@ body {
 }
 
 /* Cores específicas para a aplicação */
-.text-blue-primary { color: hsl(217, 91%, 60%); }
-.text-blue-elegant { color: hsl(212, 95%, 68%); }
-.text-gold-accent { color: hsl(45, 93%, 47%); }
-.text-mint-fresh { color: hsl(156, 73%, 59%); }
-.text-sky-soft { color: hsl(197, 71%, 73%); }
+.text-blue-primary {
+  color: hsl(217, 91%, 60%);
+}
+.text-blue-elegant {
+  color: hsl(212, 95%, 68%);
+}
+.text-gold-accent {
+  color: hsl(45, 93%, 47%);
+}
+.text-mint-fresh {
+  color: hsl(156, 73%, 59%);
+}
+.text-sky-soft {
+  color: hsl(197, 71%, 73%);
+}
 
-.bg-blue-light { background-color: hsl(217, 100%, 97%); }
-.bg-blue-subtle { background-color: hsl(214, 32%, 91%); }
-.bg-gold-light { background-color: hsl(45, 100%, 96%); }
-.bg-mint-light { background-color: hsl(156, 100%, 96%); }
-.bg-sky-light { background-color: hsl(197, 100%, 96%); }
+.bg-blue-light {
+  background-color: hsl(217, 100%, 97%);
+}
+.bg-blue-subtle {
+  background-color: hsl(214, 32%, 91%);
+}
+.bg-gold-light {
+  background-color: hsl(45, 100%, 96%);
+}
+.bg-mint-light {
+  background-color: hsl(156, 100%, 96%);
+}
+.bg-sky-light {
+  background-color: hsl(197, 100%, 96%);
+}
 
 /* Bordas com cores elegantes */
-.border-blue-elegant { border-color: hsl(214, 32%, 91%); }
-.border-blue-subtle { border-color: hsl(220, 14%, 96%); }
-.border-gold-elegant { border-color: hsl(45, 60%, 85%); }
+.border-blue-elegant {
+  border-color: hsl(214, 32%, 91%);
+}
+.border-blue-subtle {
+  border-color: hsl(220, 14%, 96%);
+}
+.border-gold-elegant {
+  border-color: hsl(45, 60%, 85%);
+}
 
 /* Badges modernas */
 .badge-modern {
@@ -188,31 +215,51 @@ body {
 }
 
 .badge-blue {
-  background: linear-gradient(135deg, hsl(217, 100%, 95%) 0%, hsl(212, 100%, 94%) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(217, 100%, 95%) 0%,
+    hsl(212, 100%, 94%) 100%
+  );
   color: hsl(217, 91%, 40%);
   border: 1px solid hsl(214, 32%, 91%);
 }
 
 .badge-blue-light {
-  background: linear-gradient(135deg, hsl(210, 40%, 98%) 0%, hsl(214, 32%, 96%) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(210, 40%, 98%) 0%,
+    hsl(214, 32%, 96%) 100%
+  );
   color: hsl(220, 14%, 35%);
   border: 1px solid hsl(214, 32%, 91%);
 }
 
 .badge-gold {
-  background: linear-gradient(135deg, hsl(45, 100%, 96%) 0%, hsl(40, 100%, 95%) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(45, 100%, 96%) 0%,
+    hsl(40, 100%, 95%) 100%
+  );
   color: hsl(45, 93%, 35%);
   border: 1px solid hsl(45, 60%, 80%);
 }
 
 .badge-mint {
-  background: linear-gradient(135deg, hsl(156, 100%, 96%) 0%, hsl(150, 100%, 95%) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(156, 100%, 96%) 0%,
+    hsl(150, 100%, 95%) 100%
+  );
   color: hsl(156, 73%, 35%);
   border: 1px solid hsl(156, 60%, 80%);
 }
 
 .badge-sky {
-  background: linear-gradient(135deg, hsl(197, 100%, 96%) 0%, hsl(190, 100%, 95%) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(197, 100%, 96%) 0%,
+    hsl(190, 100%, 95%) 100%
+  );
   color: hsl(197, 71%, 35%);
   border: 1px solid hsl(197, 60%, 80%);
 }
@@ -259,8 +306,12 @@ body {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Scrollbar personalizada */
@@ -273,12 +324,20 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(212, 95%, 68%) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(217, 91%, 60%) 0%,
+    hsl(212, 95%, 68%) 100%
+  );
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, hsl(217, 91%, 55%) 0%, hsl(212, 95%, 63%) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(217, 91%, 55%) 0%,
+    hsl(212, 95%, 63%) 100%
+  );
 }
 
 /* Inputs modernos */
@@ -305,7 +364,11 @@ body {
 }
 
 .table-modern th {
-  background: linear-gradient(135deg, hsl(315, 100%, 96%) 0%, hsl(280, 20%, 96%) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(315, 100%, 96%) 0%,
+    hsl(280, 20%, 96%) 100%
+  );
   color: hsl(240, 10%, 3.9%);
   font-weight: 600;
   padding: 1rem;
@@ -323,13 +386,21 @@ body {
 
 /* Status indicators */
 .status-active {
-  background: linear-gradient(135deg, hsl(156, 100%, 95%) 0%, hsl(150, 100%, 94%) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(156, 100%, 95%) 0%,
+    hsl(150, 100%, 94%) 100%
+  );
   color: hsl(156, 73%, 35%);
   border: 1px solid hsl(156, 60%, 80%);
 }
 
 .status-inactive {
-  background: linear-gradient(135deg, hsl(0, 100%, 96%) 0%, hsl(10, 100%, 95%) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(0, 100%, 96%) 0%,
+    hsl(10, 100%, 95%) 100%
+  );
   color: hsl(0, 84%, 35%);
   border: 1px solid hsl(0, 60%, 85%);
 }
@@ -342,12 +413,20 @@ body {
 }
 
 .sidebar-item:hover {
-  background: linear-gradient(135deg, hsl(210, 40%, 98%) 0%, hsl(214, 32%, 91%) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(210, 40%, 98%) 0%,
+    hsl(214, 32%, 91%) 100%
+  );
   transform: translateX(4px);
 }
 
 .sidebar-item.active {
-  background: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(212, 95%, 68%) 100%);
+  background: linear-gradient(
+    135deg,
+    hsl(217, 91%, 60%) 0%,
+    hsl(212, 95%, 68%) 100%
+  );
   color: white;
   box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
 }
@@ -374,7 +453,9 @@ body {
 }
 
 /* Dark mode prevention - força sempre light mode */
-html, body, #root {
+html,
+body,
+#root {
   color-scheme: light only;
 }
 
@@ -382,7 +463,8 @@ html, body, #root {
   color-scheme: light;
 }
 
-.dark, [data-theme="dark"] {
+.dark,
+[data-theme='dark'] {
   display: none !important;
 }
 
@@ -403,15 +485,23 @@ html, body, #root {
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15) !important;
 }
 
-.pagination-fix[data-active="true"] {
-  background: linear-gradient(135deg, hsl(217, 91%, 60%), hsl(212, 95%, 68%)) !important;
+.pagination-fix[data-active='true'] {
+  background: linear-gradient(
+    135deg,
+    hsl(217, 91%, 60%),
+    hsl(212, 95%, 68%)
+  ) !important;
   color: white !important;
   border-color: transparent !important;
   box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3) !important;
 }
 
-.pagination-fix[data-active="true"]:hover {
-  background: linear-gradient(135deg, hsl(217, 91%, 55%), hsl(212, 95%, 63%)) !important;
+.pagination-fix[data-active='true']:hover {
+  background: linear-gradient(
+    135deg,
+    hsl(217, 91%, 55%),
+    hsl(212, 95%, 63%)
+  ) !important;
   transform: translateY(-1px) !important;
   box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
 }
@@ -420,7 +510,8 @@ html, body, #root {
 .dropdown-fix {
   background-color: rgba(255, 255, 255, 0.98) !important;
   border: 1px solid hsl(217, 20%, 85%) !important;
-  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.15), 0 4px 16px rgba(37, 99, 235, 0.08) !important;
+  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.15),
+    0 4px 16px rgba(37, 99, 235, 0.08) !important;
   backdrop-filter: blur(12px) !important;
   border-radius: 0.75rem !important;
 }
@@ -456,4 +547,47 @@ html, body, #root {
 .nav-item-fix:hover {
   background-color: var(--blue-light) !important;
   color: var(--primary-text) !important;
+}
+
+/* Responsividade global para containers */
+html,
+body {
+  overflow-x: hidden;
+}
+
+body {
+  min-width: 320px; /* Garante largura mínima */
+}
+
+/* Responsividade para todos os containers principais */
+main {
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+/* Fix para selects em telas pequenas */
+@media (max-width: 640px) {
+  .select-responsive {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Garante que cards não quebrem o layout */
+  .card-responsive {
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  /* Ajusta grids para telas pequenas */
+  .grid-responsive {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  /* Flexbox responsivo */
+  .flex-responsive {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
 }
