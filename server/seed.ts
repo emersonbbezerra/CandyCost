@@ -195,6 +195,23 @@ async function seed() {
         price: 12.0,
         brand: 'Mãe Terra',
       },
+      // Ingredientes para teste de conversão de unidades
+      {
+        name: 'Ovos Especiais',
+        category: 'Outros',
+        quantity: 2, // 2 dúzias = 24 unidades
+        unit: 'dúzia',
+        price: 36.0,
+        brand: 'Caipira Premium',
+      },
+      {
+        name: 'Farinha Especial',
+        category: 'Farinhas',
+        quantity: 2000, // 2000g = 2kg
+        unit: 'g',
+        price: 8.5,
+        brand: 'Especial',
+      },
     ];
 
     // Inserir ingredientes
