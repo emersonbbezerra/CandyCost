@@ -325,16 +325,52 @@ export class FixedCostController {
         return res.status(404).json({ message: 'Custo fixo não encontrado' });
       }
 
+      // Fazer uma consulta adicional para garantir que temos o estado atualizado
+      const refreshedFixedCost = await this.fixedCostRepository.findById(id);
+      if (!refreshedFixedCost) {
+        return res
+          .status(404)
+          .json({ message: 'Custo fixo não encontrado após atualização' });
+      }
+
       // Histórico agregado do custo fixo (toggle)
       try {
-        await priceHistoryRepository.create({
-          itemType: 'fixed_cost',
-          itemName: updatedFixedCost.name,
-          oldPrice: Number(currentFixedCost.value),
-          newPrice: Number(updatedFixedCost.value),
-          changeType: 'fixed_cost_toggle',
-          description: updatedFixedCost.isActive ? 'Ativado' : 'Desativado',
+        console.log('='.repeat(60));
+        console.log('🔄 TOGGLE FIXED COST DEBUG INFO:');
+        console.log('='.repeat(60));
+        console.log('Current Fixed Cost:', {
+          id: currentFixedCost.id,
+          name: currentFixedCost.name,
+          isActive: currentFixedCost.isActive,
         });
+        console.log('Refreshed Fixed Cost:', {
+          id: refreshedFixedCost.id,
+          name: refreshedFixedCost.name,
+          isActive: refreshedFixedCost.isActive,
+        });
+        console.log('History Values:');
+        console.log(
+          '  OldPrice (current state):',
+          currentFixedCost.isActive ? 1 : 0
+        );
+        console.log(
+          '  NewPrice (new state):',
+          refreshedFixedCost.isActive ? 1 : 0
+        );
+        console.log('='.repeat(60));
+
+        const historyData = {
+          itemType: 'fixed_cost',
+          itemName: refreshedFixedCost.name,
+          // Para toggle, usamos 0/1 para representar inativo/ativo
+          oldPrice: currentFixedCost.isActive ? 1 : 0,
+          newPrice: refreshedFixedCost.isActive ? 1 : 0,
+          changeType: 'fixed_cost_toggle',
+          description: refreshedFixedCost.isActive ? 'Ativado' : 'Desativado',
+        };
+
+        console.log('🎯 Creating History Record with NEW LOGIC:', historyData);
+        await priceHistoryRepository.create(historyData);
       } catch (e) {
         console.error(
           'Falha ao registrar histórico agregado de toggle de custo fixo',
@@ -368,7 +404,7 @@ export class FixedCostController {
         } catch {}
       }
 
-      res.json(updatedFixedCost);
+      res.json(refreshedFixedCost);
     } catch (error) {
       console.error('Erro ao alterar status do custo fixo:', error);
       res.status(500).json({ message: 'Erro interno do servidor' });

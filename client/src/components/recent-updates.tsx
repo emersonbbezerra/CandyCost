@@ -328,7 +328,15 @@ export function RecentUpdatesCard() {
                                         </div>
                                         <div className="flex-1">
                                             <p className="text-gray-900">
-                                                {update.changeType.includes('toggle') ? 'Status alterado' : 'Valor alterado'} de {formatCurrency(update.oldPrice ?? 0)} para {formatCurrency(update.newPrice ?? 0)} - <strong>{update.name}</strong>
+                                                {update.changeType.includes('toggle') ? (
+                                                    <>
+                                                        Status alterado de {update.oldPrice === 1 ? 'Ativado' : 'Desativado'} para {update.newPrice === 1 ? 'Ativado' : 'Desativado'} - <strong>{update.name}</strong>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        Valor alterado de {formatCurrency(update.oldPrice ?? 0)} para {formatCurrency(update.newPrice ?? 0)} - <strong>{update.name}</strong>
+                                                    </>
+                                                )}
                                             </p>
                                             <p className="text-sm text-gray-500 mt-1">
                                                 {(() => {
