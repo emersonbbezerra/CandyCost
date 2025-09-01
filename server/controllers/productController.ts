@@ -196,6 +196,8 @@ export const updateProduct = async (req: Request, res: Response) => {
       (field) => data[field as keyof typeof data] !== undefined
     );
 
+    let costChanged = false;
+
     if (changedFields.length > 0) {
       console.log(
         '[ProductController] Cost-affecting fields changed:',
@@ -230,11 +232,41 @@ export const updateProduct = async (req: Request, res: Response) => {
           changeType: 'product_update',
         });
 
+        costChanged = true;
         console.log('[ProductController] Price history recorded successfully');
       } else {
         console.log(
           '[ProductController] Cost change too small, not recording in history'
         );
+      }
+    }
+
+    // 🚀 NOVA FUNCIONALIDADE: Se este produto também é usado como ingrediente e o custo mudou,
+    // propagar as mudanças para outros produtos que o usam como ingrediente
+    if (costChanged && product.isAlsoIngredient) {
+      console.log(
+        '[ProductController] Product is also an ingredient and cost changed, propagating changes...'
+      );
+
+      try {
+        // Propagar mudanças para produtos que usam este produto como ingrediente
+        const processedProducts = new Set<string>();
+        processedProducts.add(id); // Evitar recursão infinita
+
+        await productService.propagateCostChangeToProductDependencies(
+          [id],
+          processedProducts
+        );
+
+        console.log(
+          '[ProductController] Cost change propagation completed successfully'
+        );
+      } catch (propagationError) {
+        console.error(
+          '[ProductController] Error propagating cost changes:',
+          propagationError
+        );
+        // Não falhar a resposta por causa do erro de propagação
       }
     }
 

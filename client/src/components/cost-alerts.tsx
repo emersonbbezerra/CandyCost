@@ -54,18 +54,31 @@ export function CostAlerts() {
         const ingredient = ingredients.find(i => i.id === history.ingredientId);
         if (!ingredient) return;
 
-        // Garante que os argumentos sejam string
+        // Calcular percentual de mudança corretamente
         const oldPrice = parseFloat(String(history.oldPrice));
         const newPrice = parseFloat(String(history.newPrice));
+
+        // Verificar se os valores são válidos
+        if (isNaN(oldPrice) || isNaN(newPrice) || oldPrice <= 0) {
+          console.warn(`Dados de histórico inválidos para ${ingredient.name}:`, {
+            oldPrice: history.oldPrice,
+            newPrice: history.newPrice
+          });
+          return;
+        }
+
         const percentage = ((newPrice - oldPrice) / oldPrice) * 100;
 
         // Usar threshold das configurações
         const threshold = settings.priceIncreaseAlertThreshold || 20;
+
+        console.log(`Verificando mudança de preço de ${ingredient.name}: ${percentage.toFixed(1)}% (threshold: ${threshold}%)`);
+
         if (percentage > threshold) {
           alerts.push({
             type: "price_increase",
             title: `Aumento significativo detectado`,
-            description: `${ingredient.name} aumentou ${percentage.toFixed(1)}% nos últimos 7 dias`,
+            description: `${ingredient.name} aumentou ${percentage.toFixed(1)}% nos últimos 7 dias (de ${formatCurrency(oldPrice, currencySymbol)} para ${formatCurrency(newPrice, currencySymbol)} por ${ingredient.unit})`,
             ingredient,
             percentage,
             severity: percentage > threshold * 2.5 ? "high" : percentage > threshold * 1.5 ? "medium" : "low"
@@ -77,11 +90,25 @@ export function CostAlerts() {
     // Alertas de ingredientes com custo alto (apenas se habilitado)
     if (settings.enableCostAlerts) {
       ingredients.forEach(ingredient => {
-        // Garante que os argumentos sejam string
-        const unitCost = parseFloat(String(ingredient.price)) / parseFloat(String(ingredient.quantity));
+        // Calcular custo por unidade corretamente
+        const ingredientPrice = parseFloat(String(ingredient.price));
+        const ingredientQuantity = parseFloat(String(ingredient.quantity));
+
+        // Verificar se os valores são válidos
+        if (isNaN(ingredientPrice) || isNaN(ingredientQuantity) || ingredientQuantity <= 0) {
+          console.warn(`Dados inválidos para ingrediente ${ingredient.name}:`, {
+            price: ingredient.price,
+            quantity: ingredient.quantity
+          });
+          return;
+        }
+
+        const unitCost = ingredientPrice / ingredientQuantity;
 
         // Usar threshold das configurações
         const threshold = settings.highCostAlertThreshold || 50;
+
+        console.log(`Verificando custo de ${ingredient.name}: R$ ${unitCost.toFixed(4)} / ${ingredient.unit} (threshold: R$ ${threshold})`);
 
         if (unitCost > threshold) {
           alerts.push({

@@ -54,6 +54,8 @@ export const saveRecipes = async (req: Request, res: Response) => {
       ).toFixed(6)}`
     );
 
+    let costChanged = false;
+
     if (Math.abs(newCostPerUnit - oldCostPerUnit) > threshold) {
       console.log(
         '[RecipeController] Registering cost change in price history...'
@@ -69,11 +71,54 @@ export const saveRecipes = async (req: Request, res: Response) => {
         changeType: 'recipe_update',
       });
 
+      costChanged = true;
       console.log('[RecipeController] Price history recorded successfully');
     } else {
       console.log(
         '[RecipeController] Cost change too small, not recording in history'
       );
+    }
+
+    // 🚀 NOVA FUNCIONALIDADE: Se o custo do produto mudou e ele também é usado como ingrediente,
+    // propagar as mudanças para outros produtos que o usam
+    if (costChanged) {
+      console.log(
+        '[RecipeController] Product cost changed, checking if it affects other products...'
+      );
+
+      try {
+        // Buscar informações do produto para ver se é também ingrediente
+        const product = await productService.getProductById(productId);
+
+        if (product?.isAlsoIngredient) {
+          console.log(
+            '[RecipeController] Product is also an ingredient, propagating changes...'
+          );
+
+          // Propagar mudanças para produtos que usam este produto como ingrediente
+          const processedProducts = new Set<string>();
+          processedProducts.add(productId); // Evitar recursão infinita
+
+          await productService.propagateCostChangeToProductDependencies(
+            [productId],
+            processedProducts
+          );
+
+          console.log(
+            '[RecipeController] Cost change propagation completed successfully'
+          );
+        } else {
+          console.log(
+            '[RecipeController] Product is not used as ingredient, no propagation needed'
+          );
+        }
+      } catch (propagationError) {
+        console.error(
+          '[RecipeController] Error propagating cost changes:',
+          propagationError
+        );
+        // Não falhar a resposta por causa do erro de propagação
+      }
     }
 
     res.json(createdRecipes);

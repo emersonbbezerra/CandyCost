@@ -70,38 +70,93 @@ export const updateIngredient = async (req: Request, res: Response) => {
       ingredientData.price !== undefined &&
       ingredientData.quantity !== undefined
     ) {
-      const oldUnitPrice = oldIngredient.price / oldIngredient.quantity;
-      const newUnitPrice = ingredientData.price / ingredientData.quantity;
+      const oldTotalPrice = parseFloat(String(oldIngredient.price));
+      const oldQuantity = parseFloat(String(oldIngredient.quantity));
+      const newTotalPrice = parseFloat(String(ingredientData.price));
+      const newQuantity = parseFloat(String(ingredientData.quantity));
 
-      // Verificar se o preço por unidade realmente mudou
-      const unitPriceChanged = Math.abs(oldUnitPrice - newUnitPrice) > 0.01; // tolerância de 1 centavo
+      // Normalizar ambos os preços para uma unidade padrão para comparação justa
+      const oldUnit = oldIngredient.unit;
+      const newUnit = ingredientData.unit || oldIngredient.unit;
+
+      let oldNormalizedUnitPrice = oldTotalPrice / oldQuantity;
+      let newNormalizedUnitPrice = newTotalPrice / newQuantity;
+
+      // Converter para unidades base para comparação:
+      // - Peso: converter para gramas (g)
+      // - Volume: converter para mililitros (ml)
+      // - Quantidade: converter para unidades individuais (un)
+
+      // Normalizar preço antigo
+      if (oldUnit === 'kg') {
+        oldNormalizedUnitPrice = oldNormalizedUnitPrice / 1000; // preço por g
+      } else if (oldUnit === 'l') {
+        oldNormalizedUnitPrice = oldNormalizedUnitPrice / 1000; // preço por ml
+      } else if (
+        oldUnit === 'dúzia' ||
+        oldUnit === 'duzia' ||
+        oldUnit === 'dz'
+      ) {
+        oldNormalizedUnitPrice = oldNormalizedUnitPrice / 12; // preço por unidade
+      }
+
+      // Normalizar preço novo
+      if (newUnit === 'kg') {
+        newNormalizedUnitPrice = newNormalizedUnitPrice / 1000; // preço por g
+      } else if (newUnit === 'l') {
+        newNormalizedUnitPrice = newNormalizedUnitPrice / 1000; // preço por ml
+      } else if (
+        newUnit === 'dúzia' ||
+        newUnit === 'duzia' ||
+        newUnit === 'dz'
+      ) {
+        newNormalizedUnitPrice = newNormalizedUnitPrice / 12; // preço por unidade
+      }
+
+      // Verificar se o preço por unidade normalizado realmente mudou
+      const unitPriceChanged =
+        Math.abs(oldNormalizedUnitPrice - newNormalizedUnitPrice) > 0.0001;
+
+      console.log('🔍 Price comparison:', {
+        oldTotal: oldTotalPrice,
+        oldQuantity,
+        oldUnit,
+        newTotal: newTotalPrice,
+        newQuantity,
+        newUnit,
+        oldNormalizedUnitPrice: oldNormalizedUnitPrice.toFixed(6),
+        newNormalizedUnitPrice: newNormalizedUnitPrice.toFixed(6),
+        difference: Math.abs(
+          oldNormalizedUnitPrice - newNormalizedUnitPrice
+        ).toFixed(6),
+        changed: unitPriceChanged,
+      });
 
       if (unitPriceChanged) {
         console.log(
           '🔄 [updateIngredient] Unit price changed, tracking affected products...'
         );
-        console.log(
-          `📊 [updateIngredient] Old unit price: ${oldUnitPrice.toFixed(
-            4
-          )}, New unit price: ${newUnitPrice.toFixed(4)}`
-        );
 
-        // Registrar histórico do próprio ingrediente usando preço por unidade
+        // Registrar histórico do próprio ingrediente usando preço por unidade normalizado
         await priceHistoryService.createPriceHistory({
           itemType: 'ingredient',
           itemName: oldIngredient.name,
-          oldPrice: oldUnitPrice,
-          newPrice: newUnitPrice,
+          oldPrice: oldNormalizedUnitPrice,
+          newPrice: newNormalizedUnitPrice,
           changeType: 'manual',
-          changeReason: 'Alteração manual de preço por unidade',
+          changeReason: `Alteração manual: ${oldTotalPrice.toFixed(
+            2
+          )}/${oldQuantity}${oldUnit} → ${newTotalPrice.toFixed(
+            2
+          )}/${newQuantity}${newUnit}`,
           ingredientId: id,
         });
 
-        // Rastrear produtos afetados (passando preços por unidade)
+        // Rastrear produtos afetados (passando preços por unidade normalizados)
         await productService.trackCostChangesForAffectedProducts(
           id,
-          oldUnitPrice,
-          newUnitPrice
+          oldNormalizedUnitPrice,
+          newNormalizedUnitPrice
         );
       } else {
         console.log('Unit price unchanged, no tracking needed');

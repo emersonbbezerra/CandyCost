@@ -162,7 +162,14 @@ export function RecentUpdatesCard() {
                                                 Custo atualizado de {formatCurrency(update.oldPrice ?? 0)} para {formatCurrency(update.newPrice ?? 0)}{update.unit ? ` / ${update.unit}` : ''} - <strong>{update.name}</strong>
                                             </p>
                                             <p className="text-sm text-gray-500 mt-1">
-                                                {update.changeType === 'auto' ? 'Atualização automática' : 'Atualização manual'}
+                                                {(() => {
+                                                    switch (update.changeType) {
+                                                        case 'manual': return 'Atualização manual do preço/quantidade';
+                                                        case 'auto': return 'Atualização automática';
+                                                        case 'unit_conversion': return 'Conversão de unidade de medida';
+                                                        default: return update.changeType === 'auto' ? 'Atualização automática' : 'Atualização manual';
+                                                    }
+                                                })()}
                                             </p>
                                             <p className="text-xs text-gray-400 mt-1">
                                                 {formatRelativeTime(new Date(update.createdAt))}
@@ -252,12 +259,15 @@ export function RecentUpdatesCard() {
                                                 <p className="text-sm text-gray-500 mt-1">
                                                     {(() => {
                                                         switch (update.changeType) {
-                                                            case 'ingredient_update': return 'Recálculo por alteração de ingrediente';
+                                                            case 'ingredient_update': return 'Recálculo automático por alteração de ingrediente';
+                                                            case 'recipe_update': return 'Atualização de receita/fórmula';
+                                                            case 'product_update': return 'Atualização direta do produto';
                                                             case 'fixed_cost_create': return 'Recálculo por criação de custo fixo';
                                                             case 'fixed_cost_update': return 'Recálculo por alteração de custo fixo';
                                                             case 'fixed_cost_toggle': return 'Recálculo por ativação/desativação de custo fixo';
                                                             case 'fixed_cost_delete': return 'Recálculo por exclusão de custo fixo';
                                                             case 'work_config_impact': return 'Recálculo por mudança na configuração de trabalho';
+                                                            case 'unit_conversion_impact': return 'Recálculo por conversão de unidade de ingrediente';
                                                             case 'auto': return 'Atualização automática';
                                                             default: return 'Atualização de produto';
                                                         }
