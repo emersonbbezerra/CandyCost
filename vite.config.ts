@@ -1,32 +1,10 @@
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig } from 'vite';
 
-// Plugins condicionais
-const plugins = [];
-
-// Tentar adicionar plugins se estiverem disponíveis
-try {
-  const react = require('@vitejs/plugin-react').default;
-  plugins.push(react());
-} catch (e) {
-  console.warn('Plugin React não encontrado, usando esbuild para JSX');
-}
-
-try {
-  const tailwindcss = require('@tailwindcss/vite').default;
-  plugins.push(tailwindcss());
-} catch (e) {
-  console.warn('Plugin Tailwind não encontrado, usando PostCSS');
-}
-
 export default defineConfig({
-  plugins,
-  esbuild: {
-    jsx: 'automatic', // Fallback caso o plugin React não esteja disponível
-  },
-  css: {
-    postcss: './postcss.config.js',
-  },
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, 'client', 'src'),
