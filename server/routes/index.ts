@@ -15,30 +15,35 @@ import settingsRoutes from './settingsRoutes';
 import userRoutes from './userRoutes';
 
 export async function registerRoutes(app: Express) {
-  app.use(authRoutes);
-  app.use(ingredientRoutes);
-  app.use(priceHistoryRoutes);
-  app.use(productRoutes);
-  app.use(recipeRoutes);
-  app.use(reportRoutes);
-  app.use(userRoutes);
-  app.use('/api/fixed-costs', fixedCostRoutes);
-  app.use('/api/dashboard', dashboardRoutes);
-  app.use('/api/settings', settingsRoutes);
+  try {
+    app.use('/api/auth', authRoutes);
+    app.use('/api/ingredients', ingredientRoutes);
+    app.use('/api/price-history', priceHistoryRoutes);
+    app.use('/api/products', productRoutes);
+    app.use('/api/recipes', recipeRoutes);
+    app.use('/api/reports', reportRoutes);
+    app.use('/api/users', userRoutes);
+    app.use('/api/fixed-costs', fixedCostRoutes);
+    app.use('/api/dashboard', dashboardRoutes);
+    app.use('/api/settings', settingsRoutes);
 
-  // Work configuration routes
-  const workConfigRouter = Router();
-  const fixedCostController = new FixedCostController();
+    // Work configuration routes
+    const workConfigRouter = Router();
+    const fixedCostController = new FixedCostController();
 
-  workConfigRouter.use(isAuthenticated);
-  workConfigRouter.get(
-    '/work-configuration',
-    fixedCostController.getWorkConfiguration.bind(fixedCostController)
-  );
-  workConfigRouter.put(
-    '/work-configuration',
-    fixedCostController.updateWorkConfiguration.bind(fixedCostController)
-  );
+    workConfigRouter.use(isAuthenticated);
+    workConfigRouter.get(
+      '/work-configuration',
+      fixedCostController.getWorkConfiguration.bind(fixedCostController)
+    );
+    workConfigRouter.put(
+      '/work-configuration',
+      fixedCostController.updateWorkConfiguration.bind(fixedCostController)
+    );
 
-  app.use('/api/work-config', workConfigRouter);
+    app.use('/api/work-config', workConfigRouter);
+  } catch (error) {
+    console.error('Error registering routes:', error);
+    throw error;
+  }
 }
