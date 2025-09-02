@@ -15,20 +15,37 @@ export async function registerRoutes(app: Express) {
   try {
     console.log('Starting route registration...');
 
+    console.log('Registering auth routes...');
     app.use('/api/auth', authRoutes);
+
+    console.log('Registering ingredients routes...');
     app.use('/api/ingredients', ingredientRoutes);
+
+    console.log('Registering price history routes...');
     app.use('/api/price-history', priceHistoryRoutes);
+
+    console.log('Registering product routes...');
     app.use('/api/products', productRoutes);
+
+    console.log('Registering recipe routes...');
     app.use('/api/recipes', recipeRoutes);
+
+    console.log('Registering report routes...');
     app.use('/api/reports', reportRoutes);
+
+    console.log('Registering user routes...');
     app.use('/api/users', userRoutes);
+
+    console.log('Registering fixed cost routes...');
     app.use('/api/fixed-costs', fixedCostRoutes);
+
+    console.log('Registering dashboard routes...');
     app.use('/api/dashboard', dashboardRoutes);
+
+    console.log('Registering settings routes...');
     app.use('/api/settings', settingsRoutes);
 
-    console.log('Routes registered successfully');
-
-    // Work configuration routes - COMENTADO PARA DEBUG
+    console.log('All routes registered successfully'); // Work configuration routes - COMENTADO PARA DEBUG
     // const workConfigRouter = Router();
     // const fixedCostController = new FixedCostController();
 

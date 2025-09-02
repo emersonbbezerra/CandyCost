@@ -1,15 +1,17 @@
-import cors from "cors";
-import express from "express";
-import { setupAuth } from "./auth";
-import { registerRoutes } from "./routes";
-import { log, serveStatic, setupVite } from "./vite";
+import cors from 'cors';
+import express from 'express';
+import { setupAuth } from './auth';
+import { registerRoutes } from './routes';
+import { log, serveStatic } from './vite';
 
 const app = express();
 
-app.use(cors({
-  origin: true,
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -26,16 +28,16 @@ app.use((req, res, next) => {
     return originalResJson.apply(res, [bodyJson]);
   };
 
-  res.on("finish", () => {
+  res.on('finish', () => {
     const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
+    if (path.startsWith('/api')) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
 
       if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "...";
+        logLine = logLine.slice(0, 79) + '...';
       }
 
       log(logLine);
@@ -46,19 +48,30 @@ app.use((req, res, next) => {
 });
 
 export async function setupApp() {
+  console.log('Setting up app...');
+
   await setupAuth(app);
-  if (app.get("env") !== "development") {
+
+  if (app.get('env') !== 'development') {
     serveStatic(app);
   }
+
+  // Rota simples para teste
+  app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
   await registerRoutes(app);
+
+  console.log('App setup complete');
+
   return app;
 }
 
-
 export async function setupViteIfDev(app: express.Express, server: any) {
   // Vite runs separately in development
-  if (app.get("env") !== "development") {
-    const { serveStatic } = await import("./vite");
+  if (app.get('env') !== 'development') {
+    const { serveStatic } = await import('./vite');
     serveStatic(app);
   }
 }
