@@ -48,23 +48,11 @@ app.use((req, res, next) => {
 });
 
 export async function setupApp() {
-  console.log('Setting up app...');
-
   await setupAuth(app);
-
   if (app.get('env') !== 'development') {
     serveStatic(app);
   }
-
-  // Rota simples para teste
-  app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-  });
-
   await registerRoutes(app);
-
-  console.log('App setup complete');
-
   return app;
 }
 
