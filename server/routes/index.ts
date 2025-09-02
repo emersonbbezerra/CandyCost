@@ -1,8 +1,5 @@
 import { Express } from 'express';
 
-import { Router } from 'express';
-import { FixedCostController } from '../controllers/fixedCostController';
-import { isAuthenticated } from '../middlewares/authMiddleware';
 import authRoutes from './authRoutes';
 import dashboardRoutes from './dashboardRoutes';
 import fixedCostRoutes from './fixedCostRoutes';
@@ -17,7 +14,7 @@ import userRoutes from './userRoutes';
 export async function registerRoutes(app: Express) {
   try {
     console.log('Starting route registration...');
-    
+
     app.use('/api/auth', authRoutes);
     app.use('/api/ingredients', ingredientRoutes);
     app.use('/api/price-history', priceHistoryRoutes);
