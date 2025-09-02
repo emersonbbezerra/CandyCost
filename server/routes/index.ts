@@ -16,6 +16,8 @@ import userRoutes from './userRoutes';
 
 export async function registerRoutes(app: Express) {
   try {
+    console.log('Starting route registration...');
+    
     app.use('/api/auth', authRoutes);
     app.use('/api/ingredients', ingredientRoutes);
     app.use('/api/price-history', priceHistoryRoutes);
@@ -27,21 +29,23 @@ export async function registerRoutes(app: Express) {
     app.use('/api/dashboard', dashboardRoutes);
     app.use('/api/settings', settingsRoutes);
 
-    // Work configuration routes
-    const workConfigRouter = Router();
-    const fixedCostController = new FixedCostController();
+    console.log('Routes registered successfully');
 
-    workConfigRouter.use(isAuthenticated);
-    workConfigRouter.get(
-      '/work-configuration',
-      fixedCostController.getWorkConfiguration.bind(fixedCostController)
-    );
-    workConfigRouter.put(
-      '/work-configuration',
-      fixedCostController.updateWorkConfiguration.bind(fixedCostController)
-    );
+    // Work configuration routes - COMENTADO PARA DEBUG
+    // const workConfigRouter = Router();
+    // const fixedCostController = new FixedCostController();
 
-    app.use('/api/work-config', workConfigRouter);
+    // workConfigRouter.use(isAuthenticated);
+    // workConfigRouter.get(
+    //   '/work-configuration',
+    //   fixedCostController.getWorkConfiguration.bind(fixedCostController)
+    // );
+    // workConfigRouter.put(
+    //   '/work-configuration',
+    //   fixedCostController.updateWorkConfiguration.bind(fixedCostController)
+    // );
+
+    // app.use('/api/work-config', workConfigRouter);
   } catch (error) {
     console.error('Error registering routes:', error);
     throw error;
