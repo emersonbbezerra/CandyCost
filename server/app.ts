@@ -2,7 +2,7 @@ import cors from 'cors';
 import express from 'express';
 import { setupAuth } from './auth';
 import { registerRoutes } from './routes';
-import { log, serveStatic } from './vite';
+import { log, serveSPA, serveStatic } from './vite';
 
 const app = express();
 
@@ -49,17 +49,24 @@ app.use((req, res, next) => {
 
 export async function setupApp() {
   await setupAuth(app);
+
   if (app.get('env') !== 'development') {
     serveStatic(app);
   }
+
   await registerRoutes(app);
+
+  if (app.get('env') !== 'development') {
+    serveSPA(app);
+  }
+
   return app;
 }
 
 export async function setupViteIfDev(app: express.Express, server: any) {
   // Vite runs separately in development
-  if (app.get('env') !== 'development') {
-    const { serveStatic } = await import('./vite');
-    serveStatic(app);
+  if (app.get('env') === 'development') {
+    const { setupVite } = await import('./vite');
+    await setupVite(app, server);
   }
 }

@@ -14,7 +14,7 @@ export default defineConfig({
   },
   root: path.resolve(import.meta.dirname, 'client'),
   build: {
-    outDir: path.resolve(import.meta.dirname, 'public'),
+    outDir: '../public',
     emptyOutDir: true,
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
