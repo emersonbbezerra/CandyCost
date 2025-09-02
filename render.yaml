@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: candycost
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: candycost-db
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: INITIAL_ADMIN_EMAIL
+        value: admin@candycost.com
+      - key: INITIAL_ADMIN_PASSWORD
+        value: Admin123!
+      - key: INITIAL_ADMIN_FIRST_NAME
+        value: Admin
+      - key: INITIAL_ADMIN_LAST_NAME
+        value: User
+      - key: BCRYPT_SALT_ROUNDS
+        value: 12
+
+databases:
+  - name: candycost-db
+    plan: free
