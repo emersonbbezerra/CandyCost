@@ -65,11 +65,9 @@ export const isAuthenticated: RequestHandler = (req, res, next) => {
     path: req.originalUrl,
     method: req.method,
   });
-  res
-    .status(401)
-    .json({
-      message: 'Você precisa estar logado para acessar esta funcionalidade.',
-    });
+  res.status(401).json({
+    message: 'Você precisa estar logado para acessar esta funcionalidade.',
+  });
 };
 
 // Admin authorization middleware
@@ -88,12 +86,10 @@ export const isAdmin: RequestHandler = (req, res, next) => {
       method: req.method,
     }
   );
-  res
-    .status(403)
-    .json({
-      message:
-        'Esta funcionalidade é exclusiva para administradores. Entre em contato com o responsável pelo sistema.',
-    });
+  res.status(403).json({
+    message:
+      'Esta funcionalidade é exclusiva para administradores. Entre em contato com o responsável pelo sistema.',
+  });
 };
 
 // User service functions
@@ -144,6 +140,8 @@ export const userService = {
     const adminEmail =
       process.env.INITIAL_ADMIN_EMAIL || 'admin@confeitaria.com';
     const adminPassword = process.env.INITIAL_ADMIN_PASSWORD || 'admin123!';
+    const adminFirstName = process.env.INITIAL_ADMIN_FIRST_NAME || 'Admin';
+    const adminLastName = process.env.INITIAL_ADMIN_LAST_NAME || 'User';
 
     // Check if admin already exists
     const existingAdmin = await this.getUserByEmail(adminEmail);
@@ -154,8 +152,8 @@ export const userService = {
     const adminUser = await this.createUser({
       email: adminEmail,
       password: adminPassword,
-      firstName: 'Administrador',
-      lastName: 'Sistema',
+      firstName: adminFirstName,
+      lastName: adminLastName,
       role: 'admin',
     });
 

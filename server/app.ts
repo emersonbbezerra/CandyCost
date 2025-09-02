@@ -5,6 +5,8 @@ import { registerRoutes } from './routes';
 import { log, serveSPA, serveStatic } from './vite';
 
 const app = express();
+// Necessário em produção atrás de proxy (Render) para cookies secure e IPs corretos
+app.set('trust proxy', 1);
 
 app.use(
   cors({

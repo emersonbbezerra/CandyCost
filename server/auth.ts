@@ -1,4 +1,3 @@
-
 import bcrypt from 'bcryptjs';
 import connectPg from 'connect-pg-simple';
 import type { Express, RequestHandler } from 'express';
@@ -49,7 +48,7 @@ passport.serializeUser((user: any, done) => {
 passport.deserializeUser(async (id: string, done) => {
   try {
     const user = await prisma.user.findUnique({
-      where: { id }
+      where: { id },
     });
     done(null, user);
   } catch (error) {
@@ -60,8 +59,19 @@ passport.deserializeUser(async (id: string, done) => {
 // Session configuration
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+  const isProd = process.env.NODE_ENV === 'production';
+  const connectionString = process.env.DATABASE_URL;
+
+  // Em produção no Render, o Postgres exige SSL/TLS. Configuramos o pg com ssl.
+  // Em desenvolvimento, mantemos sem SSL para usar banco local.
   const sessionStore = new PgSession({
-    conString: process.env.DATABASE_URL,
+    // Preferimos conObject para poder passar opções SSL explicitamente
+    conObject: isProd
+      ? {
+          connectionString,
+          ssl: { rejectUnauthorized: false },
+        }
+      : { connectionString },
     createTableIfMissing: true,
     ttl: sessionTtl,
     tableName: 'sessions',
@@ -94,11 +104,9 @@ export const isAuthenticated: RequestHandler = (req, res, next) => {
   if (req.isAuthenticated()) {
     return next();
   }
-  res
-    .status(401)
-    .json({
-      message: 'Você precisa estar logado para acessar esta funcionalidade.',
-    });
+  res.status(401).json({
+    message: 'Você precisa estar logado para acessar esta funcionalidade.',
+  });
 };
 
 // Admin authorization middleware
@@ -106,19 +114,17 @@ export const isAdmin: RequestHandler = (req, res, next) => {
   if (req.isAuthenticated() && (req.user as any)?.role === 'admin') {
     return next();
   }
-  res
-    .status(403)
-    .json({
-      message:
-        'Esta funcionalidade é exclusiva para administradores. Entre em contato com o responsável pelo sistema.',
-    });
+  res.status(403).json({
+    message:
+      'Esta funcionalidade é exclusiva para administradores. Entre em contato com o responsável pelo sistema.',
+  });
 };
 
 // User service functions
 export const userService = {
   async hasAdmin(): Promise<boolean> {
     const admin = await prisma.user.findFirst({
-      where: { role: 'admin' }
+      where: { role: 'admin' },
     });
     return !!admin;
   },
@@ -140,7 +146,7 @@ export const userService = {
         firstName: userData.firstName || null,
         lastName: userData.lastName || null,
         role: userData.role || 'user',
-      }
+      },
     });
 
     return newUser;
@@ -148,13 +154,13 @@ export const userService = {
 
   async getUserByEmail(email: string): Promise<any> {
     return await prisma.user.findUnique({
-      where: { email }
+      where: { email },
     });
   },
 
   async getUserById(id: string): Promise<any> {
     return await prisma.user.findUnique({
-      where: { id }
+      where: { id },
     });
   },
 
@@ -192,7 +198,7 @@ export const userService = {
 
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
-      data: { role: 'admin' }
+      data: { role: 'admin' },
     });
 
     console.log(`✓ User ${userEmail} promoted to admin`);
@@ -208,7 +214,7 @@ export const userService = {
   ): Promise<any> {
     // Check if any admin exists
     const existingAdmin = await prisma.user.findFirst({
-      where: { role: 'admin' }
+      where: { role: 'admin' },
     });
 
     if (existingAdmin) {
@@ -241,7 +247,7 @@ export const userService = {
   ): Promise<any> {
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: userData
+      data: userData,
     });
 
     if (!updatedUser) {
@@ -257,13 +263,13 @@ export const userService = {
   ): Promise<void> {
     await prisma.user.update({
       where: { id: userId },
-      data: { password: hashedPassword }
+      data: { password: hashedPassword },
     });
   },
 
   async deleteUser(userId: string): Promise<void> {
     await prisma.user.delete({
-      where: { id: userId }
+      where: { id: userId },
     });
   },
 
@@ -279,13 +285,13 @@ export const userService = {
         createdAt: true,
         updatedAt: true,
         password: true,
-      }
+      },
     });
   },
 
   async getUserWithPassword(userId: string): Promise<any> {
     return await prisma.user.findUnique({
-      where: { id: userId }
+      where: { id: userId },
     });
   },
 };
