@@ -7,7 +7,7 @@
     "dev:backend": "cross-env NODE_ENV=development tsx server/index.ts",
     "dev:frontend": "npx vite --host 0.0.0.0 --port 3000 --force",
     "build:backend": "esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
-    "build:frontend": "npx vite build",
+    "build:frontend": "npx vite build --config vite.config.prod.ts",
     "build": "npm run build:frontend && npm run build:backend",
     "start:backend": "NODE_ENV=production node dist/index.js",
     "start:frontend": "serve -s public -l 3000",
