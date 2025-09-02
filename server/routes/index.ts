@@ -16,7 +16,6 @@ import userRoutes from './userRoutes';
 
 export async function registerRoutes(app: Express) {
   app.use(authRoutes);
-  app.use(dashboardRoutes);
   app.use(ingredientRoutes);
   app.use(priceHistoryRoutes);
   app.use(productRoutes);
