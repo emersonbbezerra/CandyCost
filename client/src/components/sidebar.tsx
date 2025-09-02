@@ -167,17 +167,15 @@ export function Sidebar() {
                     : user?.firstName || 'Usuário'
                   }
                 </p>
-                <p className="text-xs text-gray-600 truncate">{user?.email}</p>
+                <div className="flex justify-start">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
+                    <Settings className="w-3 h-3 mr-1" />
+                    {user?.role === 'admin' ? 'Administrador' : 'Usuário'}
+                  </span>
+                </div>
               </div>
             </div>
-            {user?.role === 'admin' && (
-              <div className="flex justify-center">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800">
-                  <Settings className="w-3 h-3 mr-1" />
-                  Administrador
-                </span>
-              </div>
-            )}
+            {/* Removed the duplicate admin badge that was below */}
           </div>
 
           <div className="space-y-1">
