@@ -4,7 +4,7 @@ services:
     env: node
     plan: free
     buildCommand: npm install && npm run build
-    startCommand: npm start
+    startCommand: npm run start:prod
     envVars:
       - key: NODE_ENV
         value: production
@@ -16,8 +16,6 @@ services:
         generateValue: true
       - key: INITIAL_ADMIN_EMAIL
         value: admin@candycost.com
-      - key: INITIAL_ADMIN_PASSWORD
-        value: Admin123!
       - key: INITIAL_ADMIN_FIRST_NAME
         value: Admin
       - key: INITIAL_ADMIN_LAST_NAME
