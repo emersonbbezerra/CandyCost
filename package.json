@@ -9,7 +9,7 @@
     "build:backend": "esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "build:frontend": "node --max-old-space-size=2048 ./node_modules/.bin/vite build",
     "build": "npm run build:frontend && npm run build:backend",
-    "start:backend": "cross-env NODE_ENV=production node dist/index.js",
+    "start:backend": "node dist/index.js",
     "start:prod": "npm run db:migrate:deploy && tsx server/scripts/initAdmin.ts && npm run start:backend",
     "start": "npm run db:migrate:deploy && npm run seed && npm run start:backend",
     "typecheck": "tsc --noEmit",
