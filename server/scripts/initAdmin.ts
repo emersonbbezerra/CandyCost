@@ -13,8 +13,8 @@ async function main() {
       return;
     }
 
-    const email = process.env.INITIAL_ADMIN_EMAIL;
-    const password = process.env.INITIAL_ADMIN_PASSWORD;
+    const email = process.env.INITIAL_ADMIN_EMAIL || 'admin@candycost.com';
+    const password = process.env.INITIAL_ADMIN_PASSWORD || 'Admin123!';
     const firstName = process.env.INITIAL_ADMIN_FIRST_NAME || 'Admin';
     const lastName = process.env.INITIAL_ADMIN_LAST_NAME || 'User';
 
