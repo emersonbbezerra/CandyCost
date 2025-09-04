@@ -1,6 +1,7 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useCurrencySymbol } from "@/contexts/SettingsContext";
+import { getUnitLabel } from "@/lib/unitLabels";
 import { formatCurrency } from "@/lib/utils";
 import type { Ingredient, PriceHistory } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
@@ -54,31 +55,55 @@ export function CostAlerts() {
         const ingredient = ingredients.find(i => i.id === history.ingredientId);
         if (!ingredient) return;
 
-        // Calcular percentual de mudança corretamente
-        const oldPrice = parseFloat(String(history.oldPrice));
-        const newPrice = parseFloat(String(history.newPrice));
+        // Ignorar conversões de unidade automáticas
+        if (history.description &&
+          (history.description.includes('Conversão de unidade') ||
+            history.description.includes('receitas convertidas automaticamente'))) {
+          return;
+        }
+
+        // Parse context data para obter preços originais
+        let contextData = null;
+        try {
+          if (history.description && history.description.startsWith('{')) {
+            const parsed = JSON.parse(history.description);
+            contextData = parsed.context;
+          }
+        } catch (e) {
+          // Usar dados padrão se não conseguir fazer parse
+        }
+
+        let oldPrice = parseFloat(String(history.oldPrice));
+        let newPrice = parseFloat(String(history.newPrice));
+        let displayUnit = ingredient.unit;
+        let displayQuantity = ingredient.quantity;
+
+        // Se temos contexto com preços originais, usar eles
+        if (contextData?.originalOldPrice !== undefined && contextData?.originalNewPrice !== undefined) {
+          oldPrice = contextData.originalOldPrice;
+          newPrice = contextData.originalNewPrice;
+          displayUnit = contextData.originalNewUnit || ingredient.unit;
+          displayQuantity = contextData.originalNewQuantity || ingredient.quantity;
+        }
 
         // Verificar se os valores são válidos
         if (isNaN(oldPrice) || isNaN(newPrice) || oldPrice <= 0) {
-          console.warn(`Dados de histórico inválidos para ${ingredient.name}:`, {
-            oldPrice: history.oldPrice,
-            newPrice: history.newPrice
-          });
           return;
         }
 
         const percentage = ((newPrice - oldPrice) / oldPrice) * 100;
 
-        // Usar threshold das configurações
+        // Usar threshold das configurações (padrão 20%)
         const threshold = settings.priceIncreaseAlertThreshold || 20;
 
-        console.log(`Verificando mudança de preço de ${ingredient.name}: ${percentage.toFixed(1)}% (threshold: ${threshold}%)`);
+        // Filtrar aumentos muito pequenos ou irrelevantes
+        if (percentage > threshold && Math.abs(newPrice - oldPrice) > 0.01) {
+          const unitLabel = getUnitLabel(displayUnit);
 
-        if (percentage > threshold) {
           alerts.push({
             type: "price_increase",
             title: `Aumento significativo detectado`,
-            description: `${ingredient.name} aumentou ${percentage.toFixed(1)}% nos últimos 7 dias (de ${formatCurrency(oldPrice, currencySymbol)} para ${formatCurrency(newPrice, currencySymbol)} por ${ingredient.unit})`,
+            description: `${ingredient.name} aumentou ${percentage.toFixed(1)}% nos últimos 7 dias (de ${formatCurrency(oldPrice, currencySymbol)} para ${formatCurrency(newPrice, currencySymbol)} por ${displayQuantity}${unitLabel})`,
             ingredient,
             percentage,
             severity: percentage > threshold * 2.5 ? "high" : percentage > threshold * 1.5 ? "medium" : "low"
@@ -90,33 +115,29 @@ export function CostAlerts() {
     // Alertas de ingredientes com custo alto (apenas se habilitado)
     if (settings.enableCostAlerts) {
       ingredients.forEach(ingredient => {
-        // Calcular custo por unidade corretamente
+        // Calcular custo por unidade base (normalizada)
         const ingredientPrice = parseFloat(String(ingredient.price));
         const ingredientQuantity = parseFloat(String(ingredient.quantity));
 
         // Verificar se os valores são válidos
         if (isNaN(ingredientPrice) || isNaN(ingredientQuantity) || ingredientQuantity <= 0) {
-          console.warn(`Dados inválidos para ingrediente ${ingredient.name}:`, {
-            price: ingredient.price,
-            quantity: ingredient.quantity
-          });
           return;
         }
 
-        const unitCost = ingredientPrice / ingredientQuantity;
-
-        // Usar threshold das configurações
+        // Para alertas de custo alto, mostrar o preço total pago pelo ingrediente
+        // não o custo unitário normalizado que pode ser confuso
         const threshold = settings.highCostAlertThreshold || 50;
 
-        console.log(`Verificando custo de ${ingredient.name}: R$ ${unitCost.toFixed(4)} / ${ingredient.unit} (threshold: R$ ${threshold})`);
+        // Usar o preço total como referência para ingredientes caros
+        if (ingredientPrice > threshold) {
+          const unitLabel = getUnitLabel(ingredient.unit);
 
-        if (unitCost > threshold) {
           alerts.push({
             type: "high_cost",
             title: `Custo elevado detectado`,
-            description: `${ingredient.name} tem custo de ${formatCurrency(unitCost, currencySymbol)} por ${ingredient.unit}`,
+            description: `${ingredient.name} tem custo de ${formatCurrency(ingredientPrice, currencySymbol)} por ${ingredient.quantity}${unitLabel}`,
             ingredient,
-            severity: unitCost > threshold * 2 ? "high" : "medium"
+            severity: ingredientPrice > threshold * 3 ? "high" : ingredientPrice > threshold * 1.5 ? "medium" : "low"
           });
         }
       });
@@ -160,29 +181,31 @@ export function CostAlerts() {
         Alertas de Custos ({alerts.length})
       </h3>
 
-      {alerts.map((alert, index) => (
-        <Alert key={index} className={getSeverityColor(alert.severity)}>
-          <div className="flex items-start justify-between">
-            <div className="flex items-start space-x-3">
-              {getSeverityIcon(alert.severity)}
-              <div>
-                <h4 className="font-medium">{alert.title}</h4>
-                <AlertDescription className="mt-1">
-                  {alert.description}
-                </AlertDescription>
+      <div className="max-h-96 overflow-y-auto space-y-3">
+        {alerts.map((alert, index) => (
+          <Alert key={`${alert.type}-${alert.ingredient?.id}-${index}`} className={getSeverityColor(alert.severity)}>
+            <div className="flex items-start justify-between">
+              <div className="flex items-start space-x-3">
+                {getSeverityIcon(alert.severity)}
+                <div>
+                  <h4 className="font-medium">{alert.title}</h4>
+                  <AlertDescription className="mt-1">
+                    {alert.description}
+                  </AlertDescription>
+                </div>
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => dismissAlert(alert)}
+                className="h-6 w-6 p-0 hover:bg-transparent"
+              >
+                <X className="w-4 h-4" />
+              </Button>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => dismissAlert(alert)}
-              className="h-6 w-6 p-0 hover:bg-transparent"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        </Alert>
-      ))}
+          </Alert>
+        ))}
+      </div>
     </div>
   );
 }
