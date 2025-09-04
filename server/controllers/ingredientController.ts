@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { priceHistoryService } from '../services/priceHistoryService';
 import { productService } from '../services/productService';
+import { getUnitLabel } from '../utils/unitLabels.js';
 
 export const getIngredients = async (_req: Request, res: Response) => {
   try {
@@ -59,8 +60,93 @@ export const updateIngredient = async (req: Request, res: Response) => {
 
     console.log('Updating ingredient:', id, ingredientData);
 
-    // Buscar ingrediente anterior para comparar preços
+    // Buscar ingrediente anterior para comparar preços E unidades
     const oldIngredient = await productService.getIngredient(id);
+
+    // Verificar se houve mudança de unidade
+    let unitChanged = false;
+    let conversionResults = null;
+
+    if (
+      oldIngredient &&
+      ingredientData.unit &&
+      oldIngredient.unit !== ingredientData.unit
+    ) {
+      unitChanged = true;
+      console.log(
+        `🔄 [updateIngredient] Unit change detected: ${oldIngredient.unit} → ${ingredientData.unit}`
+      );
+
+      // Executar conversão automática das receitas
+      try {
+        conversionResults =
+          await productService.convertRecipeQuantitiesOnUnitChange(
+            id,
+            oldIngredient.unit,
+            ingredientData.unit
+          );
+
+        console.log(
+          `📊 [updateIngredient] Recipe conversion results:`,
+          conversionResults
+        );
+
+        // Verificar se houve erro de incompatibilidade de unidades
+        const hasIncompatibilityError = conversionResults.errors.some(
+          (error) =>
+            error.includes('incompatíveis') || error.includes('incompatible')
+        );
+
+        if (hasIncompatibilityError) {
+          console.error(
+            '❌ [updateIngredient] Unit conversion failed due to incompatibility'
+          );
+
+          // Extrair a mensagem específica de incompatibilidade e substituir por nomes amigáveis
+          let incompatibilityMessage =
+            conversionResults.errors.find(
+              (error) =>
+                error.includes('incompatíveis') ||
+                error.includes('incompatible')
+            ) || 'Unidades incompatíveis para conversão';
+
+          // Substituir nomes internos de unidades por nomes amigáveis na mensagem
+          const oldUnitLabel = getUnitLabel(oldIngredient.unit);
+          const newUnitLabel = getUnitLabel(ingredientData.unit);
+
+          // Criar mensagem personalizada com nomes amigáveis
+          const friendlyMessage = `Unidades incompatíveis: não é possível converter de ${oldUnitLabel} para ${newUnitLabel}`;
+
+          return res.status(400).json({
+            error: friendlyMessage,
+            details: `Não é possível converter automaticamente de ${oldUnitLabel} para ${newUnitLabel}. As receitas que usam este ingrediente não podem ser atualizadas automaticamente.`,
+            suggestion:
+              'Considere manter a unidade atual ou converter as receitas manualmente.',
+            originalUnit: oldUnitLabel,
+            targetUnit: newUnitLabel,
+          });
+        }
+
+        if (conversionResults.errors.length > 0) {
+          console.warn(
+            '⚠️ [updateIngredient] Some recipe conversions had errors:',
+            conversionResults.errors
+          );
+        }
+      } catch (conversionError) {
+        console.error(
+          '❌ [updateIngredient] Error during recipe conversion:',
+          conversionError
+        );
+        return res.status(500).json({
+          error: 'Erro interno durante conversão de receitas',
+          details:
+            conversionError instanceof Error
+              ? conversionError.message
+              : String(conversionError),
+        });
+      }
+    }
 
     const result = await productService.updateIngredient(id, ingredientData);
 
@@ -130,6 +216,7 @@ export const updateIngredient = async (req: Request, res: Response) => {
           oldNormalizedUnitPrice - newNormalizedUnitPrice
         ).toFixed(6),
         changed: unitPriceChanged,
+        unitChanged,
       });
 
       if (unitPriceChanged) {
@@ -137,19 +224,38 @@ export const updateIngredient = async (req: Request, res: Response) => {
           '🔄 [updateIngredient] Unit price changed, tracking affected products...'
         );
 
+        // Preparar changeReason com informações sobre conversão de receitas
+        let changeReason = `Alteração manual: ${oldTotalPrice.toFixed(
+          2
+        )}/${oldQuantity}${oldUnit} → ${newTotalPrice.toFixed(
+          2
+        )}/${newQuantity}${newUnit}`;
+
+        if (unitChanged && conversionResults) {
+          changeReason += ` | ${conversionResults.convertedRecipes} receitas convertidas automaticamente`;
+          if (conversionResults.errors.length > 0) {
+            changeReason += ` (${conversionResults.errors.length} erros)`;
+          }
+        }
+
         // Registrar histórico do próprio ingrediente usando preço por unidade normalizado
         await priceHistoryService.createPriceHistory({
           itemType: 'ingredient',
           itemName: oldIngredient.name,
           oldPrice: oldNormalizedUnitPrice,
           newPrice: newNormalizedUnitPrice,
-          changeType: 'manual',
-          changeReason: `Alteração manual: ${oldTotalPrice.toFixed(
-            2
-          )}/${oldQuantity}${oldUnit} → ${newTotalPrice.toFixed(
-            2
-          )}/${newQuantity}${newUnit}`,
+          changeType: unitChanged ? 'unit_conversion' : 'manual',
+          changeReason,
           ingredientId: id,
+          // Adicionar dados contextuais para melhor apresentação no frontend
+          contextData: {
+            originalOldPrice: oldTotalPrice,
+            originalOldQuantity: oldQuantity,
+            originalOldUnit: oldUnit,
+            originalNewPrice: newTotalPrice,
+            originalNewQuantity: newQuantity,
+            originalNewUnit: newUnit,
+          },
         });
 
         // Rastrear produtos afetados (passando preços por unidade normalizados)
@@ -158,6 +264,29 @@ export const updateIngredient = async (req: Request, res: Response) => {
           oldNormalizedUnitPrice,
           newNormalizedUnitPrice
         );
+      } else if (unitChanged && conversionResults) {
+        // Se apenas a unidade mudou mas não o preço, registrar histórico de conversão
+        console.log(
+          '🔄 [updateIngredient] Only unit changed, registering conversion history...'
+        );
+
+        await priceHistoryService.createPriceHistory({
+          itemType: 'ingredient',
+          itemName: oldIngredient.name,
+          oldPrice: oldNormalizedUnitPrice,
+          newPrice: newNormalizedUnitPrice,
+          changeType: 'unit_conversion',
+          changeReason: `Conversão de unidade: ${oldUnit} → ${newUnit} | ${conversionResults.convertedRecipes} receitas convertidas automaticamente`,
+          ingredientId: id,
+          contextData: {
+            originalOldPrice: oldTotalPrice,
+            originalOldQuantity: oldQuantity,
+            originalOldUnit: oldUnit,
+            originalNewPrice: newTotalPrice,
+            originalNewQuantity: newQuantity,
+            originalNewUnit: newUnit,
+          },
+        });
       } else {
         console.log('Unit price unchanged, no tracking needed');
       }
@@ -168,7 +297,19 @@ export const updateIngredient = async (req: Request, res: Response) => {
         hasQuantity: ingredientData.quantity !== undefined,
       });
     }
-    res.json(result);
+
+    // Preparar resposta com informações sobre conversões realizadas
+    const response = {
+      ...result,
+      conversionInfo: conversionResults
+        ? {
+            convertedRecipes: conversionResults.convertedRecipes,
+            conversionErrors: conversionResults.errors,
+          }
+        : null,
+    };
+
+    res.json(response);
   } catch (error) {
     console.error('Error updating ingredient:', error);
     res.status(500).json({ message: 'Erro ao atualizar ingrediente' });

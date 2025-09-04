@@ -3,7 +3,12 @@ import { prisma } from '../db';
 import { fixedCostRepository } from '../repositories/fixedCostRepository';
 import { priceHistoryRepository } from '../repositories/priceHistoryRepository';
 import { productRepository } from '../repositories/productRepository';
-import { calculateIngredientCost } from '../utils/unitConversion';
+import { logUnitConversion } from '../utils/auditLogger.js';
+import {
+  areUnitsCompatible,
+  calculateIngredientCost,
+  convertUnits,
+} from '../utils/unitConversion.js';
 import { priceHistoryService } from './priceHistoryService'; // Importar o serviço de histórico de preços
 
 export const productService = {
@@ -604,6 +609,233 @@ export const productService = {
         `❌ Failed to update product timestamp for ID: ${productId}`,
         error
       );
+    }
+  },
+
+  /**
+   * Converte automaticamente as quantidades das receitas quando a unidade do ingrediente é alterada
+   * @param ingredientId ID do ingrediente que teve a unidade alterada
+   * @param oldUnit Unidade anterior do ingrediente
+   * @param newUnit Nova unidade do ingrediente
+   * @returns Promise<{ convertedRecipes: number, errors: string[] }>
+   */
+  async convertRecipeQuantitiesOnUnitChange(
+    ingredientId: string,
+    oldUnit: string,
+    newUnit: string
+  ): Promise<{ convertedRecipes: number; errors: string[] }> {
+    console.log(
+      `🔄 [convertRecipeQuantitiesOnUnitChange] Starting conversion for ingredient ${ingredientId}: ${oldUnit} → ${newUnit}`
+    );
+
+    const errors: string[] = [];
+    let convertedCount = 0;
+    let ingredientName = 'Unknown';
+    const conversionResults: {
+      recipeId: string;
+      productName: string;
+      oldQuantity: number;
+      oldUnit: string;
+      newQuantity: number;
+      newUnit: string;
+    }[] = [];
+
+    try {
+      // Buscar informações do ingrediente para auditoria
+      const ingredient = await prisma.ingredient.findUnique({
+        where: { id: ingredientId },
+        select: { id: true, name: true, unit: true },
+      });
+
+      if (!ingredient) {
+        const errorMsg = `Ingrediente ${ingredientId} não encontrado`;
+        console.error('❌ [convertRecipeQuantitiesOnUnitChange]', errorMsg);
+        errors.push(errorMsg);
+        return { convertedRecipes: 0, errors };
+      }
+
+      ingredientName = ingredient.name;
+
+      // Verificar se as unidades são compatíveis para conversão
+      if (!areUnitsCompatible(oldUnit, newUnit)) {
+        const errorMsg = `Unidades incompatíveis: não é possível converter de ${oldUnit} para ${newUnit}`;
+        console.error('❌ [convertRecipeQuantitiesOnUnitChange]', errorMsg);
+        errors.push(errorMsg);
+        return { convertedRecipes: 0, errors };
+      }
+
+      // Buscar todas as receitas que usam este ingrediente
+      const recipes = await prisma.recipe.findMany({
+        where: { ingredientId },
+        include: {
+          product: {
+            select: { id: true, name: true },
+          },
+          ingredient: {
+            select: { id: true, name: true, unit: true },
+          },
+        },
+      });
+
+      console.log(
+        `📊 [convertRecipeQuantitiesOnUnitChange] Found ${recipes.length} recipes to convert`
+      );
+
+      if (recipes.length === 0) {
+        console.log(
+          'ℹ️ [convertRecipeQuantitiesOnUnitChange] No recipes found for this ingredient'
+        );
+        return { convertedRecipes: 0, errors };
+      }
+
+      // Processar cada receita
+      for (const recipe of recipes) {
+        try {
+          const currentQuantity = parseFloat(String(recipe.quantity));
+          const currentUnit = recipe.unit;
+
+          console.log(
+            `🔍 [convertRecipeQuantitiesOnUnitChange] Processing recipe ID ${recipe.id} (Product: ${recipe.product?.name})`
+          );
+          console.log(`   Current recipe: ${currentQuantity} ${currentUnit}`);
+          console.log(`   Ingredient unit changed: ${oldUnit} → ${newUnit}`);
+
+          // Converter a quantidade da receita da unidade atual para a nova unidade do ingrediente
+          let newQuantity: number;
+
+          // Se a unidade da receita é igual à unidade antiga do ingrediente, fazer conversão direta
+          if (
+            currentUnit.toLowerCase().trim() === oldUnit.toLowerCase().trim()
+          ) {
+            const convertedQuantity = convertUnits(
+              currentQuantity,
+              oldUnit,
+              newUnit
+            );
+
+            if (convertedQuantity === null) {
+              const errorMsg = `Erro ao converter quantidade ${currentQuantity} de ${oldUnit} para ${newUnit} na receita do produto ${recipe.product?.name}`;
+              console.error(
+                '❌ [convertRecipeQuantitiesOnUnitChange]',
+                errorMsg
+              );
+              errors.push(errorMsg);
+              continue;
+            }
+
+            newQuantity = convertedQuantity;
+            console.log(
+              `   ✅ Direct conversion: ${currentQuantity} ${currentUnit} → ${newQuantity} ${newUnit}`
+            );
+          } else {
+            // Se a unidade da receita é diferente da unidade antiga do ingrediente,
+            // primeiro converter para a unidade antiga, depois para a nova
+            const quantityInOldUnit = convertUnits(
+              currentQuantity,
+              currentUnit,
+              oldUnit
+            );
+
+            if (quantityInOldUnit === null) {
+              const errorMsg = `Erro ao converter ${currentQuantity} ${currentUnit} para ${oldUnit} na receita do produto ${recipe.product?.name}`;
+              console.error(
+                '❌ [convertRecipeQuantitiesOnUnitChange]',
+                errorMsg
+              );
+              errors.push(errorMsg);
+              continue;
+            }
+
+            const finalQuantity = convertUnits(
+              quantityInOldUnit,
+              oldUnit,
+              newUnit
+            );
+
+            if (finalQuantity === null) {
+              const errorMsg = `Erro ao converter ${quantityInOldUnit} ${oldUnit} para ${newUnit} na receita do produto ${recipe.product?.name}`;
+              console.error(
+                '❌ [convertRecipeQuantitiesOnUnitChange]',
+                errorMsg
+              );
+              errors.push(errorMsg);
+              continue;
+            }
+
+            newQuantity = finalQuantity;
+            console.log(
+              `   ✅ Two-step conversion: ${currentQuantity} ${currentUnit} → ${quantityInOldUnit} ${oldUnit} → ${newQuantity} ${newUnit}`
+            );
+          }
+
+          // Atualizar a receita no banco de dados
+          await prisma.recipe.update({
+            where: { id: recipe.id },
+            data: {
+              quantity: newQuantity,
+              unit: newUnit,
+            },
+          });
+
+          console.log(
+            `   ✅ Recipe updated: ${recipe.id} - ${recipe.product?.name}`
+          );
+          convertedCount++;
+
+          // Registrar conversão para auditoria
+          conversionResults.push({
+            recipeId: recipe.id,
+            productName: recipe.product?.name || 'Unknown Product',
+            oldQuantity: currentQuantity,
+            oldUnit: currentUnit,
+            newQuantity,
+            newUnit,
+          });
+
+          // Log de auditoria
+          console.log(
+            `📝 [AUDIT] Recipe conversion - Product: ${recipe.product?.name}, Recipe ID: ${recipe.id}, Quantity: ${currentQuantity} ${currentUnit} → ${newQuantity} ${newUnit}, Reason: Ingredient unit change (${oldUnit} → ${newUnit})`
+          );
+        } catch (recipeError) {
+          const errorMsg = `Erro ao processar receita ${recipe.id} (${recipe.product?.name}): ${recipeError}`;
+          console.error('❌ [convertRecipeQuantitiesOnUnitChange]', errorMsg);
+          errors.push(errorMsg);
+        }
+      }
+
+      console.log(
+        `✅ [convertRecipeQuantitiesOnUnitChange] Conversion completed. ${convertedCount} recipes converted, ${errors.length} errors`
+      );
+
+      // Log the conversion operation
+      logUnitConversion({
+        timestamp: new Date().toISOString(),
+        ingredientId,
+        ingredientName: ingredient.name,
+        oldUnit,
+        newUnit,
+        conversions: conversionResults,
+        errors,
+      });
+
+      return { convertedRecipes: convertedCount, errors };
+    } catch (error) {
+      const errorMsg = `Erro geral na conversão de receitas: ${error}`;
+      console.error('❌ [convertRecipeQuantitiesOnUnitChange]', errorMsg);
+      errors.push(errorMsg);
+
+      // Log the failed operation
+      logUnitConversion({
+        timestamp: new Date().toISOString(),
+        ingredientId,
+        ingredientName,
+        oldUnit,
+        newUnit,
+        conversions: [],
+        errors: [...errors, errorMsg],
+      });
+
+      return { convertedRecipes: convertedCount, errors };
     }
   },
 

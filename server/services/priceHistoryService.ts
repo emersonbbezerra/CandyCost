@@ -16,6 +16,14 @@ export const priceHistoryService = {
     itemType?: string;
     itemName?: string;
     changeType?: string;
+    contextData?: {
+      originalOldPrice?: number;
+      originalOldQuantity?: number;
+      originalOldUnit?: string;
+      originalNewPrice?: number;
+      originalNewQuantity?: number;
+      originalNewUnit?: string;
+    };
   }) {
     console.log('Creating price history:', {
       ingredientId: data.ingredientId,
@@ -46,7 +54,12 @@ export const priceHistoryService = {
       productId: data.productId ?? undefined,
       oldPrice: data.oldPrice,
       newPrice: data.newPrice,
-      description: data.changeReason ?? undefined,
+      description: data.contextData
+        ? JSON.stringify({
+            reason: data.changeReason ?? undefined,
+            context: data.contextData,
+          })
+        : data.changeReason ?? undefined,
       itemType: data.itemType ?? (data.ingredientId ? 'ingredient' : 'product'),
       itemName,
       changeType: data.changeType ?? 'manual',

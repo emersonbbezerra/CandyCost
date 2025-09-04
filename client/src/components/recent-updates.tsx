@@ -22,6 +22,15 @@ interface SimplifiedUpdate {
     unit?: string;
     changeType: string;
     createdAt: string;
+    changeReason?: string;
+    contextData?: {
+        originalOldPrice?: number;
+        originalOldQuantity?: number;
+        originalOldUnit?: string;
+        originalNewPrice?: number;
+        originalNewQuantity?: number;
+        originalNewUnit?: string;
+    };
 }
 
 interface RecentUpdates {
@@ -47,7 +56,20 @@ const getProductName = (productId?: number): string => {
     return `Produto ID: ${productId}`;
 };
 
-export function RecentUpdatesCard() {
+// Helper function to format ingredient price update display
+const formatIngredientPriceDisplay = (update: SimplifiedUpdate) => {
+    if (update.contextData) {
+        const { originalOldPrice, originalOldQuantity, originalOldUnit, originalNewPrice, originalNewQuantity, originalNewUnit } = update.contextData;
+        if (originalOldPrice !== undefined && originalOldQuantity !== undefined && originalOldUnit &&
+            originalNewPrice !== undefined && originalNewQuantity !== undefined && originalNewUnit) {
+            // Show original prices with quantities - clear and simple
+            return `${update.name}: ${formatCurrency(originalOldPrice)}/${originalOldQuantity}${originalOldUnit} → ${formatCurrency(originalNewPrice)}/${originalNewQuantity}${originalNewUnit}`;
+        }
+    }
+
+    // Fallback to original display
+    return `Custo atualizado de ${formatCurrency(update.oldPrice)} para ${formatCurrency(update.newPrice)}${update.unit ? ` / ${update.unit}` : ''} - ${update.name}`;
+}; export function RecentUpdatesCard() {
     const [, setLocation] = useLocation();
     const [isProductFormOpen, setIsProductFormOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<any>();
@@ -182,57 +204,60 @@ export function RecentUpdatesCard() {
                                     <p className="text-sm">As atualizações aparecerão aqui quando você modificar ingredientes.</p>
                                 </div>
                             ) : (
-                                data?.ingredientUpdates.slice(0, 5).map((update) => (
-                                    <div key={`ingredient-${update.id}`} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
-                                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                            <Sprout className="text-green-600 w-5 h-5" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <p className="text-gray-900">
-                                                Custo atualizado de {formatCurrency(update.oldPrice ?? 0)} para {formatCurrency(update.newPrice ?? 0)}{update.unit ? ` / ${update.unit}` : ''} - <strong>{update.name}</strong>
-                                            </p>
-                                            <p className="text-sm text-gray-500 mt-1">
-                                                {(() => {
-                                                    switch (update.changeType) {
-                                                        case 'manual': return 'Atualização manual do preço/quantidade';
-                                                        case 'auto': return 'Atualização automática';
-                                                        case 'unit_conversion': return 'Conversão de unidade de medida';
-                                                        default: return update.changeType === 'auto' ? 'Atualização automática' : 'Atualização manual';
-                                                    }
-                                                })()}
-                                            </p>
-                                            <p className="text-xs text-gray-400 mt-1">
-                                                {formatRelativeTime(new Date(update.createdAt))}
-                                            </p>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${update.newPrice > update.oldPrice
-                                                ? "bg-red-100 text-red-700"
-                                                : "bg-green-100 text-green-700"
-                                                }`}>
-                                                {(() => {
-                                                    const oldPrice = update.oldPrice ?? 0;
-                                                    const newPrice = update.newPrice ?? 0;
+                                data?.ingredientUpdates.slice(0, 5).map((update) => {
+                                    const displayTitle = formatIngredientPriceDisplay(update);
+                                    return (
+                                        <div key={`ingredient-${update.id}`} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+                                            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                                <Sprout className="text-green-600 w-5 h-5" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="text-gray-900 font-medium">
+                                                    {displayTitle}
+                                                </p>
+                                                <p className="text-sm text-gray-500 mt-1">
+                                                    {(() => {
+                                                        switch (update.changeType) {
+                                                            case 'manual': return 'Atualização manual do preço/quantidade';
+                                                            case 'auto': return 'Atualização automática';
+                                                            case 'unit_conversion': return 'Conversão de unidade de medida';
+                                                            default: return update.changeType === 'auto' ? 'Atualização automática' : 'Atualização manual';
+                                                        }
+                                                    })()}
+                                                </p>
+                                                <p className="text-xs text-gray-400 mt-1">
+                                                    {formatRelativeTime(new Date(update.createdAt))}
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${update.newPrice > update.oldPrice
+                                                    ? "bg-red-100 text-red-700"
+                                                    : "bg-green-100 text-green-700"
+                                                    }`}>
+                                                    {(() => {
+                                                        const oldPrice = update.oldPrice ?? 0;
+                                                        const newPrice = update.newPrice ?? 0;
 
-                                                    if (oldPrice === 0) {
-                                                        return newPrice > 0 ? "Novo" : "0%";
-                                                    }
+                                                        if (oldPrice === 0) {
+                                                            return newPrice > 0 ? "Novo" : "0%";
+                                                        }
 
-                                                    const percentChange = ((newPrice - oldPrice) / oldPrice) * 100;
-                                                    return `${percentChange > 0 ? "+" : ""}${percentChange.toFixed(1)}%`;
-                                                })()}
-                                            </span>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => update.itemId && handleEditIngredient(update.itemId)}
-                                                className="px-2 py-1 h-8"
-                                            >
-                                                <ExternalLink className="w-3 h-3" />
-                                            </Button>
+                                                        const percentChange = ((newPrice - oldPrice) / oldPrice) * 100;
+                                                        return `${percentChange > 0 ? "+" : ""}${percentChange.toFixed(1)}%`;
+                                                    })()}
+                                                </span>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => update.itemId && handleEditIngredient(update.itemId)}
+                                                    className="px-2 py-1 h-8"
+                                                >
+                                                    <ExternalLink className="w-3 h-3" />
+                                                </Button>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))
+                                    );
+                                })
                             )}
                         </div>
                     </TabsContent>

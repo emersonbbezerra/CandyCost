@@ -16,6 +16,15 @@ export interface IngredientUpdate {
   unit?: string;
   changeType: string;
   createdAt: string;
+  changeReason?: string;
+  contextData?: {
+    originalOldPrice?: number;
+    originalOldQuantity?: number;
+    originalOldUnit?: string;
+    originalNewPrice?: number;
+    originalNewQuantity?: number;
+    originalNewUnit?: string;
+  };
 }
 
 export function useDashboardIngredientUpdates() {

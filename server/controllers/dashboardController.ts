@@ -252,17 +252,35 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
       ]);
 
     // Format ingredient updates
-    const enrichedIngredientUpdates = ingredientUpdates.map((update) => ({
-      id: update.id,
-      type: 'ingredient' as const,
-      name: update.ingredient?.name || 'Ingrediente desconhecido',
-      itemId: update.ingredientId,
-      oldPrice: parseFloat(String(update.oldPrice)) || 0,
-      newPrice: parseFloat(String(update.newPrice)) || 0,
-      unit: update.ingredient?.unit || undefined,
-      changeType: update.changeType,
-      createdAt: update.createdAt,
-    }));
+    const enrichedIngredientUpdates = ingredientUpdates.map((update) => {
+      // Parse context data if available
+      let contextData = null;
+      let changeReason = update.description;
+
+      try {
+        if (update.description && update.description.startsWith('{')) {
+          const parsed = JSON.parse(update.description);
+          contextData = parsed.context;
+          changeReason = parsed.reason;
+        }
+      } catch (e) {
+        // Se não conseguir fazer parse, usar description como changeReason normalmente
+      }
+
+      return {
+        id: update.id,
+        type: 'ingredient' as const,
+        name: update.ingredient?.name || 'Ingrediente desconhecido',
+        itemId: update.ingredientId,
+        oldPrice: parseFloat(String(update.oldPrice)) || 0,
+        newPrice: parseFloat(String(update.newPrice)) || 0,
+        unit: update.ingredient?.unit || undefined,
+        changeType: update.changeType,
+        createdAt: update.createdAt,
+        changeReason,
+        contextData,
+      };
+    });
 
     // Process ALL product updates (unified approach)
     // First, deduplicate by product to keep only the most recent update per product
@@ -394,17 +412,35 @@ export const getIngredientUpdates = async (req: Request, res: Response) => {
       },
     });
 
-    const enrichedIngredientUpdates = ingredientUpdates.map((update) => ({
-      id: update.id,
-      type: 'ingredient' as const,
-      name: update.ingredient?.name || 'Ingrediente desconhecido',
-      itemId: update.ingredientId,
-      oldPrice: update.oldPrice,
-      newPrice: update.newPrice,
-      unit: update.ingredient?.unit || undefined,
-      changeType: update.changeType,
-      createdAt: update.createdAt,
-    }));
+    const enrichedIngredientUpdates = ingredientUpdates.map((update) => {
+      // Parse context data if available
+      let contextData = null;
+      let changeReason = update.description;
+
+      try {
+        if (update.description && update.description.startsWith('{')) {
+          const parsed = JSON.parse(update.description);
+          contextData = parsed.context;
+          changeReason = parsed.reason;
+        }
+      } catch (e) {
+        // Se não conseguir fazer parse, usar description como changeReason normalmente
+      }
+
+      return {
+        id: update.id,
+        type: 'ingredient' as const,
+        name: update.ingredient?.name || 'Ingrediente desconhecido',
+        itemId: update.ingredientId,
+        oldPrice: update.oldPrice,
+        newPrice: update.newPrice,
+        unit: update.ingredient?.unit || undefined,
+        changeType: update.changeType,
+        createdAt: update.createdAt,
+        changeReason,
+        contextData,
+      };
+    });
 
     console.log(
       '🥄 Found ingredient updates:',

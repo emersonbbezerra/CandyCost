@@ -86,6 +86,13 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
   const updateMutation = useMutation({
     mutationFn: async (data: z.infer<typeof insertIngredientSchema>) => {
       const response = await apiRequest("PUT", `/api/ingredients/${ingredient?.id}`, data);
+
+      if (!response.ok) {
+        // Se não foi bem-sucedido, tentar extrair a mensagem de erro específica
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || errorData.message || 'Erro ao atualizar ingrediente');
+      }
+
       return response.json();
     },
     onSuccess: (result) => {
@@ -99,8 +106,10 @@ export function IngredientForm({ open, onOpenChange, ingredient }: IngredientFor
       sessionStorage.setItem('lastPageNavigation', 'ingredients');
       sessionStorage.setItem('hasRecentUpdates', 'true');
     },
-    onError: () => {
-      errorToast("Erro", "Erro ao atualizar ingrediente. Tente novamente.");
+    onError: (error: Error) => {
+      // Mostrar a mensagem específica do erro, ou uma mensagem genérica como fallback
+      const errorMessage = error.message || "Erro ao atualizar ingrediente. Tente novamente.";
+      errorToast("Erro", errorMessage);
     },
   });
 
