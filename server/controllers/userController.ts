@@ -59,7 +59,7 @@ export const updateUserProfile = async (req: Request, res: Response) => {
 
     const validated = updateSchema.parse(req.body);
 
-    // Check if email is already taken by another user
+    // Verificar se o email já está sendo usado por outro usuário
     const existingUser = await prisma.user.findFirst({
       where: { email: validated.email },
     });
@@ -126,7 +126,7 @@ export const changeUserPassword = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Senha atual incorreta' });
     }
 
-    // Update password
+    // Atualizar senha
     const hashedNewPassword = await hashPassword(newPassword);
     await userService.updateUserPassword(userId, hashedNewPassword);
 
@@ -162,7 +162,7 @@ export const updateUser = async (req: Request, res: Response) => {
 
     const validated = updateSchema.parse(req.body);
 
-    // Check if email is already taken by another user
+    // Verificar se o email já está sendo usado por outro usuário
     const existingUser = await userService.getUserByEmail(validated.email);
     if (existingUser && existingUser.id !== userId) {
       return res

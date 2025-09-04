@@ -223,7 +223,7 @@ export const userService = {
       );
     }
 
-    // Create the first admin
+    // Criar o primeiro administrador
     const adminUser = await this.createUser({
       email,
       password,

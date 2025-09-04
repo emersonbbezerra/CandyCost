@@ -76,14 +76,6 @@ export const productService = {
           totalCost += costPerUnit * recipeQuantity;
         } else {
           totalCost += recipeCost;
-          console.log(
-            `Custo calculado para ${recipe.ingredient.name}: 
-            Ingrediente: ${ingredientQuantity} ${ingredientUnit} a R$ ${ingredientPrice} (R$ ${(
-              ingredientPrice / ingredientQuantity
-            ).toFixed(4)}/${ingredientUnit})
-            Receita usa: ${recipeQuantity} ${recipeUnit}
-            Custo na receita: R$ ${recipeCost.toFixed(4)}`
-          );
         }
       } else if (recipe.productIngredient) {
         // Cálculo recursivo para produtos usados como ingredientes
@@ -178,7 +170,7 @@ export const productService = {
     oldPrice: number,
     newPrice: number
   ) {
-    // Find products that use this ingredient
+    // Buscar produtos que usam este ingrediente
     const recipes = await prisma.recipe.findMany({
       where: { ingredientId },
       include: { product: true, ingredient: true },
@@ -188,8 +180,8 @@ export const productService = {
 
     for (const recipe of recipes) {
       try {
-        // Calculate old cost using a per-unit override derived from the provided total old price.
-        // Note: This uses the current ingredient quantity as a fallback and may not reflect historical quantity.
+        // Calcular custo antigo usando preço unitário derivado do preço total fornecido
+        // Nota: Usa a quantidade atual do ingrediente como fallback e pode não refletir quantidade histórica
         const fallbackQty = parseFloat(
           String(recipe.ingredient?.quantity || 1)
         );
@@ -200,12 +192,12 @@ export const productService = {
           oldUnitPrice
         );
 
-        // Calculate new cost
+        // Calcular novo custo
         const newCost = await this.calculateProductCost(
           String(recipe.product.id)
         );
 
-        // Create price history entry for the product (cost per yield unit)
+        // Criar entrada no histórico de preços para o produto (custo por unidade de rendimento)
         const oldCostPerUnit =
           oldCost.costPerYieldUnit ?? oldCost.totalCost / (oldCost.yield || 1);
         const newCostPerUnit =
@@ -252,7 +244,7 @@ export const productService = {
 
     let totalCost = 0;
 
-    // Calculate cost from recipe ingredients
+    // Calcular custo dos ingredientes da receita
     for (const recipe of product.recipes) {
       if (recipe.ingredient) {
         const ingredientQuantity = parseFloat(
@@ -322,7 +314,7 @@ export const productService = {
       }
     }
 
-    // Get work configuration for fixed cost calculation
+    // Buscar configuração de trabalho para cálculo de custos fixos
     const workConfig = await prisma.workConfiguration.findFirst();
 
     // Usar nova lógica se disponível, senão usar lógica antiga para compatibilidade
@@ -338,7 +330,7 @@ export const productService = {
       totalWorkHoursPerMonth = daysPerMonth * hoursPerDay;
     }
 
-    // Calculate total monthly fixed costs
+    // Calcular total mensal de custos fixos
     const fixedCosts = await fixedCostRepository.findActive();
     let totalMonthlyFixedCosts = 0;
 
@@ -357,15 +349,15 @@ export const productService = {
       }
     }
 
-    // Calculate fixed cost per minute
+    // Calcular custo fixo por minuto
     const fixedCostPerMinute =
       totalMonthlyFixedCosts / (totalWorkHoursPerMonth * 60);
 
-    // Calculate fixed cost for this product based on preparation time
+    // Calcular custo fixo para este produto baseado no tempo de preparação
     const fixedCostPerUnit =
       fixedCostPerMinute * (product.preparationTimeMinutes ?? 0);
 
-    // Calculate suggested price with margin
+    // Calcular preço sugerido com margem
     const marginPercentage = product.marginPercentage;
     const totalProductCost = totalCost + fixedCostPerUnit;
     const suggestedPrice = totalProductCost * (1 + marginPercentage / 100);
@@ -455,11 +447,6 @@ export const productService = {
     newUnitPrice: number
   ): Promise<void> {
     try {
-      console.log('🔄 [trackCostChangesForAffectedProducts] Starting...');
-      console.log(
-        `🧪 [trackCostChangesForAffectedProducts] Ingredient: ${ingredientId}, Old price: ${oldUnitPrice}, New price: ${newUnitPrice}`
-      );
-
       // Buscar todas as receitas que usam este ingrediente
       const recipesWithIngredient = await prisma.recipe.findMany({
         where: { ingredientId },
@@ -469,14 +456,7 @@ export const productService = {
         },
       });
 
-      console.log(
-        `📊 [trackCostChangesForAffectedProducts] Found ${recipesWithIngredient.length} recipes using this ingredient`
-      );
-
       if (recipesWithIngredient.length === 0) {
-        console.log(
-          '⚠️ [trackCostChangesForAffectedProducts] No recipes found for this ingredient'
-        );
         return;
       }
 
@@ -489,14 +469,7 @@ export const productService = {
         }
         processedProducts.add(recipe.productId);
 
-        console.log(
-          `🔍 [trackCostChangesForAffectedProducts] Processing product: ${recipe.product?.name} (ID: ${recipe.productId})`
-        );
-
         // Calcular custo total do produto antes da alteração
-        console.log(
-          '📈 [trackCostChangesForAffectedProducts] Calculating old product cost...'
-        );
         const oldProductCost = await this.calculateProductCostAtUnitPrice(
           String(recipe.product.id),
           ingredientId,
@@ -523,19 +496,7 @@ export const productService = {
         const threshold = 0.0001;
         const costDifference = Math.abs(newUnit - oldUnit);
 
-        console.log(
-          `📊 [trackCostChangesForAffectedProducts] Cost comparison for ${
-            recipe.product?.name
-          }: Old: R$ ${oldUnit.toFixed(4)}, New: R$ ${newUnit.toFixed(
-            4
-          )}, Diff: R$ ${costDifference.toFixed(4)}`
-        );
-
         if (costDifference > threshold) {
-          console.log(
-            '📝 [trackCostChangesForAffectedProducts] Creating price history entry (significant change detected)...'
-          );
-
           await priceHistoryService.createPriceHistory({
             itemType: 'product',
             itemName: recipe.product?.name || 'Produto desconhecido',
@@ -549,20 +510,9 @@ export const productService = {
             )} por unidade)`,
             productId: recipe.productId,
           });
-
-          console.log(
-            `✅ [trackCostChangesForAffectedProducts] Price history recorded for product: ${recipe.product?.name}`
-          );
-        } else {
-          console.log(
-            `⏭️ [trackCostChangesForAffectedProducts] Cost change too small for ${recipe.product?.name}, skipping history entry`
-          );
         }
 
         // 🔥 IMPORTANTE: Atualizar o timestamp updatedAt do produto para refletir nas mudanças de "há X minutos"
-        console.log(
-          `🕐 [trackCostChangesForAffectedProducts] Updating product timestamp for: ${recipe.product?.name}`
-        );
         await this.updateProductTimestamp(recipe.productId);
 
         // Adicionar o produto à lista de afetados para propagação
@@ -573,10 +523,6 @@ export const productService = {
       await this.propagateCostChangeToProductDependencies(
         affectedProductIds,
         processedProducts
-      );
-
-      console.log(
-        '🎉 [trackCostChangesForAffectedProducts] Process completed successfully!'
       );
     } catch (error) {
       console.error(
@@ -589,21 +535,13 @@ export const productService = {
   // Função auxiliar para atualizar timestamp do produto
   async updateProductTimestamp(productId: string): Promise<void> {
     try {
-      const updateResult = await prisma.product.update({
+      await prisma.product.update({
         where: { id: productId },
         data: {
           // Forçar atualização do updatedAt sem alterar outros campos
           updatedAt: new Date(),
         },
       });
-      console.log(
-        `✅ Product timestamp updated successfully for ID: ${productId}`,
-        {
-          id: updateResult.id,
-          name: updateResult.name,
-          updatedAt: updateResult.updatedAt,
-        }
-      );
     } catch (error) {
       console.error(
         `❌ Failed to update product timestamp for ID: ${productId}`,
@@ -677,14 +615,7 @@ export const productService = {
         },
       });
 
-      console.log(
-        `📊 [convertRecipeQuantitiesOnUnitChange] Found ${recipes.length} recipes to convert`
-      );
-
       if (recipes.length === 0) {
-        console.log(
-          'ℹ️ [convertRecipeQuantitiesOnUnitChange] No recipes found for this ingredient'
-        );
         return { convertedRecipes: 0, errors };
       }
 
@@ -693,12 +624,6 @@ export const productService = {
         try {
           const currentQuantity = parseFloat(String(recipe.quantity));
           const currentUnit = recipe.unit;
-
-          console.log(
-            `🔍 [convertRecipeQuantitiesOnUnitChange] Processing recipe ID ${recipe.id} (Product: ${recipe.product?.name})`
-          );
-          console.log(`   Current recipe: ${currentQuantity} ${currentUnit}`);
-          console.log(`   Ingredient unit changed: ${oldUnit} → ${newUnit}`);
 
           // Converter a quantidade da receita da unidade atual para a nova unidade do ingrediente
           let newQuantity: number;
@@ -738,10 +663,6 @@ export const productService = {
 
             if (quantityInOldUnit === null) {
               const errorMsg = `Erro ao converter ${currentQuantity} ${currentUnit} para ${oldUnit} na receita do produto ${recipe.product?.name}`;
-              console.error(
-                '❌ [convertRecipeQuantitiesOnUnitChange]',
-                errorMsg
-              );
               errors.push(errorMsg);
               continue;
             }
@@ -754,18 +675,11 @@ export const productService = {
 
             if (finalQuantity === null) {
               const errorMsg = `Erro ao converter ${quantityInOldUnit} ${oldUnit} para ${newUnit} na receita do produto ${recipe.product?.name}`;
-              console.error(
-                '❌ [convertRecipeQuantitiesOnUnitChange]',
-                errorMsg
-              );
               errors.push(errorMsg);
               continue;
             }
 
             newQuantity = finalQuantity;
-            console.log(
-              `   ✅ Two-step conversion: ${currentQuantity} ${currentUnit} → ${quantityInOldUnit} ${oldUnit} → ${newQuantity} ${newUnit}`
-            );
           }
 
           // Atualizar a receita no banco de dados
@@ -777,9 +691,6 @@ export const productService = {
             },
           });
 
-          console.log(
-            `   ✅ Recipe updated: ${recipe.id} - ${recipe.product?.name}`
-          );
           convertedCount++;
 
           // Registrar conversão para auditoria
@@ -798,16 +709,11 @@ export const productService = {
           );
         } catch (recipeError) {
           const errorMsg = `Erro ao processar receita ${recipe.id} (${recipe.product?.name}): ${recipeError}`;
-          console.error('❌ [convertRecipeQuantitiesOnUnitChange]', errorMsg);
           errors.push(errorMsg);
         }
       }
 
-      console.log(
-        `✅ [convertRecipeQuantitiesOnUnitChange] Conversion completed. ${convertedCount} recipes converted, ${errors.length} errors`
-      );
-
-      // Log the conversion operation
+      // Registrar a operação de conversão
       logUnitConversion({
         timestamp: new Date().toISOString(),
         ingredientId,
@@ -824,7 +730,7 @@ export const productService = {
       console.error('❌ [convertRecipeQuantitiesOnUnitChange]', errorMsg);
       errors.push(errorMsg);
 
-      // Log the failed operation
+      // Registrar a operação falhada
       logUnitConversion({
         timestamp: new Date().toISOString(),
         ingredientId,
@@ -865,30 +771,16 @@ export const productService = {
         },
       });
 
-      console.log(
-        `📊 [propagateCostChangeToProductDependencies] Found ${recipesUsingProduct.length} recipes using product ${productId} as ingredient`
-      );
-
       for (const recipe of recipesUsingProduct) {
         if (processedProducts.has(recipe.productId)) {
-          console.log(
-            `⏭️ [propagateCostChangeToProductDependencies] Skipping already processed product: ${recipe.product?.name} (ID: ${recipe.productId})`
-          );
           continue;
         }
         processedProducts.add(recipe.productId);
-
-        console.log(
-          `🔍 [propagateCostChangeToProductDependencies] Processing dependent product: ${recipe.product?.name} (ID: ${recipe.productId})`
-        );
 
         // Para produtos dependentes, vamos calcular uma diferença estimada baseada no impacto
         const dependentProductIngredient = recipe.productIngredient;
 
         if (!dependentProductIngredient) {
-          console.log(
-            '⚠️ [propagateCostChangeToProductDependencies] No product ingredient found, skipping'
-          );
           continue;
         }
 
@@ -916,10 +808,6 @@ export const productService = {
         );
 
         // Para registrar no histórico com diferença estimada
-        console.log(
-          `📝 [propagateCostChangeToProductDependencies] Creating price history for dependent product: ${recipe.product?.name}`
-        );
-
         await priceHistoryService.createPriceHistory({
           itemType: 'product',
           itemName: recipe.product?.name || 'Produto desconhecido',
@@ -932,12 +820,7 @@ export const productService = {
           productId: recipe.productId,
         });
 
-        console.log(
-          `✅ [propagateCostChangeToProductDependencies] Price history recorded for dependent product: ${recipe.product?.name}`
-        ); // Atualizar timestamp do produto dependente
-        console.log(
-          `🕐 [propagateCostChangeToProductDependencies] Updating timestamp for dependent product: ${recipe.product?.name}`
-        );
+        // Atualizar timestamp do produto dependente
         await this.updateProductTimestamp(recipe.productId);
 
         // Adicionar à próxima iteração para continuar a propagação
@@ -947,9 +830,6 @@ export const productService = {
 
     // Continuar propagação recursivamente
     if (nextLevelAffectedProducts.length > 0) {
-      console.log(
-        `🔄 [propagateCostChangeToProductDependencies] Continuing propagation to ${nextLevelAffectedProducts.length} next-level products`
-      );
       await this.propagateCostChangeToProductDependencies(
         nextLevelAffectedProducts,
         processedProducts

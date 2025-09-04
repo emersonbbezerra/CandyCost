@@ -10,7 +10,7 @@ export const reportService = {
     return await productService.getProducts();
   },
 
-  // Use string IDs to avoid NaN issues from Number(uuid)
+  // Usar IDs string para evitar problemas de NaN com Number(uuid)
   async getRecipesByProduct(productId: string) {
     const recipes = await prisma.recipe.findMany({
       where: { productId },

@@ -9,7 +9,7 @@ const logDir = path.resolve(__dirname, '../../logs');
 const logFile = path.join(logDir, 'audit.log');
 const conversionLogFile = path.join(logDir, 'unit-conversions.log');
 
-// Ensure log directory exists
+// Garantir que o diretório de logs existe
 if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir, { recursive: true });
 }

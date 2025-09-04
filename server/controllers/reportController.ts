@@ -6,7 +6,7 @@ export const getReports = async (_req: Request, res: Response) => {
     const ingredients = await reportService.getIngredients();
     const products = await reportService.getProducts();
 
-    // Calculate product costs
+    // Calcular custos dos produtos
     const costsPromises = products.map(async (product) => {
       try {
         const cost = await reportService.calculateProductCost(product.id);
@@ -54,7 +54,7 @@ export const getReports = async (_req: Request, res: Response) => {
       })
       .sort((a, b) => b.profitMargin - a.profitMargin);
 
-    // Critical ingredients analysis
+    // Análise de ingredientes críticos
     const ingredientUsage = new Map<string, number>();
     const recipesPromises = products.map(async (product) => {
       try {

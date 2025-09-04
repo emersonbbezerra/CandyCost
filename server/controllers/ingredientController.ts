@@ -58,8 +58,6 @@ export const updateIngredient = async (req: Request, res: Response) => {
     const { id } = req.params;
     const ingredientData = req.body;
 
-    console.log('Updating ingredient:', id, ingredientData);
-
     // Buscar ingrediente anterior para comparar preços E unidades
     const oldIngredient = await productService.getIngredient(id);
 
@@ -73,9 +71,6 @@ export const updateIngredient = async (req: Request, res: Response) => {
       oldIngredient.unit !== ingredientData.unit
     ) {
       unitChanged = true;
-      console.log(
-        `🔄 [updateIngredient] Unit change detected: ${oldIngredient.unit} → ${ingredientData.unit}`
-      );
 
       // Executar conversão automática das receitas
       try {
@@ -85,11 +80,6 @@ export const updateIngredient = async (req: Request, res: Response) => {
             oldIngredient.unit,
             ingredientData.unit
           );
-
-        console.log(
-          `📊 [updateIngredient] Recipe conversion results:`,
-          conversionResults
-        );
 
         // Verificar se houve erro de incompatibilidade de unidades
         const hasIncompatibilityError = conversionResults.errors.some(
@@ -203,27 +193,7 @@ export const updateIngredient = async (req: Request, res: Response) => {
       const unitPriceChanged =
         Math.abs(oldNormalizedUnitPrice - newNormalizedUnitPrice) > 0.0001;
 
-      console.log('🔍 Price comparison:', {
-        oldTotal: oldTotalPrice,
-        oldQuantity,
-        oldUnit,
-        newTotal: newTotalPrice,
-        newQuantity,
-        newUnit,
-        oldNormalizedUnitPrice: oldNormalizedUnitPrice.toFixed(6),
-        newNormalizedUnitPrice: newNormalizedUnitPrice.toFixed(6),
-        difference: Math.abs(
-          oldNormalizedUnitPrice - newNormalizedUnitPrice
-        ).toFixed(6),
-        changed: unitPriceChanged,
-        unitChanged,
-      });
-
       if (unitPriceChanged) {
-        console.log(
-          '🔄 [updateIngredient] Unit price changed, tracking affected products...'
-        );
-
         // Preparar changeReason com informações sobre conversão de receitas
         let changeReason = `Alteração manual: ${oldTotalPrice.toFixed(
           2
@@ -266,10 +236,6 @@ export const updateIngredient = async (req: Request, res: Response) => {
         );
       } else if (unitChanged && conversionResults) {
         // Se apenas a unidade mudou mas não o preço, registrar histórico de conversão
-        console.log(
-          '🔄 [updateIngredient] Only unit changed, registering conversion history...'
-        );
-
         await priceHistoryService.createPriceHistory({
           itemType: 'ingredient',
           itemName: oldIngredient.name,
@@ -287,15 +253,7 @@ export const updateIngredient = async (req: Request, res: Response) => {
             originalNewUnit: newUnit,
           },
         });
-      } else {
-        console.log('Unit price unchanged, no tracking needed');
       }
-    } else {
-      console.log('Missing data for unit price comparison:', {
-        hasOldIngredient: !!oldIngredient,
-        hasPrice: ingredientData.price !== undefined,
-        hasQuantity: ingredientData.quantity !== undefined,
-      });
     }
 
     // Preparar resposta com informações sobre conversões realizadas

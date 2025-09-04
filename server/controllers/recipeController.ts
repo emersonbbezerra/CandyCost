@@ -17,10 +17,10 @@ export const saveRecipes = async (req: Request, res: Response) => {
     const oldCost = await productService.calculateProductCost(productId);
     console.log('[RecipeController] Old product cost:', oldCost);
 
-    // Delete existing recipes for this product
+    // Excluir receitas existentes para este produto
     await recipeService.deleteRecipesByProduct(productId);
 
-    // Create new recipes with proper validation
+    // Criar novas receitas com validação adequada
     const createdRecipes = await Promise.all(
       recipes.map((recipe: any) =>
         recipeService.createRecipe({

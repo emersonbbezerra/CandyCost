@@ -96,7 +96,7 @@ export class FixedCostService {
     const oldConfig = await this.getWorkConfiguration();
     const oldCostPerHour = await this.calculateFixedCostPerHour();
 
-    // Remove all timestamp and ID fields to avoid conflicts
+    // Remover todos os campos de timestamp e ID para evitar conflitos
     const {
       id,
       createdAt,

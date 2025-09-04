@@ -10,7 +10,7 @@ import {
   verifyPassword,
 } from '../utils/authUtils';
 
-// Configure Passport Local Strategy
+// Configurar Estratégia Local do Passport
 passport.use(
   new LocalStrategy(
     {
@@ -25,7 +25,7 @@ passport.use(
           return done(null, false, { message: 'Email ou senha inválidos.' });
         }
 
-        // Check password
+        // Verificar senha
         const isValidPassword = await verifyPassword(password, user.password);
 
         if (!isValidPassword) {
@@ -40,12 +40,12 @@ passport.use(
   )
 );
 
-// Serialize user for session
+// Serializar usuário para sessão
 passport.serializeUser((user: any, done) => {
   done(null, user.id);
 });
 
-// Deserialize user from session
+// Deserializar usuário da sessão
 passport.deserializeUser(async (id: string, done) => {
   try {
     const user = await userService.getUserById(id);
@@ -143,7 +143,7 @@ export const userService = {
     const adminFirstName = process.env.INITIAL_ADMIN_FIRST_NAME || 'Admin';
     const adminLastName = process.env.INITIAL_ADMIN_LAST_NAME || 'User';
 
-    // Check if admin already exists
+    // Verificar se admin já existe
     const existingAdmin = await this.getUserByEmail(adminEmail);
     if (existingAdmin) {
       return existingAdmin;
@@ -194,14 +194,14 @@ export const userService = {
     return updatedUser;
   },
 
-  // Create first admin via command line (production strategy)
+  // Criar primeiro admin via linha de comando (estratégia de produção)
   async initializeFirstAdmin(
     email: string,
     password: string,
     firstName: string,
     lastName?: string
   ): Promise<User> {
-    // Check if any admin exists
+    // Verificar se algum admin já existe
     const existingAdmin = await prisma.user.findFirst({
       where: { role: 'admin' },
     });
@@ -212,7 +212,7 @@ export const userService = {
       );
     }
 
-    // Create the first admin
+    // Criar o primeiro admin
     const adminUser = await this.createUser({
       email,
       password,

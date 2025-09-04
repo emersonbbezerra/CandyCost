@@ -62,21 +62,21 @@ export const getDashboardStats = async (req: Request, res: Response) => {
   try {
     const { type = 'product', category = 'all' } = req.query;
 
-    // Get ingredient count
+    // Buscar contagem de ingredientes
     const ingredientCount = await prisma.ingredient.count();
 
-    // Get product count
+    // Buscar contagem de produtos
     const productCount = await prisma.product.count();
 
     const products = await prisma.product.findMany();
 
-    // Filter products by category if specified
+    // Filtrar produtos por categoria se especificado
     const filteredProducts =
       category === 'all'
         ? products
         : products.filter((p) => p.category === category);
 
-    // Calculate profit margins (using marginPercentage from database)
+    // Calcular margens de lucro (usando marginPercentage do banco de dados)
     const profitData = filteredProducts.map((product) => ({
       profitMargin: product.marginPercentage,
       category: product.category,
@@ -86,7 +86,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     let categoryBreakdown: any[] = [];
 
     if (type === 'category') {
-      // Calculate average profit by category
+      // Calcular média de lucro por categoria
       const categoryGroups = profitData.reduce((acc, item) => {
         if (!acc[item.category]) {
           acc[item.category] = [];
@@ -95,7 +95,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         return acc;
       }, {} as Record<string, number[]>);
 
-      // Create category breakdown for frontend
+      // Criar detalhamento de categorias para o frontend
       categoryBreakdown = Object.entries(categoryGroups).map(
         ([cat, margins]) => ({
           category: cat,
@@ -105,7 +105,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       );
 
       if (category === 'all') {
-        // General average across all categories
+        // Média geral entre todas as categorias
         const categoryAverages = Object.values(categoryGroups).map(
           (margins: number[]) =>
             margins.reduce((a: number, b: number) => a + b, 0) / margins.length
@@ -116,7 +116,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
               categoryAverages.length
             : 0;
       } else {
-        // Average for specific category
+        // Média para categoria específica
         const categoryKey = String(category);
         const categoryMargins = categoryGroups[categoryKey] || [];
         avgProfitMargin =
@@ -126,7 +126,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
             : 0;
       }
     } else {
-      // Calculate average profit by product
+      // Calcular média de lucro por produto
       const margins = profitData.map((item) => item.profitMargin);
       avgProfitMargin =
         margins.length > 0
@@ -134,7 +134,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
           : 0;
     }
 
-    // Today's changes
+    // Mudanças de hoje
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayChanges = await prisma.priceHistory.count({
@@ -145,7 +145,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       },
     });
 
-    // Get unique categories for frontend
+    // Buscar categorias únicas para o frontend
     const uniqueCategories = Array.from(
       new Set(products.map((p) => p.category))
     ).sort();
@@ -158,13 +158,13 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       todayChanges,
     });
   } catch (error) {
-    console.error('Error getting dashboard stats:', error);
+    console.error('Erro ao buscar estatísticas do dashboard:', error);
     res.status(500).json({ message: 'Erro ao buscar estatísticas' });
   }
 };
 
 export const getRecentUpdates = async (req: Request, res: Response) => {
-  // Strong cache-busting headers
+  // Cabeçalhos anti-cache para garantir dados atualizados
   res.set({
     'Cache-Control': 'no-cache, no-store, must-revalidate, private',
     Pragma: 'no-cache',
@@ -174,68 +174,34 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
   });
 
   try {
-    // Debug: vamos ver o que tem no banco de ingredientes
-    console.log('🔍 Debugando histórico de ingredientes...');
-
-    // Primeira verificação: quantos registros de ingredientes existem no total?
-    const totalIngredientHistory = await prisma.priceHistory.count({
-      where: { ingredientId: { not: null } },
-    });
-    console.log(
-      '📊 Total de registros de ingredientes no banco:',
-      totalIngredientHistory
-    );
-
-    // Segunda verificação: quais são os últimos registros de ingredientes?
-    const allIngredientHistory = await prisma.priceHistory.findMany({
-      where: { ingredientId: { not: null } },
-      orderBy: { createdAt: 'desc' },
-      take: 10, // Pegar 10 para debug
-      include: {
-        ingredient: true,
-      },
-    });
-
-    console.log(
-      '🥄 Últimos registros de ingredientes:',
-      allIngredientHistory.map((h) => ({
-        id: h.id,
-        ingredientName: h.ingredient?.name,
-        oldPrice: h.oldPrice,
-        newPrice: h.newPrice,
-        createdAt: h.createdAt,
-        changeType: h.changeType,
-      }))
-    );
-
-    // Abordagem completamente separada: consulta direta por ingredientes como sugerido
+    // Abordagem direta: consultar por tipo de item separadamente
     const [ingredientUpdates, allProductUpdates, fixedCostUpdates] =
       await Promise.all([
-        // Consulta direta e específica para ingredientes - garantia total
+        // Consulta específica para ingredientes
         prisma.priceHistory.findMany({
           where: {
             ingredientId: { not: null },
           },
           orderBy: { createdAt: 'desc' },
-          take: 5, // Pegar os 5 mais recentes de ingredientes
+          take: 5,
           include: {
             ingredient: true,
             product: true,
           },
         }),
-        // Consulta unificada para TODOS os produtos (diretos e indiretos)
+        // Consulta para TODOS os produtos (diretos e indiretos)
         prisma.priceHistory.findMany({
           where: {
             productId: { not: null },
           },
           orderBy: { createdAt: 'desc' },
-          take: 20, // Pegar mais para ter dados suficientes após deduplicação
+          take: 20,
           include: {
             ingredient: true,
             product: true,
           },
         }),
-        // Consulta direta para custos fixos
+        // Consulta para custos fixos
         prisma.priceHistory.findMany({
           where: {
             itemType: 'fixed_cost',
@@ -243,7 +209,7 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
             ingredientId: null,
           },
           orderBy: { createdAt: 'desc' },
-          take: 5, // Ajustado para 5 custos fixos
+          take: 5,
           include: {
             ingredient: true,
             product: true,
@@ -251,9 +217,9 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
         }),
       ]);
 
-    // Format ingredient updates
+    // Formatar atualizações de ingredientes
     const enrichedIngredientUpdates = ingredientUpdates.map((update) => {
-      // Parse context data if available
+      // Analisar dados de contexto se disponível
       let contextData = null;
       let changeReason = update.description;
 
@@ -264,7 +230,7 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
           changeReason = parsed.reason;
         }
       } catch (e) {
-        // Se não conseguir fazer parse, usar description como changeReason normalmente
+        // Se não conseguir fazer parse, usar description normalmente
       }
 
       return {
@@ -282,8 +248,8 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
       };
     });
 
-    // Process ALL product updates (unified approach)
-    // First, deduplicate by product to keep only the most recent update per product
+    // Processar TODAS as atualizações de produtos (abordagem unificada)
+    // Primeiro, deduplificar por produto para manter apenas a atualização mais recente
     const productMap = new Map<string, any>();
 
     allProductUpdates.forEach((update) => {
@@ -299,7 +265,7 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
       }
     });
 
-    // Convert to array, sort by date, and take the 5 most recent
+    // Converter para array, ordenar por data e pegar os 5 mais recentes
     const enrichedProductUpdates = Array.from(productMap.values())
       .sort(
         (a, b) =>
@@ -322,8 +288,7 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
         createdAt: update.createdAt,
       }));
 
-    // Format fixed cost updates
-
+    // Formatar atualizações de custos fixos
     const enrichedFixedCostUpdates = fixedCostUpdates.map((update) => ({
       id: update.id,
       type: 'fixed_cost' as const,
@@ -336,20 +301,7 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
       createdAt: update.createdAt,
     }));
 
-    // Debug: Log dos custos fixos encontrados
-    console.log('🔧 Fixed Cost Updates encontrados:');
-    fixedCostUpdates.forEach((update) => {
-      console.log(
-        `  - ${update.itemName}: ${update.changeType} (${new Date(
-          update.createdAt
-        ).toLocaleString()})`
-      );
-    });
-    console.log(
-      `📊 Total de fixed cost updates: ${enrichedFixedCostUpdates.length}`
-    );
-
-    // Separate products by type for frontend compatibility
+    // Separar produtos por tipo para compatibilidade do frontend
     const directProducts = enrichedProductUpdates.filter(
       (p) => p.type === 'product'
     );
@@ -364,27 +316,16 @@ export const getRecentUpdates = async (req: Request, res: Response) => {
       fixedCostUpdates: enrichedFixedCostUpdates,
     };
 
-    // Log para debug - mostrar quantos registros cada categoria tem
-    console.log('📊 Dashboard recent updates:', {
-      ingredientCount: enrichedIngredientUpdates.length,
-      directProductCount: directProducts.length,
-      indirectProductCount: indirectProducts.length,
-      fixedCostCount: enrichedFixedCostUpdates.length,
-      totalProductUpdates: enrichedProductUpdates.length,
-      ingredientNames: enrichedIngredientUpdates.map((u) => u.name).join(', '),
-      allProductNames: enrichedProductUpdates.map((u) => u.name).join(', '),
-    });
-
     res.json(responseData);
   } catch (error) {
-    console.error('Error fetching recent updates:', error);
+    console.error('Erro ao buscar atualizações recentes:', error);
     res.status(500).json({ message: 'Erro ao buscar atualizações recentes' });
   }
 };
 
 /**
  * Endpoint específico APENAS para atualizações de ingredientes
- * Independente de qualquer outra lógica de invalidação
+ * Independente de qualquer outra lógica
  */
 export const getIngredientUpdates = async (req: Request, res: Response) => {
   // Cache headers muito específicos
@@ -397,23 +338,21 @@ export const getIngredientUpdates = async (req: Request, res: Response) => {
   });
 
   try {
-    console.log('🥄 Fetching ingredient updates ONLY');
-
-    // Query ultra-específica - APENAS ingredientes, nada mais
+    // Consulta ultra-específica - APENAS ingredientes
     const ingredientUpdates = await prisma.priceHistory.findMany({
       where: {
         ingredientId: { not: null }, // APENAS registros de ingredientes
         ingredient: { isNot: null }, // Garantir que o ingrediente existe
       },
       orderBy: { createdAt: 'desc' },
-      take: 10, // Pegar mais registros para garantir
+      take: 10,
       include: {
         ingredient: true,
       },
     });
 
     const enrichedIngredientUpdates = ingredientUpdates.map((update) => {
-      // Parse context data if available
+      // Analisar dados de contexto se disponível
       let contextData = null;
       let changeReason = update.description;
 
@@ -424,7 +363,7 @@ export const getIngredientUpdates = async (req: Request, res: Response) => {
           changeReason = parsed.reason;
         }
       } catch (e) {
-        // Se não conseguir fazer parse, usar description como changeReason normalmente
+        // Se não conseguir fazer parse, usar description normalmente
       }
 
       return {
@@ -442,16 +381,11 @@ export const getIngredientUpdates = async (req: Request, res: Response) => {
       };
     });
 
-    console.log(
-      '🥄 Found ingredient updates:',
-      enrichedIngredientUpdates.length
-    );
-
     res.json({
       ingredientUpdates: enrichedIngredientUpdates,
     });
   } catch (error) {
-    console.error('Error fetching ingredient updates:', error);
+    console.error('Erro ao buscar atualizações de ingredientes:', error);
     res
       .status(500)
       .json({ message: 'Erro ao buscar atualizações de ingredientes' });

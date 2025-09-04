@@ -14,12 +14,10 @@ export const login = (req: any, res: any, next: any) => {
         ip: req.ip,
         email: req.body.email,
       });
-      return res
-        .status(500)
-        .json({
-          message:
-            'Ocorreu um problema no sistema. Tente novamente em alguns minutos.',
-        });
+      return res.status(500).json({
+        message:
+          'Ocorreu um problema no sistema. Tente novamente em alguns minutos.',
+      });
     }
     if (!user) {
       auditLog(
@@ -30,13 +28,11 @@ export const login = (req: any, res: any, next: any) => {
           email: req.body.email,
         }
       );
-      return res
-        .status(401)
-        .json({
-          message:
-            info.message ||
-            'Email ou senha incorretos. Verifique suas informações.',
-        });
+      return res.status(401).json({
+        message:
+          info.message ||
+          'Email ou senha incorretos. Verifique suas informações.',
+      });
     }
     req.logIn(user, (err: any) => {
       if (err) {
@@ -44,11 +40,9 @@ export const login = (req: any, res: any, next: any) => {
           ip: req.ip,
           email: req.body.email,
         });
-        return res
-          .status(500)
-          .json({
-            message: 'Problema no sistema durante o login. Tente novamente.',
-          });
+        return res.status(500).json({
+          message: 'Problema no sistema durante o login. Tente novamente.',
+        });
       }
       auditLog('LOGIN_SUCCESS', `Login realizado com sucesso: ${user.email}`, {
         userId: user.id,
@@ -85,7 +79,7 @@ export const register = async (req: any, res: any) => {
       req.body
     );
 
-    // Check if user already exists
+    // Verificar se o usuário já existe
     const existingUser = await userService.getUserByEmail(email);
     if (existingUser) {
       auditLog(
@@ -96,15 +90,13 @@ export const register = async (req: any, res: any) => {
           email,
         }
       );
-      return res
-        .status(400)
-        .json({
-          message:
-            'Este email já está cadastrado. Use outro email ou faça login.',
-        });
+      return res.status(400).json({
+        message:
+          'Este email já está cadastrado. Use outro email ou faça login.',
+      });
     }
 
-    // Create new user
+    // Criar novo usuário
     const newUser = await userService.createUser({
       email,
       password,
@@ -113,7 +105,7 @@ export const register = async (req: any, res: any) => {
       role: 'user',
     });
 
-    // Log the user in
+    // Fazer login do usuário
     req.logIn(newUser, (err: any) => {
       if (err) {
         auditLog(
@@ -124,12 +116,10 @@ export const register = async (req: any, res: any) => {
             email,
           }
         );
-        return res
-          .status(500)
-          .json({
-            message:
-              'Conta criada com sucesso, mas houve um problema no login automático. Tente fazer login manualmente.',
-          });
+        return res.status(500).json({
+          message:
+            'Conta criada com sucesso, mas houve um problema no login automático. Tente fazer login manualmente.',
+        });
       }
       auditLog('REGISTER_SUCCESS', `Cadastro realizado com sucesso: ${email}`, {
         userId: newUser.id,
@@ -157,12 +147,10 @@ export const register = async (req: any, res: any) => {
       email: req.body.email,
     });
     console.error('Register error:', error);
-    res
-      .status(500)
-      .json({
-        message:
-          'Ocorreu um problema no cadastro. Tente novamente em alguns minutos.',
-      });
+    res.status(500).json({
+      message:
+        'Ocorreu um problema no cadastro. Tente novamente em alguns minutos.',
+    });
   }
 };
 
@@ -184,7 +172,7 @@ export const logoutGet = (req: any, res: any) => {
       ip: req.ip,
     });
 
-    // Destroy the session
+    // Destruir a sessão
     req.session.destroy((destroyErr: any) => {
       if (destroyErr) {
         auditLog(
@@ -200,7 +188,7 @@ export const logoutGet = (req: any, res: any) => {
         return res.redirect('/?error=session');
       }
 
-      // Clear the session cookie and redirect
+      // Limpar o cookie de sessão e redirecionar
       res.clearCookie('connect.sid');
       res.redirect('/');
     });
@@ -216,11 +204,9 @@ export const logoutPost = (req: any, res: any) => {
         ip: req.ip,
       });
       console.error('Logout error:', err);
-      return res
-        .status(500)
-        .json({
-          message: 'Houve um problema ao sair da conta. Tente novamente.',
-        });
+      return res.status(500).json({
+        message: 'Houve um problema ao sair da conta. Tente novamente.',
+      });
     }
 
     auditLog('LOGOUT_SUCCESS', `Logout realizado com sucesso`, {
@@ -242,14 +228,12 @@ export const logoutPost = (req: any, res: any) => {
           }
         );
         console.error('Session destroy error:', destroyErr);
-        return res
-          .status(500)
-          .json({
-            message: 'Problema ao finalizar a sessão. Tente novamente.',
-          });
+        return res.status(500).json({
+          message: 'Problema ao finalizar a sessão. Tente novamente.',
+        });
       }
 
-      // Clear the session cookie
+      // Limpar o cookie de sessão
       res.clearCookie('connect.sid');
       res.json({ message: 'Logout realizado com sucesso' });
     });

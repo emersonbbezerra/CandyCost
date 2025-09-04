@@ -13,7 +13,7 @@ async function setupSessionsTable() {
     // Drop existing sessions table if it exists
     await prisma.$executeRaw`DROP TABLE IF EXISTS sessions CASCADE`;
 
-    // Create sessions table with correct structure for connect-pg-simple
+    // Criar tabela de sessões com estrutura correta para connect-pg-simple
     await prisma.$executeRaw`
       CREATE TABLE sessions (
         sid VARCHAR NOT NULL COLLATE "default",
@@ -43,7 +43,7 @@ async function seed() {
     // Setup sessions table first
     await setupSessionsTable();
 
-    // Check if data already exists
+    // Verificar se os dados já existem
     const existingIngredients = await prisma.ingredient.count();
     const existingProducts = await prisma.product.count();
     const existingFixedCosts = await prisma.fixedCost.count();

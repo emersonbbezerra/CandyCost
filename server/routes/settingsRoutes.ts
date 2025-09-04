@@ -106,8 +106,6 @@ router.get('/', isAuthenticated, async (req, res) => {
 
 router.put('/', isAuthenticated, async (req, res) => {
   try {
-    console.log('🔧 [API Settings] Recebendo dados para salvar:', req.body);
-
     // Buscar configuração existente
     let workConfig = await prisma.workConfiguration.findFirst();
 
@@ -214,8 +212,6 @@ router.put('/', isAuthenticated, async (req, res) => {
         },
       });
     }
-
-    console.log('✅ [API Settings] Configuração salva no banco:', workConfig);
 
     // Mapear configuração atualizada para o formato esperado pelo frontend (TODAS as configurações)
     const systemSettings = {
