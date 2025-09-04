@@ -12,51 +12,40 @@ import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Too
 export default function CostsHistory() {
   const formatCurrency = useFormatCurrency();
   const [selectedProduct, setSelectedProduct] = useState<string>("all");
-
-  // Estados para paginação das alterações recentes
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-
-  // Estados para filtro por período
-  const [periodFilter, setPeriodFilter] = useState<string>("30"); // Padrão: últimos 30 dias
+  const [periodFilter, setPeriodFilter] = useState<string>("30");
 
   const { data: products = [] } = useQuery<Product[]>({
     queryKey: ["/api/products"],
   });
 
-  // Carregar todos os dados de histórico inicialmente
   const { data: allPriceHistory = [] } = useQuery<PriceHistory[]>({
     queryKey: ["/api/price-history"],
   });
 
-  // Filtrar apenas histórico de custos de produtos (receitas)
   const productHistory = allPriceHistory.filter(item => item.productId && !item.ingredientId);
 
-  // Calcular data limite baseada no período selecionado
   const getDateLimit = (period: string) => {
     const now = new Date();
     const days = parseInt(period);
 
-    if (period === "all") return null; // Sem limite de data
+    if (period === "all") return null;
 
     const limitDate = new Date();
     limitDate.setDate(now.getDate() - days);
     return limitDate;
   };
 
-  // Filtrar produtos baseado na seleção e período
   const filteredProductHistory = productHistory.filter(item => {
-    // Filtro por produto
     const matchesProduct = selectedProduct === "all" || item.productId?.toString() === selectedProduct;
 
-    // Filtro por período
     const dateLimit = getDateLimit(periodFilter);
     const matchesPeriod = !dateLimit || new Date(item.createdAt) >= dateLimit;
 
     return matchesProduct && matchesPeriod;
   });
 
-  // Group product history by month for chart
   const productChartData = filteredProductHistory.reduce((acc: Record<string, any>, item) => {
     const month = new Date(item.createdAt).toLocaleDateString('pt-BR', {
       month: 'short',
@@ -84,24 +73,19 @@ export default function CostsHistory() {
 
   const productChartArray = Object.values(productChartData).slice(-6);
 
-  // Ordenar alterações recentes por data (mais recente primeiro)
   const sortedProductChanges = filteredProductHistory
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  // Aplicar paginação
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedProductChanges = sortedProductChanges.slice(startIndex, endIndex);
 
-  // Calcular total de páginas
   const totalPages = Math.ceil(sortedProductChanges.length / itemsPerPage);
 
-  // Resetar página quando filtro mudar
   React.useEffect(() => {
     setCurrentPage(1);
   }, [selectedProduct, periodFilter]);
 
-  // Buscar nome do produto
   const getProductName = (id: number | null) => {
     if (!id) return "Produto desconhecido";
     const product = products.find(p => String(p.id) === String(id));

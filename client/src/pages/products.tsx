@@ -25,9 +25,7 @@ type ProductWithCost = Product & {
 export default function Products() {
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  // Marcar navegação quando entrar na página
   useEffect(() => {
-    // Limpar marcação de atualizações ao entrar na página
     sessionStorage.removeItem('hasRecentUpdates');
 
     return () => {
@@ -42,7 +40,6 @@ export default function Products() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<ProductWithCost | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  // Exibir 9 cards por página (3 linhas de 3)
   const itemsPerPage = 9;
 
   const queryClient = useQueryClient();
@@ -53,7 +50,6 @@ export default function Products() {
     queryKey: ["/api/products"],
   });
 
-  // Query to get detailed product with recipes when needed
   const { data: productDetails } = useQuery({
     queryKey: ["/api/products", "details"],
     queryFn: async () => {
@@ -84,7 +80,6 @@ export default function Products() {
 
   const handleEdit = async (product: ProductWithCost) => {
     try {
-      console.log("Editando produto:", product);
       const response = await apiRequest("GET", `/api/products/${product.id}`);
 
       if (!response.ok) {
@@ -92,9 +87,7 @@ export default function Products() {
       }
 
       const productWithRecipes = await response.json();
-      console.log("Produto carregado do servidor:", productWithRecipes);
 
-      // Ensure the product has the required structure
       const sanitizedProduct = {
         ...productWithRecipes,
         marginPercentage: productWithRecipes.marginPercentage || "60",
@@ -128,7 +121,6 @@ export default function Products() {
     setEditingProduct(undefined);
   };
 
-  // Filtrar produtos baseado na pesquisa e categoria
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.category.toLowerCase().includes(searchTerm.toLowerCase());
@@ -136,7 +128,6 @@ export default function Products() {
     return matchesSearch && matchesCategory;
   });
 
-  // Ordenar produtos
   const sortedProducts = filteredProducts.sort((a, b) => {
     let aValue: any;
     let bValue: any;
@@ -164,7 +155,6 @@ export default function Products() {
     return 0;
   });
 
-  // Paginação
   const totalPages = Math.ceil(sortedProducts.length / itemsPerPage);
   const paginatedProducts = sortedProducts.slice(
     (currentPage - 1) * itemsPerPage,
@@ -353,13 +343,11 @@ export default function Products() {
                         profitPerUnitRaw = salePricePerUnit - costPerUnit;
                         marginPercentRaw = salePricePerUnit > 0 ? (profitPerUnitRaw / salePricePerUnit) * 100 : 0;
                       }
-                      // Tolerância para tratar quase zero como neutro (evitar -R$ 0,00 e -0.1%)
-                      const EPS_PROFIT = 0.005; // meio centavo
-                      const EPS_MARGIN = 0.05;   // 0.05%
+                      const EPS_PROFIT = 0.005;
+                      const EPS_MARGIN = 0.05;
                       const isNeutral = !invalid && Math.abs(profitPerUnitRaw) < EPS_PROFIT;
                       const profitPerUnit = isNeutral ? 0 : profitPerUnitRaw;
                       const marginPercent = isNeutral || Math.abs(marginPercentRaw) < EPS_MARGIN ? 0 : marginPercentRaw;
-                      // Definir classes dinâmicas
                       let bg = 'bg-gray-50';
                       let border = 'border-gray-200';
                       let labelColor = 'text-gray-700';

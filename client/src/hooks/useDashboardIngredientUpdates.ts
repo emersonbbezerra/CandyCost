@@ -30,7 +30,6 @@ export interface IngredientUpdate {
 export function useDashboardIngredientUpdates() {
   const queryClient = useQueryClient();
 
-  // Query específica só para ingredientes - nunca invalidada externamente
   const query = useQuery<IngredientUpdate[]>({
     queryKey: ['/api/dashboard/ingredient-updates'],
     queryFn: async () => {
@@ -41,13 +40,11 @@ export function useDashboardIngredientUpdates() {
       const data = await response.json();
       return data.ingredientUpdates || [];
     },
-    staleTime: 30 * 1000, // 30 segundos - dados ficam "fresh" por mais tempo
-    gcTime: 5 * 60 * 1000, // 5 minutos no cache
+    staleTime: 30 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 
-  // Método para invalidar APENAS esta query específica
   const invalidateIngredientUpdates = useCallback(() => {
-    console.log('🥄 Invalidating ONLY ingredient updates');
     queryClient.invalidateQueries({
       queryKey: ['/api/dashboard/ingredient-updates'],
       exact: true, // Só invalida esta query exata

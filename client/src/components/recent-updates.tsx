@@ -1,7 +1,6 @@
 import { errorToast, useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
-// A API /api/dashboard/recent-updates retorna objetos simplificados (não todo PriceHistory)
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calculator, ExternalLink, Package, RefreshCw, Sprout } from "lucide-react";
 import { useState } from "react";
@@ -16,7 +15,7 @@ interface SimplifiedUpdate {
     id: string;
     type: 'ingredient' | 'product' | 'product_indirect' | 'fixed_cost';
     name: string;
-    itemId: string | null; // id do ingrediente ou produto
+    itemId: string | null;
     oldPrice: number;
     newPrice: number;
     unit?: string;
@@ -36,38 +35,28 @@ interface SimplifiedUpdate {
 interface RecentUpdates {
     ingredientUpdates: SimplifiedUpdate[];
     productUpdates: SimplifiedUpdate[];
-    productIndirectUpdates: SimplifiedUpdate[]; // Nova categoria para produtos afetados por custos fixos
+    productIndirectUpdates: SimplifiedUpdate[];
     fixedCostUpdates?: SimplifiedUpdate[];
 }
 
-// Helper function to format date, assuming it's available or can be defined
-// If formatDate is not defined elsewhere, you might need to import or define it.
-// For this example, assuming a simple date formatting function exists.
 const formatDate = (date: Date) => {
     return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
-// Helper function to get product name, assuming it's available or can be defined
-// This is a placeholder and should be implemented based on how product names are managed.
 const getProductName = (productId?: number): string => {
     if (!productId) return "Produto Desconhecido";
-    // In a real application, you would fetch or look up the product name here.
-    // For this example, we'll return a placeholder.
     return `Produto ID: ${productId}`;
 };
 
-// Helper function to format ingredient price update display
 const formatIngredientPriceDisplay = (update: SimplifiedUpdate) => {
     if (update.contextData) {
         const { originalOldPrice, originalOldQuantity, originalOldUnit, originalNewPrice, originalNewQuantity, originalNewUnit } = update.contextData;
         if (originalOldPrice !== undefined && originalOldQuantity !== undefined && originalOldUnit &&
             originalNewPrice !== undefined && originalNewQuantity !== undefined && originalNewUnit) {
-            // Show original prices with quantities - clear and simple
             return `${update.name}: ${formatCurrency(originalOldPrice)}/${originalOldQuantity}${originalOldUnit} → ${formatCurrency(originalNewPrice)}/${originalNewQuantity}${originalNewUnit}`;
         }
     }
 
-    // Fallback to original display
     return `Custo atualizado de ${formatCurrency(update.oldPrice)} para ${formatCurrency(update.newPrice)}${update.unit ? ` / ${update.unit}` : ''} - ${update.name}`;
 }; export function RecentUpdatesCard() {
     const [, setLocation] = useLocation();
@@ -75,25 +64,17 @@ const formatIngredientPriceDisplay = (update: SimplifiedUpdate) => {
     const [editingProduct, setEditingProduct] = useState<any>();
     const [isIngredientFormOpen, setIsIngredientFormOpen] = useState(false);
     const [editingIngredient, setEditingIngredient] = useState<any>();
-    const [activeTab, setActiveTab] = useState<string>("ingredients"); // Nova aba ativa
+    const [activeTab, setActiveTab] = useState<string>("ingredients");
     const { toast } = useToast();
     const queryClient = useQueryClient();
 
     const { data, isLoading, refetch } = useQuery<RecentUpdates>({
         queryKey: ["/api/dashboard/recent-updates"],
         refetchOnMount: "always",
-        staleTime: 0, // Dados sempre frescos para atualizações recentes
-        gcTime: 5 * 60 * 1000, // 5 minutos de cache
-        refetchInterval: false, // Remover polling automático
+        staleTime: 0,
+        gcTime: 5 * 60 * 1000,
+        refetchInterval: false,
         refetchIntervalInBackground: false,
-    });
-
-    // Debug: Log dos dados recebidos
-    console.log('🔄 Recent updates data received:', {
-        fixedCostUpdates: data?.fixedCostUpdates?.length || 0,
-        productUpdates: data?.productUpdates?.length || 0,
-        productIndirectUpdates: data?.productIndirectUpdates?.length || 0,
-        ingredientUpdates: data?.ingredientUpdates?.length || 0,
     });
 
     const handleEditProduct = async (productId: string) => {
@@ -106,7 +87,6 @@ const formatIngredientPriceDisplay = (update: SimplifiedUpdate) => {
 
             const productWithRecipes = await response.json();
 
-            // Ensure the product has the required structure
             const sanitizedProduct = {
                 ...productWithRecipes,
                 marginPercentage: productWithRecipes.marginPercentage || "60",
@@ -145,7 +125,6 @@ const formatIngredientPriceDisplay = (update: SimplifiedUpdate) => {
         queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
         queryClient.invalidateQueries({ queryKey: ["/api/products"] });
 
-        // Marcar que há atualizações para refresh futuro
         sessionStorage.setItem('hasRecentUpdates', 'true');
     };
 
@@ -155,7 +134,6 @@ const formatIngredientPriceDisplay = (update: SimplifiedUpdate) => {
         queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
         queryClient.invalidateQueries({ queryKey: ["/api/ingredients"] });
 
-        // Marcar que há atualizações para refresh futuro
         sessionStorage.setItem('hasRecentUpdates', 'true');
     };
 
@@ -267,10 +245,8 @@ const formatIngredientPriceDisplay = (update: SimplifiedUpdate) => {
                             {isLoading ? (
                                 <p className="text-gray-500">Carregando atualizações de produtos...</p>
                             ) : (() => {
-                                // Combinar produtos diretos e indiretos com deduplicação por produto
                                 const productMap = new Map<string, any>();
 
-                                // Adicionar produtos diretos
                                 data?.productUpdates?.forEach(update => {
                                     const key = `${update.name}-${update.itemId}`;
                                     if (!productMap.has(key) || new Date(update.createdAt) > new Date(productMap.get(key).createdAt)) {
@@ -278,7 +254,6 @@ const formatIngredientPriceDisplay = (update: SimplifiedUpdate) => {
                                     }
                                 });
 
-                                // Adicionar produtos indiretos (afetados por custos fixos)
                                 data?.productIndirectUpdates?.forEach(update => {
                                     const key = `${update.name}-${update.itemId}`;
                                     if (!productMap.has(key) || new Date(update.createdAt) > new Date(productMap.get(key).createdAt)) {
