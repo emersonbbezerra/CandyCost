@@ -1,4 +1,4 @@
-import { errorToast, useToast } from "@/hooks/use-toast";
+import { errorToast, successToast, useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -77,7 +77,28 @@ const formatIngredientPriceDisplay = (update: SimplifiedUpdate) => {
         refetchIntervalInBackground: false,
     });
 
-    const handleEditProduct = async (productId: string) => {
+    const handleRefresh = async () => {
+        try {
+            const result = await refetch();
+
+            if (result.isSuccess) {
+                successToast(
+                    "Lista atualizada!",
+                    "As atualizações recentes foram carregadas com sucesso."
+                );
+            } else if (result.isError) {
+                errorToast(
+                    "Erro ao atualizar",
+                    "Não foi possível carregar as atualizações. Tente novamente."
+                );
+            }
+        } catch (error) {
+            errorToast(
+                "Erro ao atualizar",
+                "Não foi possível carregar as atualizações. Tente novamente."
+            );
+        }
+    }; const handleEditProduct = async (productId: string) => {
         try {
             const response = await apiRequest("GET", `/api/products/${productId}`);
 
@@ -145,7 +166,7 @@ const formatIngredientPriceDisplay = (update: SimplifiedUpdate) => {
                     <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => refetch()}
+                        onClick={handleRefresh}
                         disabled={isLoading}
                         className="flex items-center gap-2"
                     >
