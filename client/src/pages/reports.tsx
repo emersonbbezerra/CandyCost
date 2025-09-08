@@ -635,7 +635,12 @@ export default function Reports() {
                     </div>
                     <div className="flex space-x-2">
                       {hasProductIngredients && (
-                        <Badge variant="outline">Multi-nível</Badge>
+                        <Badge
+                          variant="outline"
+                          className="hover:bg-transparent hover:text-primary"
+                        >
+                          Multi-nível
+                        </Badge>
                       )}
                       {ingredientCount > 5 && (
                         <Badge variant="secondary">Muitos ingredientes</Badge>
