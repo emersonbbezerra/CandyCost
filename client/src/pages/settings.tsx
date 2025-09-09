@@ -289,7 +289,7 @@ export default function Settings() {
 
   return (
     <div className="p-4 lg:p-8 max-w-4xl w-full min-w-0 overflow-x-hidden">
-      <div className="mb-8">
+      <div className="mb-5">
         <h2 className="text-3xl font-bold text-gray-900 flex items-center">
           <SettingsIcon className="w-8 h-8 mr-3 text-blue-600" />
           {isAdmin ? 'Configurações do Sistema' : 'Minhas Preferências'}

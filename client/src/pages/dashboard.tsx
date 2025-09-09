@@ -95,7 +95,7 @@ export default function Dashboard() {
 
   return (
     <div className="p-4 lg:p-8 w-full min-w-0 overflow-x-hidden">
-      <div className="mb-8">
+      <div className="mb-5">
         <h2 className="text-3xl font-bold text-gray-900 flex items-center">
           <BarChart3 className="w-8 h-8 mr-3 text-blue-600" />
           Dashboard
