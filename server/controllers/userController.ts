@@ -217,11 +217,28 @@ export const deleteUser = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
 
-    // Prevent admin from deleting themselves
+    // Impedir que admin exclua sua própria conta
     if (userId === (req as any).user.id) {
       return res
         .status(400)
         .json({ message: 'Você não pode excluir sua própria conta' });
+    }
+
+    // Buscar o usuário a ser excluído para verificar o role
+    const userToDelete = await userService.getUserById(userId);
+
+    if (!userToDelete) {
+      return res.status(404).json({ message: 'Usuário não encontrado' });
+    }
+
+    // Impedir exclusão de administradores
+    if (userToDelete.role === 'admin') {
+      return res
+        .status(400)
+        .json({
+          message:
+            'Não é possível excluir administradores. Use a função de rebaixamento primeiro.',
+        });
     }
 
     await userService.deleteUser(userId);

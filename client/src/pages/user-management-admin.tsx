@@ -176,6 +176,13 @@ export default function UserManagementAdmin() {
     });
   };
 
+  const formatUserName = (user: User | null) => {
+    if (!user) return '';
+    const firstName = user.firstName || '';
+    const lastName = user.lastName || '';
+    return lastName ? `${firstName} ${lastName}` : firstName;
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -422,7 +429,7 @@ export default function UserManagementAdmin() {
           <DialogHeader>
             <DialogTitle>Editar Usuário</DialogTitle>
             <DialogDescription>
-              Altere as informações do usuário {selectedUser?.firstName}
+              Altere as informações do usuário {formatUserName(selectedUser)}
             </DialogDescription>
           </DialogHeader>
           <Form {...editForm}>
@@ -512,7 +519,7 @@ export default function UserManagementAdmin() {
           <DialogHeader>
             <DialogTitle>Resetar Senha</DialogTitle>
             <DialogDescription>
-              Defina uma nova senha para {selectedUser?.firstName}
+              Defina uma nova senha para {formatUserName(selectedUser)}
             </DialogDescription>
           </DialogHeader>
           <Form {...passwordForm}>
@@ -570,7 +577,7 @@ export default function UserManagementAdmin() {
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         title="Excluir Usuário"
-        description={`Tem certeza que deseja excluir o usuário "${selectedUser?.firstName} ${selectedUser?.lastName}"? Esta ação não pode ser desfeita.`}
+        description={`Tem certeza que deseja excluir o usuário "${formatUserName(selectedUser)}"? Esta ação não pode ser desfeita.`}
         confirmText="Excluir"
         cancelText="Cancelar"
         onConfirm={confirmDelete}
