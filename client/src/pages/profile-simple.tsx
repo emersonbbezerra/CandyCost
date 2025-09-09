@@ -4,6 +4,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { errorToast, successToast, useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Lock, Settings, Shield, User } from "lucide-react";
@@ -35,6 +36,7 @@ type PasswordForm = z.infer<typeof passwordSchema>;
 
 export default function ProfileSimple() {
   const { toast } = useToast();
+  const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("profile");
 
@@ -138,6 +140,10 @@ export default function ProfileSimple() {
   };
 
   const onPasswordSubmit = (data: PasswordForm) => {
+    if (!isAdmin) {
+      errorToast("Acesso negado", "Apenas administradores podem alterar senhas nesta demonstração.");
+      return;
+    }
     changePasswordMutation.mutate(data);
   };
 
@@ -279,7 +285,12 @@ export default function ProfileSimple() {
                         <FormItem>
                           <FormLabel>Senha Atual</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="Digite sua senha atual" {...field} />
+                            <Input
+                              type="password"
+                              placeholder="Digite sua senha atual"
+                              disabled={!isAdmin}
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -292,7 +303,12 @@ export default function ProfileSimple() {
                         <FormItem>
                           <FormLabel>Nova Senha</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="Digite sua nova senha" {...field} />
+                            <Input
+                              type="password"
+                              placeholder="Digite sua nova senha"
+                              disabled={!isAdmin}
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -305,19 +321,35 @@ export default function ProfileSimple() {
                         <FormItem>
                           <FormLabel>Confirmar Nova Senha</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="Confirme sua nova senha" {...field} />
+                            <Input
+                              type="password"
+                              placeholder="Confirme sua nova senha"
+                              disabled={!isAdmin}
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <Button
-                      type="submit"
-                      disabled={changePasswordMutation.isPending}
-                      className="w-full md:w-auto"
-                    >
-                      {changePasswordMutation.isPending ? "Alterando..." : "Alterar Senha"}
-                    </Button>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <Button
+                        type="submit"
+                        disabled={changePasswordMutation.isPending || !isAdmin}
+                        className="w-full sm:w-auto"
+                      >
+                        {changePasswordMutation.isPending ? "Alterando..." : "Alterar Senha"}
+                      </Button>
+                      {!isAdmin && (
+                        <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-200">
+                          <Shield className="h-4 w-4 flex-shrink-0" />
+                          <span>
+                            <strong>Demonstração:</strong> Alteração de senha disponível apenas para administradores.
+                            Esta restrição protege a conta demo para outros usuários testarem.
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </form>
                 </Form>
               </CardContent>

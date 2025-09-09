@@ -11,7 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle, Database, Download, Upload } from "lucide-react";
 import { useState } from "react";
 
-export function BackupRestore() {
+export function BackupRestore({ isReadOnly = false }: { isReadOnly?: boolean }) {
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -187,7 +187,7 @@ export function BackupRestore() {
 
           <Button
             onClick={handleBackup}
-            disabled={isBackingUp}
+            disabled={isBackingUp || isReadOnly}
             className="w-full"
           >
             {isBackingUp ? "Criando Backup..." : "Fazer Backup Completo"}
@@ -224,6 +224,7 @@ export function BackupRestore() {
               accept=".json"
               onChange={handleFileSelect}
               className="mt-1"
+              disabled={isReadOnly}
             />
           </div>
 
@@ -240,7 +241,7 @@ export function BackupRestore() {
 
           <Button
             onClick={handleRestore}
-            disabled={!selectedFile || isRestoring}
+            disabled={!selectedFile || isRestoring || isReadOnly}
             variant="destructive"
             className="w-full"
           >
