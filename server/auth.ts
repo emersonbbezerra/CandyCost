@@ -9,7 +9,7 @@ import { findUserByEmail, verifyPassword } from './utils/authUtils';
 
 const PgSession = connectPg(session);
 
-// Configure Passport Local Strategy
+// Configurar estratégia local do Passport
 passport.use(
   new LocalStrategy(
     {
@@ -24,7 +24,7 @@ passport.use(
           return done(null, false, { message: 'Email ou senha inválidos.' });
         }
 
-        // Check password
+        // Verificar senha
         const isValidPassword = await verifyPassword(password, user.password);
 
         if (!isValidPassword) {
@@ -39,12 +39,12 @@ passport.use(
   )
 );
 
-// Serialize user for session
+// Serializar usuário para a sessão
 passport.serializeUser((user: any, done) => {
   done(null, user.id);
 });
 
-// Deserialize user from session
+// Deserializar usuário da sessão
 passport.deserializeUser(async (id: string, done) => {
   try {
     const user = await prisma.user.findUnique({
@@ -56,9 +56,9 @@ passport.deserializeUser(async (id: string, done) => {
   }
 });
 
-// Session configuration
+// Configuração da sessão
 export function getSession() {
-  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+  const sessionTtl = 30 * 60 * 1000; // 30 minutos
   const isProd = process.env.NODE_ENV === 'production';
   const connectionString = process.env.DATABASE_URL;
 
@@ -92,14 +92,14 @@ export function getSession() {
   });
 }
 
-// Setup authentication middleware
+// Configurar middleware de autenticação
 export async function setupAuth(app: Express) {
   app.use(getSession());
   app.use(passport.initialize());
   app.use(passport.session());
 }
 
-// Authentication middleware
+// Middleware de autenticação
 export const isAuthenticated: RequestHandler = (req, res, next) => {
   if (req.isAuthenticated()) {
     return next();
@@ -109,7 +109,7 @@ export const isAuthenticated: RequestHandler = (req, res, next) => {
   });
 };
 
-// Admin authorization middleware
+// Middleware de autorização de administrador
 export const isAdmin: RequestHandler = (req, res, next) => {
   if (req.isAuthenticated() && (req.user as any)?.role === 'admin') {
     return next();
@@ -120,7 +120,7 @@ export const isAdmin: RequestHandler = (req, res, next) => {
   });
 };
 
-// User service functions
+// Funções do serviço de usuário
 export const userService = {
   async hasAdmin(): Promise<boolean> {
     const admin = await prisma.user.findFirst({
@@ -136,7 +136,7 @@ export const userService = {
     lastName?: string;
     role?: string;
   }): Promise<any> {
-    // Hash password
+    // Hash da senha
     const hashedPassword = await bcrypt.hash(userData.password, 12);
 
     const newUser = await prisma.user.create({
@@ -165,12 +165,12 @@ export const userService = {
   },
 
   async createAdminUser(): Promise<any> {
-    // In production, use environment variables for initial admin
+    // Em produção, usar variáveis de ambiente para o administrador inicial
     const adminEmail =
       process.env.INITIAL_ADMIN_EMAIL || 'admin@confeitaria.com';
     const adminPassword = process.env.INITIAL_ADMIN_PASSWORD || 'admin123!';
 
-    // Check if admin already exists
+    // Verificar se já existe um administrador
     const existingAdmin = await this.getUserByEmail(adminEmail);
     if (existingAdmin) {
       return existingAdmin;
@@ -185,7 +185,7 @@ export const userService = {
     });
   },
 
-  // Promote existing user to admin (for production use)
+  // Promover usuário existente para administrador (para uso em produção)
   async promoteToAdmin(userEmail: string): Promise<any> {
     const user = await this.getUserByEmail(userEmail);
     if (!user) {
@@ -205,14 +205,14 @@ export const userService = {
     return updatedUser;
   },
 
-  // Create first admin via command line (production strategy)
+  // Criar primeiro administrador via linha de comando (estratégia de produção)
   async initializeFirstAdmin(
     email: string,
     password: string,
     firstName: string,
     lastName?: string
   ): Promise<any> {
-    // Check if any admin exists
+    // Verificar se existe algum administrador
     const existingAdmin = await prisma.user.findFirst({
       where: { role: 'admin' },
     });
