@@ -1,13 +1,14 @@
 // Categorias de ingredientes
 export const INGREDIENT_CATEGORIES = [
-  { value: 'Laticínios', label: 'Laticínios' },
-  { value: 'Farinhas', label: 'Farinhas' },
   { value: 'Açúcares', label: 'Açúcares' },
   { value: 'Chocolates', label: 'Chocolates' },
-  { value: 'Frutas', label: 'Frutas' },
+  { value: 'Embalagens', label: 'Embalagens' },
   { value: 'Especiarias', label: 'Especiarias' },
+  { value: 'Farinhas', label: 'Farinhas' },
+  { value: 'Frutas', label: 'Frutas' },
+  { value: 'Laticínios', label: 'Laticínios' },
   { value: 'Oleaginosas', label: 'Oleaginosas' },
-  { value: 'Ovos', label: 'Ovos' },
+  { value: 'Perecíveis', label: 'Perecíveis' },
   { value: 'Outros', label: 'Outros' },
 ];
 
@@ -31,12 +32,15 @@ export const PRODUCT_CATEGORIES = [
 
 export const FIXED_COST_CATEGORIES = [
   'Aluguel',
-  'Energia elétrica',
-  'Internet',
+  'Despesas Administrativas',
+  'Energia Elétrica',
   'Funcionários',
-  'Gás, água',
-  'Embalagens gerais',
-  'Despesas administrativas',
+  'Gás, Água',
+  'Impostos e Taxas',
+  'Internet',
+  'Manutenção e Limpeza',
+  'Marketing',
+  'Outros',
 ] as const;
 
 export const RECURRENCE_TYPES = [
