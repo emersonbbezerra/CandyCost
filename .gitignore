@@ -38,3 +38,7 @@ client/build/
 # Cache directories for build tools
 .cache/
 .turbo/
+
+start-dev.bat
+stop-dev.bat
+candycost-menu.bat

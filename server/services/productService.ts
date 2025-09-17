@@ -408,9 +408,9 @@ export const productService = {
     const ingredientData = {
       name: data.name,
       category: data.category,
-      quantity: parseFloat(data.quantity),
+      quantity: data.quantity,
       unit: data.unit,
-      price: parseFloat(data.price),
+      price: data.price,
       brand: data.brand || null,
     };
 
@@ -423,9 +423,9 @@ export const productService = {
     const updateData: any = {
       name: data.name,
       category: data.category,
-      quantity: parseFloat(data.quantity),
+      quantity: data.quantity,
       unit: data.unit,
-      price: parseFloat(data.price),
+      price: data.price,
       brand: data.brand || null,
     };
 

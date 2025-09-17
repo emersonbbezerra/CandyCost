@@ -32,11 +32,13 @@ export const createIngredient = async (req: Request, res: Response) => {
   try {
     const data = z
       .object({
-        name: z.string(),
-        category: z.string(),
-        quantity: z.string(),
-        unit: z.string(),
-        price: z.string(),
+        name: z.string().min(1, 'Nome é obrigatório'),
+        category: z.string().min(1, 'Categoria é obrigatória'),
+        quantity: z.coerce
+          .number()
+          .positive('Quantidade deve ser um número positivo'),
+        unit: z.string().min(1, 'Unidade é obrigatória'),
+        price: z.coerce.number().positive('Preço deve ser um número positivo'),
         brand: z.string().optional(),
       })
       .parse(req.body);
