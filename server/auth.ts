@@ -84,6 +84,7 @@ export function getSession() {
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
+    rolling: true, // Renova a sessão a cada requisição
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // true em produção com HTTPS
