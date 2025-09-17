@@ -28,6 +28,16 @@ const UNIT_CONVERSIONS: UnitConversion = {
     ml: 1,
   },
 
+  // Conversões de comprimento
+  m: {
+    cm: 100,
+    m: 1,
+  },
+  cm: {
+    m: 0.01,
+    cm: 1,
+  },
+
   // Unidades genéricas e conversões
   un: {
     un: 1,

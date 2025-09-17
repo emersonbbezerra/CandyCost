@@ -51,7 +51,7 @@ export const RECURRENCE_TYPES = [
 
 // Unidades de medida
 export const UNITS = [
-  { value: 'kg', label: 'kg' },
+  { value: 'kg', label: 'Kg' },
   { value: 'g', label: 'g' },
   { value: 'l', label: 'L' },
   { value: 'ml', label: 'mL' },
@@ -61,4 +61,5 @@ export const UNITS = [
   { value: 'colher_sopa', label: 'Colher de Sopa' },
   { value: 'colher_cha', label: 'Colher de Chá' },
   { value: 'pitada', label: 'Pitada' },
+  { value: 'm', label: 'Metro' },
 ];
