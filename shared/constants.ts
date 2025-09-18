@@ -21,6 +21,7 @@ export const PRODUCT_CATEGORIES = [
   'Coberturas',
   'Doces',
   'Fatias',
+  'Massas',
   'Páscoa',
   'Recheios',
   'Salgados',
