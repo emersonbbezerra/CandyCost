@@ -71,6 +71,16 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
     queryKey: ["/api/products"],
   });
 
+  // Buscar configurações do sistema para obter a margem padrão
+  const { data: settings } = useQuery({
+    queryKey: ["/api/settings"],
+    queryFn: async () => {
+      const response = await fetch("/api/settings");
+      if (!response.ok) throw new Error("Erro ao carregar configurações");
+      return response.json();
+    }
+  });
+
   const availableProductIngredients = products.filter((p) => p.isAlsoIngredient && p.id !== product?.id);
 
   // Função auxiliar para extrair preço unitário seguro
@@ -91,7 +101,9 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
       category: product?.category || "",
       description: product?.description || "",
       isAlsoIngredient: product?.isAlsoIngredient ?? false,
-      marginPercentage: typeof product?.marginPercentage === "number" ? product.marginPercentage : 60,
+      marginPercentage: typeof product?.marginPercentage === "number"
+        ? product.marginPercentage
+        : (settings?.defaultMarginPercentage ?? 60),
       preparationTimeMinutes: typeof product?.preparationTimeMinutes === "number" ? product.preparationTimeMinutes : 60,
       // Campo de entrada representa o PREÇO DE VENDA UNITÁRIO (por unidade de rendimento)
       salePrice: extractUnitSalePrice(product),
@@ -177,7 +189,9 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
         category: product.category || "",
         description: product.description || "",
         isAlsoIngredient: Boolean(product.isAlsoIngredient),
-        marginPercentage: typeof product.marginPercentage === "number" ? product.marginPercentage : 60,
+        marginPercentage: typeof product.marginPercentage === "number"
+          ? product.marginPercentage
+          : (settings?.defaultMarginPercentage ?? 60),
         preparationTimeMinutes: typeof product.preparationTimeMinutes === "number" ? product.preparationTimeMinutes : 60,
         salePrice: extractUnitSalePrice(product),
         yield: typeof product.yield === "number" ? product.yield : 1,
@@ -195,7 +209,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
         category: "",
         description: "",
         isAlsoIngredient: false,
-        marginPercentage: 60,
+        marginPercentage: settings?.defaultMarginPercentage ?? 60,
         preparationTimeMinutes: 60,
         salePrice: 0,
         yield: 1,
@@ -203,7 +217,7 @@ export function ProductForm({ open, onOpenChange, product }: ProductFormProps) {
         recipes: [],
       });
     }
-  }, [product, form]);
+  }, [product, form, settings?.defaultMarginPercentage]);
 
   // Focar no campo de ingrediente quando um novo item é adicionado
   useEffect(() => {

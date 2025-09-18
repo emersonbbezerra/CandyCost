@@ -1,7 +1,22 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
+import { prisma } from '../db';
 import { priceHistoryService } from '../services/priceHistoryService';
 import { productService } from '../services/productService';
+
+// Função para buscar a margem padrão das configurações
+async function getDefaultMarginPercentage(): Promise<number> {
+  try {
+    const workConfig = await prisma.workConfiguration.findFirst();
+    return workConfig?.defaultMarginPercentage ?? 60;
+  } catch (error) {
+    console.warn(
+      'Erro ao buscar configuração padrão, usando valor fallback:',
+      error
+    );
+    return 60; // fallback se houver erro
+  }
+}
 
 export const getProducts = async (_req: Request, res: Response) => {
   try {
@@ -35,11 +50,14 @@ export const getProductById = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Produto não encontrado' });
     }
 
+    // Buscar margem padrão das configurações
+    const defaultMargin = await getDefaultMarginPercentage();
+
     // Ensure required fields are present
     const sanitizedProduct = {
       ...product,
-      marginPercentage: product.marginPercentage || '60',
-      preparationTimeMinutes: product.preparationTimeMinutes || 60,
+      marginPercentage: product.marginPercentage ?? defaultMargin,
+      preparationTimeMinutes: product.preparationTimeMinutes ?? 60,
       recipes: product.recipes || [],
     };
 
@@ -72,6 +90,9 @@ export const createProduct = async (req: Request, res: Response) => {
       })
       .parse(req.body);
 
+    // Buscar margem padrão das configurações
+    const defaultMargin = await getDefaultMarginPercentage();
+
     // Ajustar tipos para compatibilidade com InsertProduct
     const productData = {
       name: data.name,
@@ -83,7 +104,7 @@ export const createProduct = async (req: Request, res: Response) => {
           ? typeof data.marginPercentage === 'string'
             ? parseFloat(data.marginPercentage)
             : data.marginPercentage
-          : 0,
+          : defaultMargin,
       preparationTimeMinutes: data.preparationTimeMinutes,
       salePrice: data.salePrice,
       yield: data.yield,

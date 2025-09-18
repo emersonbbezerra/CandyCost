@@ -90,8 +90,8 @@ export default function Products() {
 
       const sanitizedProduct = {
         ...productWithRecipes,
-        marginPercentage: productWithRecipes.marginPercentage || "60",
-        preparationTimeMinutes: productWithRecipes.preparationTimeMinutes || 60,
+        marginPercentage: productWithRecipes.marginPercentage ?? "60",
+        preparationTimeMinutes: productWithRecipes.preparationTimeMinutes ?? 60,
         recipes: productWithRecipes.recipes || []
       };
 
