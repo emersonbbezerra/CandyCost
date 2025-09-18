@@ -8,7 +8,6 @@ interface SystemSettings {
   highCostAlertThreshold: number;
   enableCostAlerts: boolean;
   enablePriceAlerts: boolean;
-  autoCalculateMargins: boolean;
   currencySymbol: string;
   businessName: string;
 }
@@ -26,7 +25,6 @@ const defaultSettings: SystemSettings = {
   highCostAlertThreshold: 50,
   enableCostAlerts: true,
   enablePriceAlerts: true,
-  autoCalculateMargins: true,
   currencySymbol: "R$",
   businessName: "Minha Confeitaria"
 };

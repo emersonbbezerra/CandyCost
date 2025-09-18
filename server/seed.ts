@@ -936,7 +936,6 @@ async function seed() {
         enablePriceAlerts: true,
         defaultMarginPercentage: 60.0,
         priceIncreaseAlertThreshold: 20.0,
-        autoCalculateMargins: true,
         businessName: 'Doces da Maria - Demo',
         // Configuração de dias da semana
         workMonday: defaultWorkConfig.workMonday,

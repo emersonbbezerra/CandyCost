@@ -134,7 +134,6 @@ model WorkConfiguration {
   enablePriceAlerts           Boolean  @default(true)
   defaultMarginPercentage     Float    @default(60.0)
   priceIncreaseAlertThreshold Float    @default(20.0)
-  autoCalculateMargins        Boolean  @default(true)
   businessName                String   @default("Minha Confeitaria")
   // Novos campos para o sistema de dias da semana
   workMonday                  Boolean  @default(true)

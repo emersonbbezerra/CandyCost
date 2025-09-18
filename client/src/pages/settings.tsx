@@ -35,7 +35,6 @@ interface SystemSettings {
   highCostAlertThreshold: number;
   enableCostAlerts: boolean;
   enablePriceAlerts: boolean;
-  autoCalculateMargins: boolean;
   currencySymbol: string;
   businessName: string;
 }
@@ -64,7 +63,6 @@ const defaultSettings: SystemSettings = {
   highCostAlertThreshold: 50,
   enableCostAlerts: true,
   enablePriceAlerts: true,
-  autoCalculateMargins: true,
   currencySymbol: "R$",
   businessName: "Minha Confeitaria"
 };
@@ -362,36 +360,23 @@ export default function Settings() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="defaultMargin">Margem Padrão (%)</Label>
-                <div className="flex items-center space-x-2">
-                  <Input
-                    id="defaultMargin"
-                    type="number"
-                    min="0"
-                    max="500"
-                    value={settings.defaultMarginPercentage}
-                    onChange={(e) => setSettings({ ...settings, defaultMarginPercentage: parseInt(e.target.value) || 0 })}
-                    disabled={!isAdmin}
-                  />
-                  <Percent className="w-4 h-4 text-gray-500" />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Margem aplicada automaticamente em novos produtos
-                </p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Switch
-                  id="autoMargins"
-                  checked={settings.autoCalculateMargins}
-                  onCheckedChange={(checked) => setSettings({ ...settings, autoCalculateMargins: checked })}
+            <div>
+              <Label htmlFor="defaultMargin">Margem Padrão (%)</Label>
+              <div className="flex items-center space-x-2">
+                <Input
+                  id="defaultMargin"
+                  type="number"
+                  min="0"
+                  max="500"
+                  value={settings.defaultMarginPercentage}
+                  onChange={(e) => setSettings({ ...settings, defaultMarginPercentage: parseInt(e.target.value) || 0 })}
                   disabled={!isAdmin}
                 />
-                <Label htmlFor="autoMargins" className="text-sm">
-                  Calcular margens automaticamente
-                </Label>
+                <Percent className="w-4 h-4 text-gray-500" />
               </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Margem aplicada automaticamente em novos produtos
+              </p>
             </div>
           </CardContent>
         </Card>

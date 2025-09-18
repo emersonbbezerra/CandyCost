@@ -68,7 +68,6 @@ export class FixedCostService {
           enablePriceAlerts: true,
           defaultMarginPercentage: 60.0,
           priceIncreaseAlertThreshold: 20.0,
-          autoCalculateMargins: true,
           businessName: 'Minha Confeitaria',
           // Configuração padrão: seg-sex (5 dias por semana)
           workMonday: true,

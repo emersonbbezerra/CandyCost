@@ -23,7 +23,6 @@ router.get('/', isAuthenticated, async (req, res) => {
           enablePriceAlerts: true,
           defaultMarginPercentage: 60.0,
           priceIncreaseAlertThreshold: 20.0,
-          autoCalculateMargins: true,
           businessName: 'Minha Confeitaria',
           // Configurações de dias da semana (padrão: segunda a sexta)
           workMonday: true,
@@ -44,7 +43,6 @@ router.get('/', isAuthenticated, async (req, res) => {
         highCostAlertThreshold: defaultConfig.highCostAlertThreshold,
         enableCostAlerts: defaultConfig.enableCostAlerts,
         enablePriceAlerts: defaultConfig.enablePriceAlerts,
-        autoCalculateMargins: defaultConfig.autoCalculateMargins,
         currencySymbol: defaultConfig.currencySymbol,
         businessName: defaultConfig.businessName,
         // Configurações de trabalho
@@ -76,7 +74,6 @@ router.get('/', isAuthenticated, async (req, res) => {
       highCostAlertThreshold: workConfig.highCostAlertThreshold,
       enableCostAlerts: workConfig.enableCostAlerts,
       enablePriceAlerts: workConfig.enablePriceAlerts,
-      autoCalculateMargins: workConfig.autoCalculateMargins,
       currencySymbol: workConfig.currencySymbol,
       businessName: workConfig.businessName,
       // Configurações de trabalho
@@ -123,7 +120,6 @@ router.put('/', isAuthenticated, async (req, res) => {
           defaultMarginPercentage: req.body.defaultMarginPercentage || 60.0,
           priceIncreaseAlertThreshold:
             req.body.priceIncreaseAlertThreshold || 20.0,
-          autoCalculateMargins: req.body.autoCalculateMargins ?? true,
           businessName: req.body.businessName || 'Minha Confeitaria',
           // Configurações de dias da semana
           workMonday: req.body.workMonday ?? true,
@@ -221,7 +217,6 @@ router.put('/', isAuthenticated, async (req, res) => {
       highCostAlertThreshold: workConfig.highCostAlertThreshold,
       enableCostAlerts: workConfig.enableCostAlerts,
       enablePriceAlerts: workConfig.enablePriceAlerts,
-      autoCalculateMargins: workConfig.autoCalculateMargins,
       currencySymbol: workConfig.currencySymbol,
       businessName: workConfig.businessName,
       // Configurações de trabalho

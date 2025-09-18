@@ -74,7 +74,7 @@ export const insertProductSchema = z.object({
   category: z.string().min(1),
   description: z.string().optional(),
   isAlsoIngredient: z.boolean().default(false),
-  marginPercentage: z.number().min(0),
+  marginPercentage: z.coerce.number().min(0),
   preparationTimeMinutes: z.number().optional(),
   salePrice: z.number().min(0),
   yield: z.number().min(1),
@@ -171,7 +171,6 @@ export const workConfigurationSchema = z.object({
   enablePriceAlerts: z.boolean(),
   defaultMarginPercentage: z.number(),
   priceIncreaseAlertThreshold: z.number(),
-  autoCalculateMargins: z.boolean(),
   businessName: z.string(),
   // Novos campos para dias da semana
   workMonday: z.boolean(),
@@ -199,7 +198,6 @@ export const insertWorkConfigurationSchema = z.object({
   enablePriceAlerts: z.boolean().default(true),
   defaultMarginPercentage: z.number().default(60.0),
   priceIncreaseAlertThreshold: z.number().default(20.0),
-  autoCalculateMargins: z.boolean().default(true),
   businessName: z.string().default('Minha Confeitaria'),
   // Novos campos opcionais para dias da semana
   workMonday: z.boolean().optional().default(true),
