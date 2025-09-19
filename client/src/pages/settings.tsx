@@ -143,38 +143,73 @@ export default function Settings() {
     }
   }, [currentWorkConfig, isLoadingWorkConfig]);
 
-  const saveSettingsMutation = useMutation({
-    mutationFn: async (newSettings: SystemSettings) => {
-      // Escolher rota baseada no papel do usuário
-      let endpoint = "/api/settings/personal";
-      let settingsToSend = newSettings;
+  const saveAllConfigurationsMutation = useMutation({
+    mutationFn: async () => {
+      // Validar configuração de trabalho primeiro
+      if (!validateWorkingDaysConfig({
+        workMonday: workConfig.workMonday,
+        workTuesday: workConfig.workTuesday,
+        workWednesday: workConfig.workWednesday,
+        workThursday: workConfig.workThursday,
+        workFriday: workConfig.workFriday,
+        workSaturday: workConfig.workSaturday,
+        workSunday: workConfig.workSunday,
+        hoursPerDay: parseFloat(workConfig.hoursPerDay) || 8
+      })) {
+        throw new Error('Pelo menos um dia da semana deve estar selecionado como dia de trabalho');
+      }
+
+      // Preparar dados das configurações gerais
+      let settingsEndpoint = "/api/settings/personal";
+      let settingsToSend = settings;
 
       if (isAdmin) {
         // Admin pode alterar todas as configurações
-        endpoint = "/api/settings";
+        settingsEndpoint = "/api/settings";
       } else {
         // Usuário comum só pode alterar configurações pessoais
         settingsToSend = {
-          enablePriceAlerts: newSettings.enablePriceAlerts,
-          enableCostAlerts: newSettings.enableCostAlerts
+          enablePriceAlerts: settings.enablePriceAlerts,
+          enableCostAlerts: settings.enableCostAlerts
         } as SystemSettings;
       }
 
-      const response = await apiRequest("PUT", endpoint, settingsToSend);
-      return response.json();
+      // Preparar dados da configuração de trabalho
+      const { id, createdAt, updatedAt, workDaysPerWeek, weeksPerMonth, annualWorkingDays, annualWorkingHours, monthlyWorkingHours, ...configData } = workConfig as any;
+      const cleanWorkConfigData = {
+        ...configData,
+        hoursPerDay: parseFloat(configData.hoursPerDay) || 8
+      };
+
+      // Salvar configurações gerais
+      const settingsResponse = await apiRequest("PUT", settingsEndpoint, settingsToSend);
+      const savedSettings = await settingsResponse.json();
+
+      // Salvar configuração de trabalho (apenas para admins)
+      let savedWorkConfig = workConfig;
+      if (isAdmin) {
+        const workConfigResponse = await apiRequest("PUT", "/api/work-config/work-configuration", cleanWorkConfigData);
+        savedWorkConfig = await workConfigResponse.json();
+      }
+
+      return { settings: savedSettings, workConfig: savedWorkConfig };
     },
-    onSuccess: (savedSettings) => {
-      // Atualizar o estado com os dados salvos do servidor
-      setSettings(savedSettings);
+    onSuccess: (data) => {
+      // Atualizar estados locais
+      setSettings(data.settings);
+      if (isAdmin) {
+        setWorkConfig(data.workConfig);
 
-      successToast(
-        "Configurações Salvas",
-        isAdmin
-          ? "Todas as configurações do sistema foram atualizadas!"
-          : "Suas preferências pessoais foram atualizadas!"
-      );
+        // Invalidar cache de configuração de trabalho
+        costInvalidation.invalidateOnWorkConfigChange();
+        queryClient.invalidateQueries({
+          queryKey: ["/api/work-config/work-configuration"],
+          exact: true,
+          refetchType: 'active'
+        });
+      }
 
-      // Invalidar apenas queries do dashboard para refletir mudanças
+      // Invalidar queries gerais
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
 
@@ -182,6 +217,13 @@ export default function Settings() {
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
       }, 500);
+
+      successToast(
+        "Configurações Salvas",
+        isAdmin
+          ? "Todas as configurações do sistema e de trabalho foram atualizadas com sucesso!"
+          : "Suas preferências pessoais foram atualizadas!"
+      );
     },
     onError: (error: any) => {
       errorToast(
@@ -189,56 +231,11 @@ export default function Settings() {
         error.message || "Não foi possível salvar as configurações. Tente novamente."
       );
     }
-  }); const handleSave = () => {
-    saveSettingsMutation.mutate(settings);
-  };
-
-  const saveWorkConfigMutation = useMutation({
-    mutationFn: async (newWorkConfig: WorkConfiguration) => {
-      // Validar se pelo menos um dia está selecionado
-      if (!validateWorkingDaysConfig({
-        workMonday: newWorkConfig.workMonday,
-        workTuesday: newWorkConfig.workTuesday,
-        workWednesday: newWorkConfig.workWednesday,
-        workThursday: newWorkConfig.workThursday,
-        workFriday: newWorkConfig.workFriday,
-        workSaturday: newWorkConfig.workSaturday,
-        workSunday: newWorkConfig.workSunday,
-        hoursPerDay: parseFloat(newWorkConfig.hoursPerDay) || 8
-      })) {
-        throw new Error('Pelo menos um dia da semana deve estar selecionado como dia de trabalho');
-      }
-
-      // Send only the necessary fields, exclude timestamps and ID
-      const { id, createdAt, updatedAt, workDaysPerWeek, weeksPerMonth, annualWorkingDays, annualWorkingHours, monthlyWorkingHours, ...configData } = newWorkConfig as any;
-
-      // Converter hoursPerDay para number
-      const cleanConfigData = {
-        ...configData,
-        hoursPerDay: parseFloat(configData.hoursPerDay) || 8
-      };
-
-      const response = await apiRequest("PUT", "/api/work-config/work-configuration", cleanConfigData);
-      return response.json();
-    },
-    onSuccess: (savedConfig) => {
-      setWorkConfig(prev => ({ ...prev, ...savedConfig }));
-
-      // Usar o sistema de invalidação centralizado para configuração de trabalho
-      costInvalidation.invalidateOnWorkConfigChange();
-
-      successToast(
-        "Configuração de Trabalho Salva",
-        "As configurações de trabalho foram atualizadas com sucesso! Todos os custos foram recalculados."
-      );
-    },
-    onError: (error: any) => {
-      errorToast(
-        "Erro ao Salvar",
-        error.message || "Não foi possível salvar a configuração de trabalho. Tente novamente."
-      );
-    }
   });
+
+  const handleSaveAll = () => {
+    saveAllConfigurationsMutation.mutate();
+  };
 
   // Função para alterar dias da semana
   const handleWorkingDayChange = (day: keyof Omit<WorkConfiguration, 'hoursPerDay' | 'workDaysPerWeek' | 'weeksPerMonth' | 'annualWorkingDays' | 'annualWorkingHours' | 'monthlyWorkingHours'>, value: boolean) => {
@@ -246,10 +243,6 @@ export default function Settings() {
       ...prev,
       [day]: value
     }));
-  };
-
-  const handleSaveWorkConfig = () => {
-    saveWorkConfigMutation.mutate(workConfig);
   };
 
   const handleReset = () => {
@@ -495,26 +488,6 @@ export default function Settings() {
                 </Alert>
               )}
 
-            {isAdmin && (
-              <div className="pt-4 border-t">
-                <Button
-                  onClick={handleSaveWorkConfig}
-                  disabled={saveWorkConfigMutation.isPending || !validateWorkingDaysConfig({
-                    workMonday: workConfig.workMonday,
-                    workTuesday: workConfig.workTuesday,
-                    workWednesday: workConfig.workWednesday,
-                    workThursday: workConfig.workThursday,
-                    workFriday: workConfig.workFriday,
-                    workSaturday: workConfig.workSaturday,
-                    workSunday: workConfig.workSunday,
-                    hoursPerDay: parseFloat(workConfig.hoursPerDay) || 8
-                  })}
-                  className="w-full"
-                >
-                  {saveWorkConfigMutation.isPending ? "Salvando..." : "Salvar Configuração de Trabalho"}
-                </Button>
-              </div>
-            )}
           </CardContent>
         </Card>
 
@@ -609,17 +582,26 @@ export default function Settings() {
           <Button
             variant="outline"
             onClick={handleReset}
-            disabled={saveSettingsMutation.isPending}
+            disabled={saveAllConfigurationsMutation.isPending}
           >
             Resetar Padrões
           </Button>
 
           <Button
-            onClick={handleSave}
-            disabled={saveSettingsMutation.isPending}
+            onClick={handleSaveAll}
+            disabled={saveAllConfigurationsMutation.isPending || (!isAdmin ? false : !validateWorkingDaysConfig({
+              workMonday: workConfig.workMonday,
+              workTuesday: workConfig.workTuesday,
+              workWednesday: workConfig.workWednesday,
+              workThursday: workConfig.workThursday,
+              workFriday: workConfig.workFriday,
+              workSaturday: workConfig.workSaturday,
+              workSunday: workConfig.workSunday,
+              hoursPerDay: parseFloat(workConfig.hoursPerDay) || 8
+            }))}
             className="min-w-32"
           >
-            {saveSettingsMutation.isPending ? "Salvando..." : "Salvar Configurações"}
+            {saveAllConfigurationsMutation.isPending ? "Salvando..." : "Salvar Configurações"}
           </Button>
         </div>
       </div>

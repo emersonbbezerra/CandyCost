@@ -416,7 +416,7 @@ export class FixedCostController {
       const config = await this.fixedCostService.getWorkConfiguration();
       res.json(config);
     } catch (error) {
-      console.error('Erro ao buscar configuração de trabalho:', error);
+      console.error('❌ Erro ao buscar configuração de trabalho:', error);
       res.status(500).json({ message: 'Erro interno do servidor' });
     }
   }
@@ -427,7 +427,7 @@ export class FixedCostController {
       const config = await this.fixedCostService.updateWorkConfiguration(data);
       res.json(config);
     } catch (error) {
-      console.error('Erro ao atualizar configuração de trabalho:', error);
+      console.error('❌ Erro ao atualizar configuração de trabalho:', error);
       res.status(500).json({ message: 'Erro interno do servidor' });
     }
   }

@@ -53,7 +53,7 @@ export default function FixedCosts() {
   });
 
   const { data: workConfig } = useQuery<{ hoursPerDay: number; daysPerMonth: number; hourlyRate: number; highCostAlertThreshold: number }>({
-    queryKey: ["/api/fixed-costs/work-configuration"],
+    queryKey: ["/api/work-config/work-configuration"],
   });
 
 
