@@ -79,8 +79,7 @@ export function getSession() {
 
   return session({
     secret:
-      process.env.SESSION_SECRET ||
-      'confei-calc-secret-key-change-in-production',
+      process.env.SESSION_SECRET || 'candycost-secret-key-change-in-production',
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
