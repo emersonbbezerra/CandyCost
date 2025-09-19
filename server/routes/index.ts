@@ -4,6 +4,7 @@ import { Router } from 'express';
 import { FixedCostController } from '../controllers/fixedCostController';
 import { isAuthenticated } from '../middlewares/authMiddleware';
 import authRoutes from './authRoutes';
+import backupRoutes from './backupRoutes';
 import dashboardRoutes from './dashboardRoutes';
 import fixedCostRoutes from './fixedCostRoutes';
 import ingredientRoutes from './ingredientRoutes';
@@ -25,6 +26,7 @@ export async function registerRoutes(app: Express) {
   app.use('/api/fixed-costs', fixedCostRoutes);
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/settings', settingsRoutes);
+  app.use('/api', backupRoutes);
 
   // Work configuration routes
   const workConfigRouter = Router();

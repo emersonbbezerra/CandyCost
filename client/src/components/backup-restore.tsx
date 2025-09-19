@@ -25,16 +25,20 @@ export function BackupRestore({ isReadOnly = false }: { isReadOnly?: boolean }) 
     setIsBackingUp(true);
     try {
       // Buscar todos os dados das APIs
-      const [ingredientsRes, productsRes, historyRes] = await Promise.all([
+      const [ingredientsRes, productsRes, historyRes, fixedCostsRes, workConfigRes] = await Promise.all([
         apiRequest("GET", "/api/ingredients"),
         apiRequest("GET", "/api/products"),
-        apiRequest("GET", "/api/price-history")
+        apiRequest("GET", "/api/price-history"),
+        apiRequest("GET", "/api/fixed-costs"),
+        apiRequest("GET", "/api/work-config/work-configuration")
       ]);
 
-      const [ingredients, products, priceHistory] = await Promise.all([
+      const [ingredients, products, priceHistory, fixedCosts, workConfiguration] = await Promise.all([
         ingredientsRes.json(),
         productsRes.json(),
-        historyRes.json()
+        historyRes.json(),
+        fixedCostsRes.json(),
+        workConfigRes.json()
       ]);
 
       // Buscar receitas para todos os produtos
@@ -56,12 +60,16 @@ export function BackupRestore({ isReadOnly = false }: { isReadOnly?: boolean }) 
         data: {
           ingredients,
           products: productsWithRecipes,
-          priceHistory
+          priceHistory,
+          fixedCosts,
+          workConfiguration
         },
         metadata: {
           totalIngredients: ingredients.length,
           totalProducts: products.length,
-          totalHistoryEntries: priceHistory.length
+          totalHistoryEntries: priceHistory.length,
+          totalFixedCosts: fixedCosts.length,
+          hasWorkConfiguration: !!workConfiguration
         }
       };
 
@@ -106,7 +114,19 @@ export function BackupRestore({ isReadOnly = false }: { isReadOnly?: boolean }) 
       // Invalidar todos os grupos de queries relacionadas a custos
       costInvalidation.invalidateFullRecalculation();
 
-      successToast("Restauração Concluída", `Backup restaurado com sucesso! ${data.restored.ingredients} ingredientes, ${data.restored.products} produtos e ${data.restored.priceHistory} registros de histórico foram restaurados.`);
+      const restoredCounts = [
+        `${data.restored.ingredients} ingredientes`,
+        `${data.restored.products} produtos`,
+        `${data.restored.recipes} receitas`,
+        `${data.restored.fixedCosts} custos fixos`,
+        `${data.restored.priceHistory} registros de histórico`
+      ];
+
+      if (data.restored.workConfiguration > 0) {
+        restoredCounts.push('configurações de trabalho');
+      }
+
+      successToast("Restauração Concluída", `Backup restaurado com sucesso! ${restoredCounts.join(', ')} foram restaurados.`);
 
       // Limpar estados
       setSelectedFile(null);
@@ -181,7 +201,9 @@ export function BackupRestore({ isReadOnly = false }: { isReadOnly?: boolean }) 
               <li>• Todos os ingredientes cadastrados</li>
               <li>• Produtos e suas receitas</li>
               <li>• Histórico completo de alterações de preços</li>
-              <li>• Configurações de margem e categorias</li>
+              <li>• Custos fixos e suas configurações</li>
+              <li>• Configurações de trabalho e margem</li>
+              <li>• Configurações de negócio e alertas</li>
             </ul>
           </div>
 
@@ -259,7 +281,7 @@ export function BackupRestore({ isReadOnly = false }: { isReadOnly?: boolean }) 
         open={showConfirmDialog}
         onOpenChange={setShowConfirmDialog}
         title="⚠️ Confirmar Restauração de Backup"
-        description={`Esta operação irá SUBSTITUIR TODOS os dados atuais pelos dados do backup.\n\nDados que serão restaurados:\n• ${backupDataToRestore?.data?.ingredients?.length || 0} ingredientes\n• ${backupDataToRestore?.data?.products?.length || 0} produtos/receitas\n• ${backupDataToRestore?.data?.priceHistory?.length || 0} registros de histórico\n\nData do backup: ${backupDataToRestore?.timestamp ? new Date(backupDataToRestore.timestamp).toLocaleString('pt-BR') : 'Não informada'}\n\n❌ ATENÇÃO: Esta ação não pode ser desfeita!\n\n✅ Recomendação: Faça um backup dos dados atuais antes de prosseguir.`}
+        description={`Esta operação irá SUBSTITUIR TODOS os dados atuais pelos dados do backup.\n\nDados que serão restaurados:\n• ${backupDataToRestore?.data?.ingredients?.length || 0} ingredientes\n• ${backupDataToRestore?.data?.products?.length || 0} produtos/receitas\n• ${backupDataToRestore?.data?.priceHistory?.length || 0} registros de histórico\n• ${backupDataToRestore?.data?.fixedCosts?.length || 0} custos fixos\n• ${backupDataToRestore?.data?.workConfiguration ? 'Configurações de trabalho' : 'Sem configurações de trabalho'}\n\nData do backup: ${backupDataToRestore?.timestamp ? new Date(backupDataToRestore.timestamp).toLocaleString('pt-BR') : 'Não informada'}\n\n❌ ATENÇÃO: Esta ação não pode ser desfeita!\n\n✅ Recomendação: Faça um backup dos dados atuais antes de prosseguir.`}
         confirmText="Sim, Restaurar"
         cancelText="Cancelar"
         onConfirm={confirmRestore}
